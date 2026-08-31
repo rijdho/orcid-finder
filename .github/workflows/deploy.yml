@@ -39,6 +39,12 @@ jobs:
 
   deploy:
     needs: test
+    # Pages cannot be enabled on a private repository, so deploy-pages 404s and
+    # turns every push red while the repo is still behind the publication gate.
+    # The gate is the repo's own visibility, which the push payload carries: the
+    # day it goes public this job starts running on its own, with nothing to
+    # remember to switch on.
+    if: github.event.repository.private == false
     runs-on: ubuntu-latest
     environment:
       name: github-pages
