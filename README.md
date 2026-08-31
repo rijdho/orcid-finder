@@ -39,7 +39,7 @@ with no usable criterion is refused rather than run against everything.
 
 ## The two modes
 
-Which endpoint runs is decided by the filters, not by a switch the user has to understand.
+Which endpoint runs is decided by the filters, not by a mode switch in the interface.
 
 ```mermaid
 flowchart TD

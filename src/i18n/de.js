@@ -83,7 +83,7 @@ export const de = {
 
   'how.title': 'Wie es funktioniert',
   'how.body':
-    '<p>Zwei Endpunkte der öffentlichen ORCID-API tragen das ganze Werkzeug, und welcher läuft, entscheiden die gesetzten Filter.</p>' +
+    '<p>Das Werkzeug nutzt zwei Endpunkte der öffentlichen ORCID-API. Welcher davon läuft, entscheiden die gesetzten Filter.</p>' +
     '<p>Der <b>schnelle Modus</b> ist ein einziger Aufruf von <code>expanded-search</code>, der Ihre Kriterien mit ODER zu einer Abfrage verbindet. Er liefert Namen und die von ORCID indexierten Einrichtungsnamen je Konto und beantwortet damit in Sekunden, wer diese Zugehörigkeit angibt, unabhängig von der Größe des Ergebnisses.</p>' +
     '<p>Der <b>vollständige Modus</b> beginnt, sobald Sie nach Funktionsbezeichnung, Startdatum oder laufenden Anstellungen filtern. Diese drei Felder stehen nur im Dokument <code>/employments</code> eines Datensatzes, das Werkzeug liest also eines pro Kandidat. Das ist je eine HTTP-Anfrage: genau, und entsprechend langsamer.</p>' +
     '<p>Ein über ROR gefundener Kandidat wird auch dann behalten, wenn der Einrichtungsname im Datensatz anders lautet, denn <code>expanded-search</code> liefert diese Namen ohne ROR-IDs je Eintrag. Sie zu verwerfen hieße, genau die Datensätze wegzuwerfen, für die das ROR-Kriterium gewählt wurde. Solche Zeilen sind mit <b>nur ROR</b> gekennzeichnet.</p>' +

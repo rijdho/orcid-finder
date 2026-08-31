@@ -29,7 +29,8 @@ three locale strings, and a control in `index.html`. In that order.
   rejected the candidate, not to the first filter in the chain. Reordering the checks without
   moving the stage assignments silently makes the counts fiction.
 - **A null employments document is `unreachable`, not `noOrgMatch`.** Reporting a network
-  failure as "this person does not work here" is the one wrong answer this tool must not give.
+  failure as "this person does not work here" states a filter verdict the data does not
+  support.
 - **A partial end date is read at its latest instant.** Erring the other way deletes current
   staff from a roster in silence.
 - **`maxRows` has no `step`.** With `min=1`, a step of 10 makes the browser silently reject the

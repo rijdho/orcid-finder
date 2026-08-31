@@ -84,7 +84,7 @@ export const en = {
 
   'how.title': 'How it works',
   'how.body':
-    '<p>Two endpoints of the ORCID public API carry the whole tool, and which one runs is decided by the filters you tick.</p>' +
+    '<p>The tool uses two endpoints of the ORCID public API. Which one runs is decided by the filters you tick.</p>' +
     '<p><b>Fast mode</b> is a single <code>expanded-search</code> call, OR-ing your criteria into one query. It returns names and the institution names ORCID has indexed for each account, so it answers "who declares this affiliation" in seconds however large the result.</p>' +
     '<p><b>Full mode</b> starts when you filter on role title, start date or current appointments. Those three fields exist only inside a record’s <code>/employments</code> document, so the tool reads one per candidate. That is one HTTP request each: precise, and proportionally slower.</p>' +
     '<p>A candidate found by ROR is kept even when the institution name on the record reads differently, because <code>expanded-search</code> returns those names without per-entry ROR ids. Dropping them would throw away exactly the records the ROR criterion was chosen to find. Such rows are marked <b>ROR only</b>.</p>' +

@@ -84,7 +84,7 @@ export const es = {
 
   'how.title': 'Cómo funciona',
   'how.body':
-    '<p>Dos puntos de acceso de la API pública de ORCID sostienen toda la herramienta, y cuál se ejecuta lo deciden los filtros que marques.</p>' +
+    '<p>La herramienta usa dos puntos de acceso de la API pública de ORCID. Cuál de ellos se ejecuta lo deciden los filtros que marques.</p>' +
     '<p>El <b>modo rápido</b> es una sola llamada a <code>expanded-search</code> que une tus criterios con OR en una única consulta. Devuelve nombres y los nombres de institución que ORCID ha indexado para cada cuenta, así que responde en segundos a quién declara esa afiliación, sea cual sea el tamaño del resultado.</p>' +
     '<p>El <b>modo completo</b> se activa en cuanto filtras por cargo, fecha de inicio o nombramientos vigentes. Esos tres campos solo existen dentro del documento <code>/employments</code> de cada registro, así que la herramienta lee uno por candidato. Eso es una petición HTTP por persona: preciso y proporcionalmente más lento.</p>' +
     '<p>Un candidato encontrado por ROR se conserva aunque el nombre de la institución en el registro esté escrito de otra manera, porque <code>expanded-search</code> devuelve esos nombres sin identificadores ROR por entrada. Descartarlos sería tirar justo los registros que el criterio ROR sirve para encontrar. Esas filas van marcadas como <b>solo ROR</b>.</p>' +
