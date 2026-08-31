@@ -103,7 +103,7 @@ export const en = {
 
   'about.title': 'About',
   'about.body':
-    '<p>orcid-finder is a single static page: no build step, no backend, no tracking, no cookies. It talks to <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">the ORCID public API</a> directly from your browser, which is why nothing you type is visible to anyone but ORCID.</p>' +
+    '<p>orcid-finder is a single static page: no build step, no backend, no tracking, no cookies. It talks to <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">the ORCID public API</a> directly from your browser, so no server of ours ever sees what you search for. The only thing it keeps is the language and theme you picked, in your browser’s own storage.</p>' +
     '<p>The filter set comes from a research-information system’s roster discovery, lifted out of its database so anyone can run the same search without one.</p>',
   'about.footer':
     'Built by <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · MIT licensed · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">source on GitHub</a> · data from ORCID, used under their public API terms',

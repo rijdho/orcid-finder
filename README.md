@@ -1,15 +1,16 @@
 # orcid-finder
 
-**Find the ORCID accounts that declare an institution, filter them the way a research office
-would, and take the table away as CSV or JSON.**
+**Find the ORCID accounts that declare an institution, narrow them by role title, start date
+and current appointments, and export the table as CSV or JSON.**
 
 Give it a ROR id or an organisation name and it lists the ORCID records that declare that
-affiliation. Narrow the list by role title, by whether the appointment has a start date, and by
-whether it is still current. Everything runs in the browser against the ORCID public API: no
-account, no API key, no backend of ours, nothing stored anywhere.
+affiliation. Everything runs in the browser against the ORCID public API: no account, no API
+key, and no server of ours in the path. The only thing it keeps is the language and theme you
+picked, in the browser's own storage.
 
-For research offices, repository managers and anyone assembling a roster: the fastest honest
-answer to "who at this institution has an ORCID, and what do their records say?".
+For research offices, repository managers and anyone assembling a roster from public records:
+it answers "who at this institution has an ORCID, and what do their records say?", and the
+Caveats say where that answer stops.
 
 🔗 **Live:** <https://rijdho.github.io/orcid-finder/>
 
@@ -89,8 +90,8 @@ Both downloads carry every row of the table, not the page on screen.
 | `institutions` | every institution name ORCID indexed, pipe-separated |
 
 The JSON file additionally carries the query sent to ORCID, the mode, the filter set, the
-totals and the per-filter drop counts. A file of results without the question that produced
-them is not reproducible, and this tool exists to be cited from a methods section.
+totals and the per-filter drop counts. A file of results without the query that produced it
+cannot be checked or repeated, which is what that block is for.
 
 CSV is written per RFC 4180 with CRLF line endings, and any value that a spreadsheet would
 execute as a formula is neutralised with a leading apostrophe. ORCID records are written by the
