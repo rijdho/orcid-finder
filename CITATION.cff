@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this tool, please cite it as below."
+title: "orcid-finder"
+abstract: >-
+  A static, client-side web tool that finds the ORCID accounts declaring an
+  institution, by ROR id or organisation name, and narrows them by role title,
+  start date and whether the appointment is still current. It reports what each
+  filter dropped and exports the result as CSV or JSON with the query that
+  produced it. Multilingual (EN/DE/ES). Runs entirely in the browser against the
+  ORCID public API: no account, no API key, no backend.
+type: software
+authors:
+  - family-names: "Hartley Belmar"
+    given-names: "Ricardo"
+    alias: rijdho
+    orcid: "https://orcid.org/0000-0001-5058-9309"
+repository-code: "https://github.com/rijdho/orcid-finder"
+url: "https://rijdho.github.io/orcid-finder/"
+license: MIT
+version: "1.0.0"
+date-released: "2026-08-31"
+keywords:
+  - ORCID
+  - ROR
+  - research information
+  - persistent identifiers
+  - open science
+  - researcher discovery
+  - CRIS

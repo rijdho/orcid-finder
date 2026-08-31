@@ -11,8 +11,7 @@ account, no API key, no backend of ours, nothing stored anywhere.
 For research offices, repository managers and anyone assembling a roster: the fastest honest
 answer to "who at this institution has an ORCID, and what do their records say?".
 
-🔗 **Live:** not published yet. This repository is private; the page deploys to
-`https://rijdho.github.io/orcid-finder/` when it goes public.
+🔗 **Live:** <https://rijdho.github.io/orcid-finder/>
 
 Available in **English, German and Spanish** (auto-detected from the browser, switchable).
 
@@ -163,4 +162,9 @@ purpose.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. It is a tool: the payload is code meant to be reused. See `LICENSE`.
+
+## Citation
+
+If you use this tool in a piece of work, please cite it: see `CITATION.cff`, or the
+"Cite this repository" button in the sidebar of the GitHub page.

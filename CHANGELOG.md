@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.0.0] - 2026-08-31
+
+First public version. Cut when the repository was opened; the tag and the GitHub Release
+follow, and the Zenodo DOIs are added to `CITATION.cff` and the README in the commit after
+Zenodo has minted them.
+
 ### Added
 
 - ORCID account discovery against the public API, by ROR id and by organisation name, with the
