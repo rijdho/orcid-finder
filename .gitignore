@@ -1,0 +1,14 @@
+.DS_Store
+node_modules/
+dist/
+.wrangler/
+
+# Per-machine tool permissions, not project config. Was covered only by a global
+# ignore file, which does not travel with a clone: so it lives here too.
+.claude/settings.local.json
+
+# Claude Code session state: local-only, never committed
+.claude/
+
+# Sensitive/local-only material: never committed (house rule, see github/CLAUDE.md)
+_ref/

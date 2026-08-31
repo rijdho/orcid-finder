@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+# Static app, no build step: the repo tree is served verbatim. The job exists to
+# (a) gate the deploy on the test suite and (b) bypass the legacy Jekyll builder,
+# which processes the tree needlessly and has served stale builds while looking
+# "deployed".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  # false on purpose. With true, a push cancels the in-flight deploy, and on a day
+  # when the Pages backend publishes slowly, pushing more often than that means
+  # NOTHING ever completes. Queued runs cost only latency; cancelled half-published
+  # deploys cost the deploy itself.
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # No package.json: the suite runs on Node's built-in runner, dependency-free.
+      - run: node --test tests/*.test.mjs
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Do NOT add `timeout:` here hoping to survive a slow Pages day: deploy-pages
+      # clamps it with Math.min(input, 600000) and the backend enforces its own
+      # ten-minute deadline, so the input can only ever *lower* the wait. When Pages
+      # is slow the run goes red but the site usually still publishes minutes later,
+      # and a Pages deployment id IS the commit SHA, so re-running a cancelled run
+      # recreates the same cancelled deployment. Push a new commit instead.
+      - id: deployment
+        uses: actions/deploy-pages@v4

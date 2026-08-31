@@ -1,0 +1,285 @@
+// UI wiring. All the decisions live in discover.js and exporters.js; this file
+// only moves values between the DOM and those modules, which is what keeps the
+// filter behaviour testable in Node without a browser.
+
+import { discoverPeople, isValidRor, normaliseRor, parseList } from './discover.js';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js';
+
+const $ = (id) => document.getElementById(id);
+const el = {
+  form: $('search'), go: $('go'), cancel: $('cancel'), reset: $('reset'),
+  error: $('error'), progress: $('progress'), barFill: $('bar-fill'), barLabel: $('bar-label'),
+  results: $('results'), summary: $('summary'), breakdown: $('breakdown'), query: $('query'),
+  modeTag: $('mode-tag'), tablewrap: $('tablewrap'),
+  dlCsv: $('dl-csv'), dlJson: $('dl-json'), lang: $('lang'), theme: $('theme'),
+};
+
+/** The last completed run, which is what the export buttons write out. */
+let last = null;
+let controller = null;
+
+const escapeHtml = (s) =>
+  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+// ── i18n ────────────────────────────────────────────────────────────────────
+
+function applyI18n() {
+  document.documentElement.lang = getLang();
+  for (const node of document.querySelectorAll('[data-i18n]')) node.textContent = t(node.dataset.i18n);
+  for (const node of document.querySelectorAll('[data-i18n-html]')) node.innerHTML = t(node.dataset.i18nHtml);
+  for (const node of document.querySelectorAll('[data-i18n-attr]'))
+    for (const pair of node.dataset.i18nAttr.split(';')) {
+      const [attr, key] = pair.split(':');
+      if (attr && key) node.setAttribute(attr.trim(), t(key.trim()));
+    }
+  for (const b of el.lang.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.code === getLang()));
+  // The rendered result carries translated headers and labels, so it has to be
+  // redrawn: switching language with a table on screen must not leave it in the
+  // language it was drawn in.
+  if (last) render(last);
+}
+
+function initLang() {
+  el.lang.innerHTML = LANGS.map(
+    (l) => `<button type="button" data-code="${l.code}" aria-pressed="false">${l.label}</button>`,
+  ).join('');
+  el.lang.addEventListener('click', (e) => {
+    const code = e.target.closest('button')?.dataset.code;
+    if (!code) return;
+    setLang(code);
+    try { localStorage.setItem('orcid-finder:lang', code); } catch { /* private mode */ }
+    applyI18n();
+  });
+  let stored = null;
+  try { stored = localStorage.getItem('orcid-finder:lang'); } catch { /* private mode */ }
+  const fromUrl = new URLSearchParams(location.search).get('lang');
+  setLang(resolveLang(fromUrl || stored, navigator.languages ?? [navigator.language]));
+}
+
+// ── theme ───────────────────────────────────────────────────────────────────
+
+function initTheme() {
+  let stored = null;
+  try { stored = localStorage.getItem('orcid-finder:theme'); } catch { /* private mode */ }
+  if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+  paintThemeButton();
+  el.theme.addEventListener('click', () => {
+    const dark = document.documentElement.dataset.theme
+      ? document.documentElement.dataset.theme === 'dark'
+      : matchMedia('(prefers-color-scheme: dark)').matches;
+    const next = dark ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('orcid-finder:theme', next); } catch { /* private mode */ }
+    paintThemeButton();
+  });
+}
+
+function paintThemeButton() {
+  const dark = document.documentElement.dataset.theme
+    ? document.documentElement.dataset.theme === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches;
+  el.theme.textContent = dark ? '☀' : '☾';
+}
+
+// ── form ↔ options ──────────────────────────────────────────────────────────
+
+function readForm() {
+  return {
+    rors: parseList($('rors').value).map(normaliseRor),
+    orgNames: parseList($('orgNames').value),
+    byRor: $('byRor').checked,
+    byName: $('byName').checked,
+    roleTitles: parseList($('roleTitles').value),
+    currentOnly: $('currentOnly').checked,
+    requireStartDate: $('requireStartDate').checked,
+    maxRows: parseInt($('maxRows').value, 10) || 200,
+  };
+}
+
+function writeForm(o) {
+  $('rors').value = (o.rors ?? []).join(', ');
+  $('orgNames').value = (o.orgNames ?? []).join(', ');
+  $('byRor').checked = o.byRor !== false;
+  $('byName').checked = o.byName !== false;
+  $('roleTitles').value = (o.roleTitles ?? []).join(', ');
+  $('currentOnly').checked = !!o.currentOnly;
+  $('requireStartDate').checked = !!o.requireStartDate;
+  $('maxRows').value = o.maxRows ?? 200;
+}
+
+/**
+ * Mirror the search into the URL, so a result can be linked, bookmarked and
+ * cited. A tool whose output cannot be pointed at is not reproducible.
+ */
+function syncUrl(o) {
+  const p = new URLSearchParams();
+  if (o.rors.length) p.set('ror', o.rors.join(','));
+  if (o.orgNames.length) p.set('org', o.orgNames.join(','));
+  if (!o.byRor) p.set('byRor', '0');
+  if (!o.byName) p.set('byName', '0');
+  if (o.roleTitles.length) p.set('role', o.roleTitles.join(','));
+  if (o.currentOnly) p.set('current', '1');
+  if (o.requireStartDate) p.set('started', '1');
+  if (o.maxRows !== 200) p.set('max', String(o.maxRows));
+  p.set('lang', getLang());
+  history.replaceState(null, '', `${location.pathname}?${p}`);
+}
+
+function readUrl() {
+  const p = new URLSearchParams(location.search);
+  if (!p.has('ror') && !p.has('org')) return null;
+  return {
+    rors: parseList(p.get('ror')).map(normaliseRor),
+    orgNames: parseList(p.get('org')),
+    byRor: p.get('byRor') !== '0',
+    byName: p.get('byName') !== '0',
+    roleTitles: parseList(p.get('role')),
+    currentOnly: p.get('current') === '1',
+    requireStartDate: p.get('started') === '1',
+    maxRows: parseInt(p.get('max') ?? '200', 10) || 200,
+  };
+}
+
+// ── run ─────────────────────────────────────────────────────────────────────
+
+function showError(message) {
+  el.error.textContent = message;
+  el.error.hidden = !message;
+}
+
+function busy(on) {
+  el.go.disabled = on;
+  el.go.textContent = t(on ? 'form.searching' : 'form.submit');
+  el.cancel.hidden = !on;
+  el.progress.hidden = !on;
+  if (!on) el.barFill.style.width = '0%';
+}
+
+async function run(options) {
+  const o = options ?? readForm();
+  showError('');
+
+  const bad = o.rors.find((r) => !isValidRor(r));
+  if (bad) return showError(t('err.badRor', { id: bad }));
+  if (!((o.byRor && o.rors.length) || (o.byName && o.orgNames.length)))
+    return showError(t('err.noCriteria'));
+
+  syncUrl(o);
+  controller = new AbortController();
+  busy(true);
+  el.barLabel.textContent = t('status.searching');
+
+  try {
+    const result = await discoverPeople(o, {
+      signal: controller.signal,
+      onProgress: ({ phase, done, total }) => {
+        if (phase === 'employments') {
+          el.barFill.style.width = `${total ? Math.round((done / total) * 100) : 0}%`;
+          el.barLabel.textContent = t('status.reading', { done, total });
+        }
+      },
+    });
+    last = { ...result, filters: o, retrievedAt: new Date() };
+    render(last);
+  } catch {
+    showError(t('err.failed'));
+  } finally {
+    busy(false);
+    controller = null;
+  }
+}
+
+// ── render ──────────────────────────────────────────────────────────────────
+
+function render(r) {
+  el.results.hidden = false;
+  el.modeTag.textContent = t(r.mode === 'full' ? 'res.mode.full' : 'res.mode.fast');
+  el.summary.textContent =
+    [
+      t('res.summary', { kept: r.people.length, scanned: r.scanned }),
+      t('res.totalFound', { total: r.totalFound.toLocaleString(getLang()) }),
+      r.aborted ? t('res.aborted') : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+  el.query.textContent = `${t('res.query')}: ${r.query}`;
+
+  const b = r.breakdown;
+  const chips = [
+    ['bd.noOrgMatch', b.noOrgMatch],
+    ['bd.noRoleMatch', b.noRoleMatch],
+    ['bd.noStartDate', b.noStartDate],
+    ['bd.pastEmployment', b.pastEmployment],
+    ['bd.unreachable', b.unreachable],
+  ]
+    // null means the filter was never applied, so it has nothing to report. Zero
+    // means it ran and dropped nobody, which is worth showing.
+    .filter(([, n]) => n !== null && n !== undefined && n > 0)
+    .map(([key, n]) => `<span class="tag">${escapeHtml(t(key, { n }))}</span>`);
+  el.breakdown.innerHTML = chips.length ? `<span class="cap">${escapeHtml(t('bd.title'))}</span>${chips.join('')}` : '';
+
+  el.dlCsv.disabled = r.people.length === 0;
+  el.dlJson.disabled = r.people.length === 0;
+
+  if (!r.people.length) {
+    el.tablewrap.innerHTML = `<div class="empty">${escapeHtml(t('res.empty'))}</div>`;
+    return;
+  }
+
+  const cols = r.mode === 'full'
+    ? ['col.orcid', 'col.name', 'col.role', 'col.department', 'col.organization', 'col.start', 'col.end', 'col.matched']
+    : ['col.orcid', 'col.name', 'col.organization', 'col.matched'];
+
+  const head = cols.map((c) => `<th>${escapeHtml(t(c))}</th>`).join('');
+  const rows = r.people
+    .map((p) => {
+      const idCell = `<td class="nowrap"><a class="mono" href="https://orcid.org/${escapeHtml(p.orcid)}" target="_blank" rel="noreferrer">${escapeHtml(p.orcid)}</a></td>`;
+      const badge = `<td><span class="badge ${escapeHtml(p.matchedBy)}"${p.matchedBy === 'ror_only' ? ` title="${escapeHtml(t('matched.ror_only.title'))}"` : ''}>${escapeHtml(t(`matched.${p.matchedBy}`))}</span></td>`;
+      const cell = (v) => `<td>${escapeHtml(v ?? '')}</td>`;
+      return r.mode === 'full'
+        ? `<tr>${idCell}${cell(p.name)}${cell(p.roleTitle)}${cell(p.department)}${cell(p.organization)}<td class="nowrap">${escapeHtml(p.startDate ?? '')}</td><td class="nowrap">${escapeHtml(p.endDate ?? '')}</td>${badge}</tr>`
+        : `<tr>${idCell}${cell(p.name)}${cell(p.organization)}${badge}</tr>`;
+    })
+    .join('');
+  el.tablewrap.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── exports ─────────────────────────────────────────────────────────────────
+
+function meta() {
+  return {
+    query: last.query,
+    mode: last.mode,
+    filters: last.filters,
+    totalFound: last.totalFound,
+    scanned: last.scanned,
+    breakdown: last.breakdown,
+    retrievedAt: last.retrievedAt,
+  };
+}
+
+// ── boot ────────────────────────────────────────────────────────────────────
+
+initLang();
+initTheme();
+applyI18n();
+
+el.form.addEventListener('submit', (e) => { e.preventDefault(); run(); });
+el.cancel.addEventListener('click', () => controller?.abort());
+el.reset.addEventListener('click', () => {
+  writeForm({ rors: [], orgNames: [], byRor: true, byName: true, roleTitles: [], maxRows: 200 });
+  last = null;
+  el.results.hidden = true;
+  showError('');
+  history.replaceState(null, '', location.pathname);
+});
+el.dlCsv.addEventListener('click', () => {
+  if (last) downloadText(exportFilename(last.filters, 'csv'), 'text/csv', peopleToCsv(last.people));
+});
+el.dlJson.addEventListener('click', () => {
+  if (last) downloadText(exportFilename(last.filters, 'json'), 'application/json', peopleToJson(last.people, meta()));
+});
+// A URL that carries a search runs it: that is what makes a result linkable.
+const fromUrl = readUrl();
+if (fromUrl) { writeForm(fromUrl); run(fromUrl); }
