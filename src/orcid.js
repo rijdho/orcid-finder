@@ -19,7 +19,9 @@ const HEADERS = { Accept: 'application/json' };
 const TIMEOUT_MS = 20_000;
 
 /**
- * GET one JSON document, with a short backoff on 429 and 5xx.
+ * GET one JSON document, with a short backoff on 429 and 5xx. Shared by every
+ * API this tool touches, so a second copy cannot come to disagree about what a
+ * 429 means.
  *
  * Returns `null` rather than throwing: discovery fans out over hundreds of
  * records and a single unreachable one must not abort the whole run. A caller
@@ -28,7 +30,7 @@ const TIMEOUT_MS = 20_000;
  * 4xx other than 429 is not retried: a malformed query does not get better by
  * being asked again, and retrying it only spends the visitor's rate budget.
  */
-export async function orcidGet(url, { tries = 3, signal, fetchImpl = fetch, sleep = defaultSleep } = {}) {
+export async function getJson(url, { tries = 3, signal, fetchImpl = fetch, sleep = defaultSleep } = {}) {
   for (let attempt = 0; attempt < tries; attempt++) {
     if (signal?.aborted) return null;
     let res;
@@ -79,7 +81,7 @@ function joinSignals(signal, timeoutMs) {
  * two is the honest answer to "did I see everything?".
  */
 export async function expandedSearch(query, max, deps = {}) {
-  const get = deps.get ?? orcidGet;
+  const get = deps.get ?? getJson;
   const rows = [];
   let start = 0;
   let totalFound = 0;
@@ -98,6 +100,6 @@ export async function expandedSearch(query, max, deps = {}) {
 
 /** The employments section of one record. Null when ORCID could not be reached. */
 export function fetchEmployments(orcid, deps = {}) {
-  const get = deps.get ?? orcidGet;
+  const get = deps.get ?? getJson;
   return get(`${ORCID_API}/${orcid}/employments`, deps);
 }

@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import {
   buildQuery, isValidRor, normaliseRor, parseList, needsEmployments, activeCriteria,
   matchSearchRow, matchEmployments, hasEnded, formatOrcidDate, discoverPeople, normaliseOptions,
+  classifyAssertion,
 } from '../src/discover.js';
 import { expandedSearch } from '../src/orcid.js';
 
@@ -31,7 +32,7 @@ const employments = (...summaries) => ({
   'affiliation-group': summaries.map((s) => ({ summaries: [{ 'employment-summary': s }] })),
 });
 
-const emp = ({ name = 'Institute of Digital Sciences Austria', ror = null, role = null, dept = null, start = null, end = null } = {}) => ({
+const emp = ({ name = 'Institute of Digital Sciences Austria', ror = null, role = null, dept = null, start = null, end = null, source = null } = {}) => ({
   organization: {
     name,
     ...(ror ? { 'disambiguated-organization': { 'disambiguated-organization-identifier': ror } } : {}),
@@ -40,6 +41,23 @@ const emp = ({ name = 'Institute of Digital Sciences Austria', ror = null, role 
   'department-name': dept,
   'start-date': start,
   'end-date': end,
+  ...(source ? { source } : {}),
+});
+
+/** A self-asserted source: the record's own iD wrote the entry. */
+const selfSource = (orcid, who = 'Ada Lovelace') => ({
+  'source-orcid': { path: orcid },
+  'source-name': { value: who },
+  'source-client-id': null,
+});
+
+/** A member organisation's system wrote the entry. Both client-id shapes ORCID
+ *  issues are seen in the wild: an ORCID-format id and an APP- prefixed one. */
+const orgSource = (client = 'APP-4HOGAF1S1G7KC47J', who = 'TU Wien', origin = null) => ({
+  'source-orcid': null,
+  'source-client-id': { path: client },
+  'source-name': { value: who },
+  ...(origin ? { 'assertion-origin-name': { value: origin } } : {}),
 });
 
 // ── ROR ids ─────────────────────────────────────────────────────────────────
@@ -163,7 +181,7 @@ const TODAY = new Date('2026-06-15');
 test('full mode matches an employment by ROR id and reports its fields', () => {
   const doc = employments(emp({ name: 'Differently Worded', ror: 'https://ror.org/03yrm5c26', role: 'Professor', dept: 'CS', start: date(2024, 9, 1) }));
   const { stage, person } = matchEmployments(doc, row('0000-0001-0000-0007'), OPTS, TODAY);
-  assert.equal(stage, 4);
+  assert.equal(stage, 5, 'a kept candidate has passed every stage');
   assert.equal(person.roleTitle, 'Professor');
   assert.equal(person.department, 'CS');
   assert.equal(person.startDate, '2024-09-01');
@@ -182,12 +200,15 @@ test('full mode rejects at the stage the filter actually applies', () => {
   assert.equal(matchEmployments(noStart, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true }, TODAY).stage, 2);
 
   const ended = employments(emp({ role: 'Professor', start: date(2019, 1), end: date(2021, 6) }));
-  assert.equal(matchEmployments(ended, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true, currentOnly: true }, TODAY).stage, 3);
+  assert.equal(matchEmployments(ended, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true, currentOnly: true }, TODAY).stage, 4);
+
+  const selfOnly = employments(emp({ role: 'Professor', start: date(2019, 1), source: selfSource(r['orcid-id']) }));
+  assert.equal(matchEmployments(selfOnly, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true, assertedOnly: true }, TODAY).stage, 3);
 });
 
 test('full mode matches role titles case-insensitively, as a substring', () => {
   const doc = employments(emp({ role: 'Assistant Professor of Computer Science' }));
-  assert.equal(matchEmployments(doc, row('0000-0001-0000-0009'), { ...OPTS, roleTitles: ['PROFESSOR'] }, TODAY).stage, 4);
+  assert.equal(matchEmployments(doc, row('0000-0001-0000-0009'), { ...OPTS, roleTitles: ['PROFESSOR'] }, TODAY).stage, 5);
 });
 
 test('full mode takes the first employment that passes, not the first that matches us', () => {
@@ -254,7 +275,7 @@ test('full run: the breakdown attributes every rejection to one filter', async (
   assert.equal(r.people.length, 1);
   assert.equal(r.people[0].orcid, '0000-0001-0000-0030');
   assert.deepEqual(r.breakdown, {
-    noOrgMatch: 1, noRoleMatch: 1, noStartDate: 1, pastEmployment: 1, unreachable: 0,
+    noOrgMatch: 1, noRoleMatch: 1, noStartDate: 1, selfAsserted: null, pastEmployment: 1, unreachable: 0,
   });
 });
 
@@ -336,4 +357,102 @@ test('expandedSearch gives up quietly when the endpoint cannot be read', async (
   const { rows, totalFound } = await expandedSearch('q', 100, { get: async () => null });
   assert.deepEqual(rows, []);
   assert.equal(totalFound, 0);
+});
+
+// ── who asserted the employment ─────────────────────────────────────────────
+
+test('an employment whose source is the record itself is self-asserted', () => {
+  const id = '0000-0001-0000-0050';
+  const a = classifyAssertion(emp({ source: selfSource(id) }), id);
+  assert.equal(a.assertedBy, 'self');
+  assert.equal(a.assertionSource, 'Ada Lovelace');
+  assert.equal(a.assertionOrigin, null);
+});
+
+test('an employment written by a member client is organisation-asserted', () => {
+  const a = classifyAssertion(emp({ source: orgSource() }), '0000-0001-0000-0051');
+  assert.equal(a.assertedBy, 'organization');
+  assert.equal(a.assertionSource, 'TU Wien', 'the asserting body is named, not just flagged');
+});
+
+test('a client id in ORCID-iD form is still a client, not a person', () => {
+  // Karolinska Institutet's live client id has the shape of an ORCID iD; only
+  // the FIELD it sits in says whether a person or a system wrote the entry.
+  const a = classifyAssertion(emp({ source: orgSource('0000-0002-7539-5209', 'Karolinska Institutet') }), '0000-0001-0000-0052');
+  assert.equal(a.assertedBy, 'organization');
+  assert.equal(a.assertionSource, 'Karolinska Institutet');
+});
+
+test('a different person\'s iD as source is neither self nor organisation', () => {
+  const a = classifyAssertion(emp({ source: selfSource('0000-0009-9999-9999', 'A Trusted Colleague') }), '0000-0001-0000-0053');
+  assert.equal(a.assertedBy, 'other');
+});
+
+test('an employment with no source at all is unknown, never self', () => {
+  // Calling it self-asserted would report a guess as a finding.
+  const a = classifyAssertion(emp({}), '0000-0001-0000-0054');
+  assert.equal(a.assertedBy, 'unknown');
+  assert.equal(a.assertionSource, null);
+});
+
+test('the assertion origin is carried through when the source names one', () => {
+  const a = classifyAssertion(emp({ source: orgSource('APP-X', 'TU Wien', 'Ada Lovelace') }), '0000-0001-0000-0055');
+  assert.equal(a.assertedBy, 'organization');
+  assert.equal(a.assertionOrigin, 'Ada Lovelace');
+});
+
+test('a kept candidate carries the assertion onto the row', () => {
+  const r = row('0000-0001-0000-0056');
+  const doc = employments(emp({ role: 'Professor', source: orgSource('APP-X', 'Institute of Digital Sciences Austria') }));
+  const { person } = matchEmployments(doc, r, OPTS, TODAY);
+  assert.equal(person.assertedBy, 'organization');
+  assert.equal(person.assertionSource, 'Institute of Digital Sciences Austria');
+});
+
+test('assertedOnly keeps the organisation-asserted employment and drops the rest', () => {
+  const opts = { ...OPTS, assertedOnly: true };
+  const r1 = row('0000-0001-0000-0060');
+  const selfDoc = employments(emp({ role: 'Professor', source: selfSource(r1['orcid-id']) }));
+  assert.equal(matchEmployments(selfDoc, r1, opts, TODAY).person, null);
+
+  const r2 = row('0000-0001-0000-0061');
+  const orgDoc = employments(emp({ role: 'Professor', source: orgSource() }));
+  assert.equal(matchEmployments(orgDoc, r2, opts, TODAY).person.assertedBy, 'organization');
+});
+
+test('assertedOnly picks the asserted employment over an earlier self-asserted one', () => {
+  const r = row('0000-0001-0000-0062');
+  const doc = employments(
+    emp({ role: 'Guest', source: selfSource(r['orcid-id']) }),
+    emp({ role: 'Professor', source: orgSource() }),
+  );
+  const { person } = matchEmployments(doc, r, { ...OPTS, assertedOnly: true }, TODAY);
+  assert.equal(person.roleTitle, 'Professor');
+});
+
+test('fast mode reports no assertion at all, rather than guessing self', () => {
+  const p = matchSearchRow(row('0000-0001-0000-0063', ['Institute of Digital Sciences Austria']),
+    { orgNames: ['institute of digital sciences'], byRor: false });
+  assert.equal(p.assertedBy, null, 'null means the employment was never opened');
+});
+
+test('assertedOnly is one of the filters that force full mode', () => {
+  assert.equal(needsEmployments({ assertedOnly: true }), true);
+});
+
+test('the self-asserted drop is counted under its own filter', () => {
+  const rows = [row('0000-0001-0000-0070'), row('0000-0001-0000-0071')];
+  const docs = {
+    '0000-0001-0000-0070': employments(emp({ role: 'Professor', source: orgSource() })),
+    '0000-0001-0000-0071': employments(emp({ role: 'Professor', source: selfSource('0000-0001-0000-0071') })),
+  };
+  return discoverPeople(
+    { ...OPTS, roleTitles: ['professor'], assertedOnly: true },
+    { search: async () => ({ rows, totalFound: 2 }), employments: async (id) => docs[id], today: TODAY },
+  ).then((r) => {
+    assert.equal(r.people.length, 1);
+    assert.equal(r.breakdown.selfAsserted, 1);
+    assert.equal(r.breakdown.noRoleMatch, 0, 'the role filter ran and dropped nobody');
+    assert.equal(r.breakdown.pastEmployment, null, 'the current-appointment filter was not applied');
+  });
 });

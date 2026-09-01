@@ -15,7 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=3';
+import { fetchRorNames } from './ror.js?v=3';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
@@ -41,6 +42,7 @@ export const DEFAULT_OPTIONS = {
   roleTitles: [],
   requireStartDate: false,
   currentOnly: false,
+  assertedOnly: false,
   maxRows: 200,
 };
 
@@ -83,7 +85,7 @@ export function activeCriteria(o) {
 /** Do the active filters need the per-candidate employments call? */
 export function needsEmployments(o) {
   const opts = normaliseOptions(o);
-  return opts.roleTitles.length > 0 || !!opts.requireStartDate || !!opts.currentOnly;
+  return opts.roleTitles.length > 0 || !!opts.requireStartDate || !!opts.currentOnly || !!opts.assertedOnly;
 }
 
 /** The display name ORCID gives us, with the same precedence the API documents. */
@@ -117,11 +119,52 @@ export function hasEnded(end, today = new Date()) {
   return endDate < today;
 }
 
+/**
+ * Who put this employment on the record.
+ *
+ * ORCID records the writer of every item in `source`, and that is the difference
+ * between a claim and a corroborated one:
+ *
+ *   'self'         the researcher's own iD is the source. Nothing outside the
+ *                  record backs it.
+ *   'organization' a member's system wrote it: the university, a funder, a
+ *                  national aggregator. `assertionSource` names it.
+ *   'other'        another person's iD wrote it, which ORCID allows through a
+ *                  trusted-individual delegation.
+ *   'unknown'      the employment carries no source at all. Every record the
+ *                  live API returns carries one, so this is malformed input
+ *                  rather than a real case, but calling it 'self' would be a
+ *                  guess reported as a finding.
+ *
+ * `assertionOrigin` is what ORCID puts in `assertion-origin-*`: the party the
+ * source names as having asked for the assertion, when that is not the source
+ * itself. It is reported as it stands and nothing is inferred from it.
+ */
+export function classifyAssertion(emp, orcid) {
+  const src = emp?.source ?? {};
+  const clientId = src['source-client-id']?.path ?? null;
+  const sourceOrcid = src['source-orcid']?.path ?? null;
+  const assertionSource = src['source-name']?.value ?? null;
+  const assertionOrigin = src['assertion-origin-name']?.value ?? null;
+  if (clientId) return { assertedBy: 'organization', assertionSource, assertionOrigin };
+  if (!sourceOrcid) return { assertedBy: 'unknown', assertionSource, assertionOrigin };
+  if (sourceOrcid !== orcid) return { assertedBy: 'other', assertionSource, assertionOrigin };
+  return { assertedBy: 'self', assertionSource, assertionOrigin };
+}
+
+/**
+ * How far a candidate got through the employment filters. The number is what
+ * attributes a rejection to the filter that actually caused it, so the order
+ * here IS the order of the checks in `matchEmployments`: moving one without the
+ * other turns every count in the breakdown into fiction.
+ */
+const STAGE = { NONE: 0, ORG: 1, ROLE: 2, START: 3, ASSERTED: 4, KEPT: 5 };
+
 /** Lower-cased needles, computed once per run rather than once per candidate. */
-function needles(opts) {
+function needles(opts, extraNames = []) {
   return {
     rors: new Set(opts.rors),
-    names: opts.orgNames.map((n) => n.toLowerCase()),
+    names: [...new Set([...opts.orgNames, ...extraNames])].map((n) => n.toLowerCase()),
     roles: opts.roleTitles.map((s) => s.toLowerCase()),
   };
 }
@@ -153,6 +196,11 @@ export function matchSearchRow(row, opts, n = needles(normaliseOptions(opts))) {
     endDate: null,
     institutions: row['institution-name'] ?? [],
     matchedBy: matchesName ? 'name' : 'ror_only',
+    // Fast mode never opens an employment, so who asserted it is not known.
+    // Reporting 'self' here would be a guess dressed as a finding.
+    assertedBy: null,
+    assertionSource: null,
+    assertionOrigin: null,
   };
 }
 
@@ -167,7 +215,8 @@ export function matchSearchRow(row, opts, n = needles(normaliseOptions(opts))) {
  */
 export function matchEmployments(data, row, opts, today = new Date(), n = needles(normaliseOptions(opts))) {
   const o = normaliseOptions(opts);
-  let stage = 0;
+  const orcid = row['orcid-id'];
+  let stage = STAGE.NONE;
   for (const group of data?.['affiliation-group'] ?? []) {
     for (const s of group?.summaries ?? []) {
       const emp = s['employment-summary'] ?? s;
@@ -180,25 +229,29 @@ export function matchEmployments(data, row, opts, today = new Date(), n = needle
       const hit =
         (!!empRor && n.rors.has(empRor)) || n.names.some((needle) => empName.includes(needle));
       if (!hit) continue;
-      stage = Math.max(stage, 1);
+      stage = Math.max(stage, STAGE.ORG);
 
       if (n.roles.length) {
         const role = String(emp['role-title'] ?? '').toLowerCase();
         if (!n.roles.some((rt) => role.includes(rt))) continue;
       }
-      stage = Math.max(stage, 2);
+      stage = Math.max(stage, STAGE.ROLE);
 
       const start = emp['start-date'];
       if (o.requireStartDate && !start?.year?.value) continue;
-      stage = Math.max(stage, 3);
+      stage = Math.max(stage, STAGE.START);
+
+      const assertion = classifyAssertion(emp, orcid);
+      if (o.assertedOnly && assertion.assertedBy !== 'organization') continue;
+      stage = Math.max(stage, STAGE.ASSERTED);
 
       const end = emp['end-date'];
       if (o.currentOnly && hasEnded(end, today)) continue;
 
       return {
-        stage: 4,
+        stage: STAGE.KEPT,
         person: {
-          orcid: row['orcid-id'],
+          orcid,
           name: nameOf(row),
           givenName: row['given-names'] ?? null,
           familyName: row['family-names'] ?? null,
@@ -209,6 +262,7 @@ export function matchEmployments(data, row, opts, today = new Date(), n = needle
           endDate: formatOrcidDate(end),
           institutions: row['institution-name'] ?? [],
           matchedBy: 'employment',
+          ...assertion,
         },
       };
     }
@@ -222,6 +276,7 @@ function emptyBreakdown(o) {
     noOrgMatch: 0,
     noRoleMatch: o.roleTitles.length ? 0 : null,
     noStartDate: o.requireStartDate ? 0 : null,
+    selfAsserted: o.assertedOnly ? 0 : null,
     pastEmployment: o.currentOnly ? 0 : null,
     unreachable: 0,
   };
@@ -238,19 +293,32 @@ export async function discoverPeople(options, deps = {}) {
   const query = buildQuery(o);
   const breakdown = emptyBreakdown(o);
   if (!query)
-    return { people: [], breakdown, totalFound: 0, scanned: 0, query: '', mode: 'fast', aborted: false };
+    return { people: [], breakdown, totalFound: 0, scanned: 0, query: '', rorNames: [], mode: 'fast', aborted: false };
 
   const search = deps.search ?? ((q, max) => expandedSearch(q, max, deps));
   const employments = deps.employments ?? ((id) => fetchEmployments(id, deps));
+  const resolveRorNames = deps.resolveRorNames ?? ((id) => fetchRorNames(id, deps));
   const onProgress = deps.onProgress ?? (() => {});
   const concurrency = deps.concurrency ?? 6;
   const today = deps.today ?? new Date();
-  const n = needles(o);
-
-  onProgress({ phase: 'search', done: 0, total: o.maxRows });
-  const { rows, totalFound } = await search(query, o.maxRows);
   const full = needsEmployments(o);
-  const base = { breakdown, totalFound, scanned: rows.length, query, mode: full ? 'full' : 'fast' };
+
+  // Full mode compares each employment against the institution, and ORCID lets
+  // an employment be disambiguated with RINGGOLD or FUNDREF instead of ROR, or
+  // with nothing at all. Matching on the ROR id alone would drop exactly the
+  // employments an institution's own system asserts, which is the opposite of
+  // what the asserted-only filter is for. So resolve the ROR ids to their
+  // registered names first and match on those too. One request per ROR id, run
+  // alongside the search rather than after it.
+  const wantsRorNames = full && o.byRor && o.rors.length > 0;
+  onProgress({ phase: 'search', done: 0, total: o.maxRows });
+  const [{ rows, totalFound }, rorNameLists] = await Promise.all([
+    search(query, o.maxRows),
+    wantsRorNames ? Promise.all(o.rors.map(resolveRorNames)) : Promise.resolve([]),
+  ]);
+  const rorNames = [...new Set(rorNameLists.flat())];
+  const n = needles(o, rorNames);
+  const base = { breakdown, totalFound, scanned: rows.length, query, rorNames, mode: full ? 'full' : 'fast' };
 
   if (!full) {
     const people = [];
@@ -280,9 +348,10 @@ export async function discoverPeople(options, deps = {}) {
     for (const res of outcomes) {
       if (res.person) people.push(res.person);
       else if (res.stage === -1) breakdown.unreachable++;
-      else if (res.stage === 3) breakdown.pastEmployment = (breakdown.pastEmployment ?? 0) + 1;
-      else if (res.stage === 2) breakdown.noStartDate = (breakdown.noStartDate ?? 0) + 1;
-      else if (res.stage === 1) breakdown.noRoleMatch = (breakdown.noRoleMatch ?? 0) + 1;
+      else if (res.stage === STAGE.ASSERTED) breakdown.pastEmployment = (breakdown.pastEmployment ?? 0) + 1;
+      else if (res.stage === STAGE.START) breakdown.selfAsserted = (breakdown.selfAsserted ?? 0) + 1;
+      else if (res.stage === STAGE.ROLE) breakdown.noStartDate = (breakdown.noStartDate ?? 0) + 1;
+      else if (res.stage === STAGE.ORG) breakdown.noRoleMatch = (breakdown.noRoleMatch ?? 0) + 1;
       else breakdown.noOrgMatch++;
     }
     done += batch.length;

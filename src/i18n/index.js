@@ -9,9 +9,9 @@
 //    never keys here: they are the API's vocabulary and stay as written in every
 //    locale.
 
-import { en } from './en.js';
-import { de } from './de.js';
-import { es } from './es.js';
+import { en } from './en.js?v=3';
+import { de } from './de.js?v=3';
+import { es } from './es.js?v=3';
 
 export const LOCALES = { en, de, es };
 
@@ -28,10 +28,9 @@ export const DEFAULT_LANG = 'en';
 const isSupported = (code) => Object.prototype.hasOwnProperty.call(LOCALES, code);
 
 // The selected language lives on a global slot rather than in a module-local
-// `let`. ES modules are cached per resolved URL, so importing this file as
-// './i18n/index.js' from one module and './i18n/index.js?v=3' from another gives
-// TWO instances with independent state, and half the page would keep rendering
-// the old language.
+// `let`. ES modules are cached per resolved URL, so importing this file at two
+// different cache-busting versions gives TWO instances with independent state,
+// and half the page would keep rendering the old language.
 const state = (globalThis.__orcidFinderI18n ??= { lang: DEFAULT_LANG });
 
 export const getLang = () => state.lang;

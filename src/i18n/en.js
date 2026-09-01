@@ -2,12 +2,12 @@
 // the other catalogues to this key set.
 export const en = {
   'meta.description':
-    'Search ORCID for the accounts that declare an institution, by ROR id or organisation name, narrow by role title, start date and current appointments, and download the result as CSV or JSON.',
+    'Search ORCID for the accounts that declare an institution, by ROR id or organisation name, narrow by role title, start date, current appointments and who asserted the record, and download the result as CSV or JSON.',
 
   'ui.brand.tagline': 'Find the ORCID accounts that declare an institution',
   'ui.brand.source': 'source ↗',
   'ui.lede':
-    'Give it a <b>ROR id</b> or an organisation name and it lists the ORCID accounts that declare that affiliation, then lets you narrow the list by role title, start date and whether the appointment is still current. The table downloads as <b>CSV</b> or <b>JSON</b>. Everything runs in your browser against the ORCID public API: no account, no key, and nothing passes through a server of ours.',
+    'Give it a <b>ROR id</b> or an organisation name and it lists the ORCID accounts that declare that affiliation, then lets you narrow the list by role title, start date, whether the appointment is still current, and whether an organisation asserted it rather than the researcher. The table downloads as <b>CSV</b> or <b>JSON</b>. Everything runs in your browser against the public ORCID and ROR APIs: no account, no key, and nothing passes through a server of ours.',
   'ui.lang.aria': 'Language',
   'ui.theme.title': 'Toggle light/dark theme',
   'ui.theme.aria': 'Toggle light/dark theme',
@@ -30,7 +30,7 @@ export const en = {
   'form.currentOnly': 'Only current appointments',
   'form.requireStartDate': 'Must have a start date',
   'form.employmentsHint':
-    'These three read each candidate’s ORCID employment record: one extra request per candidate, so the search gets slower but far more precise.',
+    'These four read each candidate’s ORCID employment record: one extra request per candidate, so the search gets slower but far more precise.',
   'form.maxRows.label': 'Max candidates',
   'form.maxRows.hint':
     'How many of the matching accounts to pull and examine. ORCID pages them 100 at a time; 1000 is the ceiling here.',
@@ -56,6 +56,7 @@ export const en = {
   'res.empty': 'No account matched. Loosen a filter, or check the ROR id.',
   'res.query': 'Query sent to ORCID',
 
+  'res.rorNames': 'Also matched on the names ROR registers for the id: {names}',
   'bd.title': 'What the filters dropped',
   'bd.noOrgMatch': '{n} no affiliation match',
   'bd.noRoleMatch': '{n} role title did not match',
@@ -82,18 +83,42 @@ export const en = {
   'matched.ror_only.title':
     'ORCID matched the ROR id, but the institution name it lists is worded differently. This is normal and the match is genuine.',
 
+
+  'nav.label': 'View',
+  'nav.search': 'Search',
+  'rail.data': 'Data from ORCID and ROR',
+  'form.assertedOnly': 'Only records asserted by an organisation',
+  'bd.selfAsserted': '{n} self-asserted only',
+  'col.asserted': 'Asserted by',
+  'asserted.self': 'self',
+  'asserted.organization': 'organisation',
+  'asserted.other': 'another iD',
+  'asserted.unknown': 'unknown',
+  'asserted.unknown.title':
+    'The employment carries no source, so who wrote it cannot be said. This does not mean the researcher wrote it.',
+  'asserted.self.title':
+    'The researcher entered this employment themselves. It may be perfectly accurate, but nothing outside the record stands behind it.',
+  'asserted.organization.title':
+    'A member organisation’s system wrote this employment into the record, so a second party stands behind it.',
+  'asserted.other.title':
+    'Another ORCID iD wrote this employment, which ORCID allows through a trusted-individual delegation.',
+
   'how.title': 'How it works',
   'how.body':
     '<p>The tool uses two endpoints of the ORCID public API. Which one runs is decided by the filters you tick.</p>' +
     '<p><b>Fast mode</b> is a single <code>expanded-search</code> call, OR-ing your criteria into one query. It returns names and the institution names ORCID has indexed for each account, so it answers "who declares this affiliation" in seconds however large the result.</p>' +
-    '<p><b>Full mode</b> starts when you filter on role title, start date or current appointments. Those three fields exist only inside a record’s <code>/employments</code> document, so the tool reads one per candidate. That is one HTTP request each: precise, and proportionally slower.</p>' +
+    '<p><b>Full mode</b> starts when you filter on role title, start date, current appointments or who asserted the record. Those fields exist only inside a record’s <code>/employments</code> document, so the tool reads one per candidate. That is one HTTP request each: precise, and proportionally slower.</p>' +
+    '<p><b>Who asserted the record</b> is the field ORCID calls the source. An employment the researcher typed in carries their own iD as its source; one written by a member organisation’s system, typically the university itself, carries that client instead, and the table names it. Both are shown, because the difference is between a claim and a claim a second party stands behind.</p>' +
     '<p>A candidate found by ROR is kept even when the institution name on the record reads differently, because <code>expanded-search</code> returns those names without per-entry ROR ids. Dropping them would throw away exactly the records the ROR criterion was chosen to find. Such rows are marked <b>ROR only</b>.</p>' +
+    '<p><b>The ROR id alone is not enough</b> to recognise an employment. ORCID lets one be disambiguated with any scheme, and the identifiers an institution’s own system writes are frequently RINGGOLD or FUNDREF rather than ROR, which would drop exactly the organisation-asserted records. So each ROR id is first resolved to the names the registry holds for it, and those are matched on too. The result says which names it used. Registered acronyms are left out: a two-letter needle matches a large part of ORCID.</p>' +
     '<p>Every count of what a filter dropped is attributed to the filter that actually dropped it, so a filter doing nothing is visible as a zero rather than hidden behind an earlier one.</p>',
 
   'caveats.title': 'Caveats',
   'caveats.body':
     '<ul>' +
-    '<li><b>ORCID is self-asserted.</b> A record says what its owner typed. An institution’s real roster is larger than what ORCID shows and may differ in role titles, spelling and dates.</li>' +
+    '<li><b>Most of ORCID is self-asserted.</b> A record usually says what its owner typed. An institution’s real roster is larger than what ORCID shows and may differ in role titles, spelling and dates.</li>' +
+    '<li><b>An organisation-asserted employment is evidence, not proof of the present.</b> It says that a member’s system wrote the entry at some point. It does not say the appointment still runs, and it does not mean the asserting organisation is the employer: funders and national aggregators assert too, which is why the table names the source.</li>' +
+    '<li><b>Fast mode reports no source at all.</b> Who asserted an employment lives in the employment record, so the column is empty until a filter opens it. Empty means unknown, never self-asserted.</li>' +
     '<li><b>Absence is not evidence.</b> Staff who never added the affiliation, or who have no ORCID at all, cannot appear here. This is a discovery tool, not a headcount.</li>' +
     '<li><b>Names match as substrings.</b> "Vienna" matches every institution whose name contains it. The ROR id is the precise criterion; the name is the fallback for records that carry no ROR.</li>' +
     '<li><b>Only the first employment that qualifies is reported.</b> A person with several appointments at the same institution is shown once, under the one that passed your filters.</li>' +
@@ -103,8 +128,8 @@ export const en = {
 
   'about.title': 'About',
   'about.body':
-    '<p>orcid-finder is a single static page: no build step, no backend, no tracking, no cookies. It talks to <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">the ORCID public API</a> directly from your browser, so no server of ours ever sees what you search for. The only thing it keeps is the language and theme you picked, in your browser’s own storage.</p>' +
+    '<p>orcid-finder is a single static page: no build step, no backend, no tracking, no cookies. It talks to <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">the ORCID public API</a> and to <a href="https://ror.readme.io/" target="_blank" rel="noreferrer">the ROR API</a> directly from your browser, so no server of ours ever sees what you search for. Those two are the only hosts the page contacts. The only thing it keeps is the language and theme you picked, in your browser’s own storage.</p>' +
     '<p>The filter set comes from a research-information system’s roster discovery, lifted out of its database so anyone can run the same search without one.</p>',
   'about.footer':
-    'Built by <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · MIT licensed · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">source on GitHub</a> · data from ORCID, used under their public API terms',
+    'Built by <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · MIT licensed · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">source on GitHub</a> · data from ORCID and ROR, used under their public API terms',
 };

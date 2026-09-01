@@ -18,6 +18,9 @@ const person = (over = {}) => ({
   endDate: null,
   institutions: ['Brown University', 'Wesleyan University'],
   matchedBy: 'employment',
+  assertedBy: 'organization',
+  assertionSource: 'Brown University',
+  assertionOrigin: null,
   ...over,
 });
 
@@ -121,4 +124,19 @@ test('the filename names what the file holds', () => {
 test('a filename made only of punctuation still has a name', () => {
   assert.equal(exportFilename({ orgNames: ['!!!'] }, 'csv', new Date('2026-08-31T10:00:00Z')),
     'orcid-finder-search-2026-08-31.csv');
+});
+
+test('the assertion is exported as three columns, source named', () => {
+  const r = toRecord(person());
+  assert.equal(r.asserted_by, 'organization');
+  assert.equal(r.assertion_source, 'Brown University');
+  assert.equal(r.assertion_origin, '');
+});
+
+test('an unknown assertion exports empty, never "self"', () => {
+  // Fast mode never opens an employment, so the field is absent rather than
+  // self-asserted. Filling it in would turn a gap into a claim.
+  const r = toRecord(person({ assertedBy: null, assertionSource: null }));
+  assert.equal(r.asserted_by, '');
+  assert.equal(r.assertion_source, '');
 });

@@ -2,25 +2,43 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { discoverPeople, isValidRor, normaliseRor, parseList } from './discover.js';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js';
+import { discoverPeople, isValidRor, normaliseRor, parseList } from './discover.js?v=3';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=3';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=3';
 
 const $ = (id) => document.getElementById(id);
 const el = {
   form: $('search'), go: $('go'), cancel: $('cancel'), reset: $('reset'),
   error: $('error'), progress: $('progress'), barFill: $('bar-fill'), barLabel: $('bar-label'),
   results: $('results'), summary: $('summary'), breakdown: $('breakdown'), query: $('query'),
-  modeTag: $('mode-tag'), tablewrap: $('tablewrap'),
+  modeTag: $('mode-tag'), tablewrap: $('tablewrap'), cmdTitle: $('cmd-title'), rorNames: $('ror-names'),
   dlCsv: $('dl-csv'), dlJson: $('dl-json'), lang: $('lang'), theme: $('theme'),
 };
 
+const VIEWS = ['search', 'how', 'caveats', 'about'];
+const VIEW_TITLE = { search: 'nav.search', how: 'how.title', caveats: 'caveats.title', about: 'about.title' };
+
 /** The last completed run, which is what the export buttons write out. */
 let last = null;
+/** The options of the most recent run, set before it finishes. `last` is not
+ *  enough: a view change while the first search is still in flight would
+ *  otherwise rewrite the URL without the search in it. */
+let searched = null;
 let controller = null;
+let view = 'search';
 
 const escapeHtml = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+// ── views ───────────────────────────────────────────────────────────────────
+
+function showView(next) {
+  view = VIEWS.includes(next) ? next : 'search';
+  for (const node of document.querySelectorAll('.view')) node.hidden = node.dataset.view !== view;
+  for (const b of document.querySelectorAll('.nav-item')) b.classList.toggle('active', b.dataset.view === view);
+  el.cmdTitle.textContent = t(VIEW_TITLE[view]);
+  writeUrl();
+}
 
 // ── i18n ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +51,8 @@ function applyI18n() {
       const [attr, key] = pair.split(':');
       if (attr && key) node.setAttribute(attr.trim(), t(key.trim()));
     }
-  for (const b of el.lang.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.code === getLang()));
+  for (const b of el.lang.querySelectorAll('button')) b.setAttribute('aria-current', String(b.dataset.code === getLang()));
+  el.cmdTitle.textContent = t(VIEW_TITLE[view]);
   // The rendered result carries translated headers and labels, so it has to be
   // redrawn: switching language with a table on screen must not leave it in the
   // language it was drawn in.
@@ -42,7 +61,7 @@ function applyI18n() {
 
 function initLang() {
   el.lang.innerHTML = LANGS.map(
-    (l) => `<button type="button" data-code="${l.code}" aria-pressed="false">${l.label}</button>`,
+    (l) => `<button type="button" data-code="${l.code}" aria-current="false" title="${escapeHtml(l.label)}">${l.code.toUpperCase()}</button>`,
   ).join('');
   el.lang.addEventListener('click', (e) => {
     const code = e.target.closest('button')?.dataset.code;
@@ -50,6 +69,7 @@ function initLang() {
     setLang(code);
     try { localStorage.setItem('orcid-finder:lang', code); } catch { /* private mode */ }
     applyI18n();
+    writeUrl();
   });
   let stored = null;
   try { stored = localStorage.getItem('orcid-finder:lang'); } catch { /* private mode */ }
@@ -58,12 +78,10 @@ function initLang() {
 }
 
 // ── theme ───────────────────────────────────────────────────────────────────
+// The stored theme is stamped on <html> by an inline script in the head, before
+// first paint, so nothing flashes here.
 
 function initTheme() {
-  let stored = null;
-  try { stored = localStorage.getItem('orcid-finder:theme'); } catch { /* private mode */ }
-  if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
-  paintThemeButton();
   el.theme.addEventListener('click', () => {
     const dark = document.documentElement.dataset.theme
       ? document.documentElement.dataset.theme === 'dark'
@@ -71,15 +89,7 @@ function initTheme() {
     const next = dark ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
     try { localStorage.setItem('orcid-finder:theme', next); } catch { /* private mode */ }
-    paintThemeButton();
   });
-}
-
-function paintThemeButton() {
-  const dark = document.documentElement.dataset.theme
-    ? document.documentElement.dataset.theme === 'dark'
-    : matchMedia('(prefers-color-scheme: dark)').matches;
-  el.theme.textContent = dark ? '☀' : '☾';
 }
 
 // ── form ↔ options ──────────────────────────────────────────────────────────
@@ -93,6 +103,7 @@ function readForm() {
     roleTitles: parseList($('roleTitles').value),
     currentOnly: $('currentOnly').checked,
     requireStartDate: $('requireStartDate').checked,
+    assertedOnly: $('assertedOnly').checked,
     maxRows: parseInt($('maxRows').value, 10) || 200,
   };
 }
@@ -105,23 +116,30 @@ function writeForm(o) {
   $('roleTitles').value = (o.roleTitles ?? []).join(', ');
   $('currentOnly').checked = !!o.currentOnly;
   $('requireStartDate').checked = !!o.requireStartDate;
+  $('assertedOnly').checked = !!o.assertedOnly;
   $('maxRows').value = o.maxRows ?? 200;
 }
 
 /**
- * Mirror the search into the URL, so a result can be linked, bookmarked and
- * cited. A tool whose output cannot be pointed at is not reproducible.
+ * Mirror the search, the language and the view into the URL, so a result can be
+ * linked, bookmarked and cited. A tool whose output cannot be pointed at is not
+ * reproducible.
  */
-function syncUrl(o) {
+function writeUrl(options) {
+  const o = options ?? searched;
   const p = new URLSearchParams();
-  if (o.rors.length) p.set('ror', o.rors.join(','));
-  if (o.orgNames.length) p.set('org', o.orgNames.join(','));
-  if (!o.byRor) p.set('byRor', '0');
-  if (!o.byName) p.set('byName', '0');
-  if (o.roleTitles.length) p.set('role', o.roleTitles.join(','));
-  if (o.currentOnly) p.set('current', '1');
-  if (o.requireStartDate) p.set('started', '1');
-  if (o.maxRows !== 200) p.set('max', String(o.maxRows));
+  if (o) {
+    if (o.rors.length) p.set('ror', o.rors.join(','));
+    if (o.orgNames.length) p.set('org', o.orgNames.join(','));
+    if (!o.byRor) p.set('byRor', '0');
+    if (!o.byName) p.set('byName', '0');
+    if (o.roleTitles.length) p.set('role', o.roleTitles.join(','));
+    if (o.currentOnly) p.set('current', '1');
+    if (o.requireStartDate) p.set('started', '1');
+    if (o.assertedOnly) p.set('asserted', '1');
+    if (o.maxRows !== 200) p.set('max', String(o.maxRows));
+  }
+  if (view !== 'search') p.set('view', view);
   p.set('lang', getLang());
   history.replaceState(null, '', `${location.pathname}?${p}`);
 }
@@ -137,6 +155,7 @@ function readUrl() {
     roleTitles: parseList(p.get('role')),
     currentOnly: p.get('current') === '1',
     requireStartDate: p.get('started') === '1',
+    assertedOnly: p.get('asserted') === '1',
     maxRows: parseInt(p.get('max') ?? '200', 10) || 200,
   };
 }
@@ -165,7 +184,8 @@ async function run(options) {
   if (!((o.byRor && o.rors.length) || (o.byName && o.orgNames.length)))
     return showError(t('err.noCriteria'));
 
-  syncUrl(o);
+  searched = o;
+  writeUrl(o);
   controller = new AbortController();
   busy(true);
   el.barLabel.textContent = t('status.searching');
@@ -195,14 +215,11 @@ async function run(options) {
 function render(r) {
   el.results.hidden = false;
   el.modeTag.textContent = t(r.mode === 'full' ? 'res.mode.full' : 'res.mode.fast');
-  el.summary.textContent =
-    [
-      t('res.summary', { kept: r.people.length, scanned: r.scanned }),
-      t('res.totalFound', { total: r.totalFound.toLocaleString(getLang()) }),
-      r.aborted ? t('res.aborted') : '',
-    ]
-      .filter(Boolean)
-      .join(' ');
+  el.summary.textContent = [
+    t('res.summary', { kept: r.people.length, scanned: r.scanned }),
+    t('res.totalFound', { total: r.totalFound.toLocaleString(getLang()) }),
+    r.aborted ? t('res.aborted') : '',
+  ].filter(Boolean).join(' ');
   el.query.textContent = `${t('res.query')}: ${r.query}`;
 
   const b = r.breakdown;
@@ -210,6 +227,7 @@ function render(r) {
     ['bd.noOrgMatch', b.noOrgMatch],
     ['bd.noRoleMatch', b.noRoleMatch],
     ['bd.noStartDate', b.noStartDate],
+    ['bd.selfAsserted', b.selfAsserted],
     ['bd.pastEmployment', b.pastEmployment],
     ['bd.unreachable', b.unreachable],
   ]
@@ -217,7 +235,14 @@ function render(r) {
     // means it ran and dropped nobody, which is worth showing.
     .filter(([, n]) => n !== null && n !== undefined && n > 0)
     .map(([key, n]) => `<span class="tag">${escapeHtml(t(key, { n }))}</span>`);
-  el.breakdown.innerHTML = chips.length ? `<span class="cap">${escapeHtml(t('bd.title'))}</span>${chips.join('')}` : '';
+  el.breakdown.innerHTML = chips.length
+    ? `<span class="col-title">${escapeHtml(t('bd.title'))}</span>${chips.join('')}`
+    : '';
+  // What the affiliation check actually compared against, when it is more than
+  // the ROR id the user typed.
+  el.rorNames.innerHTML = r.rorNames?.length
+    ? `<span class="tag">${escapeHtml(t('res.rorNames', { names: r.rorNames.join(', ') }))}</span>`
+    : '';
 
   el.dlCsv.disabled = r.people.length === 0;
   el.dlJson.disabled = r.people.length === 0;
@@ -227,35 +252,50 @@ function render(r) {
     return;
   }
 
+  // 'Matched by' is only shown in fast mode. In full mode every kept row matched
+  // through an employment by construction, so the column would repeat one word
+  // down the table and push the columns that do carry information off the edge.
   const cols = r.mode === 'full'
-    ? ['col.orcid', 'col.name', 'col.role', 'col.department', 'col.organization', 'col.start', 'col.end', 'col.matched']
+    ? ['col.orcid', 'col.name', 'col.role', 'col.department', 'col.organization', 'col.start', 'col.end', 'col.asserted']
     : ['col.orcid', 'col.name', 'col.organization', 'col.matched'];
 
   const head = cols.map((c) => `<th>${escapeHtml(t(c))}</th>`).join('');
-  const rows = r.people
-    .map((p) => {
-      const idCell = `<td class="nowrap"><a class="mono" href="https://orcid.org/${escapeHtml(p.orcid)}" target="_blank" rel="noreferrer">${escapeHtml(p.orcid)}</a></td>`;
-      const badge = `<td><span class="badge ${escapeHtml(p.matchedBy)}"${p.matchedBy === 'ror_only' ? ` title="${escapeHtml(t('matched.ror_only.title'))}"` : ''}>${escapeHtml(t(`matched.${p.matchedBy}`))}</span></td>`;
-      const cell = (v) => `<td>${escapeHtml(v ?? '')}</td>`;
-      return r.mode === 'full'
-        ? `<tr>${idCell}${cell(p.name)}${cell(p.roleTitle)}${cell(p.department)}${cell(p.organization)}<td class="nowrap">${escapeHtml(p.startDate ?? '')}</td><td class="nowrap">${escapeHtml(p.endDate ?? '')}</td>${badge}</tr>`
-        : `<tr>${idCell}${cell(p.name)}${cell(p.organization)}${badge}</tr>`;
-    })
-    .join('');
+  const rows = r.people.map((p) => {
+    const cell = (v) => `<td>${escapeHtml(v ?? '')}</td>`;
+    const idCell = `<td class="nowrap"><a class="mono" href="https://orcid.org/${escapeHtml(p.orcid)}" target="_blank" rel="noreferrer">${escapeHtml(p.orcid)}</a></td>`;
+    const matched = () => badge(p.matchedBy, t(`matched.${p.matchedBy}`), p.matchedBy === 'ror_only' ? t('matched.ror_only.title') : null);
+    return r.mode === 'full'
+      ? `<tr>${idCell}${cell(p.name)}${cell(p.roleTitle)}${cell(p.department)}${cell(p.organization)}` +
+        `<td class="nowrap">${escapeHtml(p.startDate ?? '')}</td><td class="nowrap">${escapeHtml(p.endDate ?? '')}</td>` +
+        `${assertionCell(p)}</tr>`
+      : `<tr>${idCell}${cell(p.name)}${cell(p.organization)}${matched()}</tr>`;
+  }).join('');
   el.tablewrap.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+const badge = (kind, label, title) =>
+  `<td><span class="badge ${escapeHtml(kind)}"${title ? ` title="${escapeHtml(title)}"` : ''}>${escapeHtml(label)}</span></td>`;
+
+/**
+ * Who asserted the employment. An organisation-asserted row shows the asserting
+ * body by name, because "asserted by an organisation" is only worth anything
+ * when the reader can see which one.
+ */
+function assertionCell(p) {
+  if (!p.assertedBy) return '<td></td>';
+  const label = p.assertedBy === 'organization' && p.assertionSource
+    ? p.assertionSource
+    : t(`asserted.${p.assertedBy}`);
+  return badge(p.assertedBy, label, t(`asserted.${p.assertedBy}.title`));
 }
 
 // ── exports ─────────────────────────────────────────────────────────────────
 
 function meta() {
   return {
-    query: last.query,
-    mode: last.mode,
-    filters: last.filters,
-    totalFound: last.totalFound,
-    scanned: last.scanned,
-    breakdown: last.breakdown,
-    retrievedAt: last.retrievedAt,
+    query: last.query, mode: last.mode, filters: last.filters,
+    totalFound: last.totalFound, scanned: last.scanned, rorNames: last.rorNames,
+    breakdown: last.breakdown, retrievedAt: last.retrievedAt,
   };
 }
 
@@ -263,16 +303,19 @@ function meta() {
 
 initLang();
 initTheme();
-applyI18n();
+
+for (const b of document.querySelectorAll('.nav-item'))
+  b.addEventListener('click', () => showView(b.dataset.view));
 
 el.form.addEventListener('submit', (e) => { e.preventDefault(); run(); });
 el.cancel.addEventListener('click', () => controller?.abort());
 el.reset.addEventListener('click', () => {
   writeForm({ rors: [], orgNames: [], byRor: true, byName: true, roleTitles: [], maxRows: 200 });
   last = null;
+  searched = null;
   el.results.hidden = true;
   showError('');
-  history.replaceState(null, '', location.pathname);
+  writeUrl();
 });
 el.dlCsv.addEventListener('click', () => {
   if (last) downloadText(exportFilename(last.filters, 'csv'), 'text/csv', peopleToCsv(last.people));
@@ -280,6 +323,16 @@ el.dlCsv.addEventListener('click', () => {
 el.dlJson.addEventListener('click', () => {
   if (last) downloadText(exportFilename(last.filters, 'json'), 'application/json', peopleToJson(last.people, meta()));
 });
-// A URL that carries a search runs it: that is what makes a result linkable.
+
+// Read the URL BEFORE anything writes to it. showView() rewrites the query
+// string, so reading afterwards finds a URL this file has already emptied, and
+// a linked search silently becomes a blank form.
 const fromUrl = readUrl();
-if (fromUrl) { writeForm(fromUrl); run(fromUrl); }
+const startView = new URLSearchParams(location.search).get('view');
+if (VIEWS.includes(startView)) view = startView;
+if (fromUrl) { searched = fromUrl; writeForm(fromUrl); }
+applyI18n();
+showView(view);
+
+// A URL that carries a search runs it: that is what makes a result linkable.
+if (fromUrl) run(fromUrl);

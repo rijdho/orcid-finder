@@ -3,11 +3,11 @@
 //
 //   python3 -m http.server 8777 &          # from the repo root
 //   npm i puppeteer                        # or point CHROME_PATH at an existing Chrome
-//   node docs/screenshots.mjs docs "http://localhost:8777/?ror=03yrm5c26&byName=0&max=16&current=1&started=1&lang=en"
+//   node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=40&asserted=1&lang=en"
 //
-// The California Digital Library (ROR 03yrm5c26) at max=16 is the reference
-// sample: small enough to run in seconds, and it exercises every filter, since
-// some of its records lack a start date and some appointments have ended.
+// Karolinska Institutet (ROR 056d84691) at max=40 with the asserted-only filter
+// is the reference sample: it is the case that exposed the RINGGOLD matching
+// defect, so it exercises ROR name resolution and the assertion column at once.
 // ORCID is live data, so the counts drift. Change the query and the README alt
 // text needs updating with the numbers actually on screen.
 
@@ -33,15 +33,16 @@ await page.goto(URL, { waitUntil: 'networkidle2', timeout: 90000 });
 // The search runs from the URL on load; wait for the table rather than a timer.
 await page.waitForSelector('#tablewrap tbody tr', { timeout: 90000 });
 
-// The sticky command bar would overlap the top of any element shot.
+// The whole shell first: rail, command bar and the filter panel, which is what
+// the reader sees on arrival.
+await page.screenshot({ path: `${OUT}/app.png` });
+console.log('OK   app.png');
+
+// Then the result on its own. The sticky command bar would overlap the top of
+// an element shot, so it is hidden for the rest.
 await page.evaluate(() => { document.querySelector('.cmdbar').style.visibility = 'hidden'; });
 
-const shots = [
-  ['filters.png', '#search'],
-  ['results.png', '#results'],
-];
-
-for (const [file, selector] of shots) {
+for (const [file, selector] of [['results.png', '#results']]) {
   const handle = await page.$(selector);
   if (!handle) { console.log(`SKIP ${file}, no ${selector}`); continue; }
   await handle.scrollIntoView();

@@ -11,6 +11,8 @@ touches the network.**
 - `src/discover.js` holds the filters. Its functions are pure except `discoverPeople`, which
   takes its HTTP through a `deps` object. That is what lets `tests/discover.test.mjs` drive the
   whole filter chain offline with exact expected values.
+- `src/ror.js` resolves a ROR id to its registered names. It exists for one reason, recorded
+  below; it is not a convenience.
 - `src/exporters.js` holds CSV and JSON. No DOM except `downloadText`, which no-ops outside a
   browser so Node can import the module.
 - `src/app.js` moves values between the form and those modules. If a piece of logic is worth a
@@ -35,6 +37,18 @@ three locale strings, and a control in `index.html`. In that order.
   staff from a roster in silence.
 - **`maxRows` has no `step`.** With `min=1`, a step of 10 makes the browser silently reject the
   default 200 on submit.
+- **ROR ids are resolved to names before the employment checks run.** ORCID lets an employment
+  be disambiguated with any scheme, and an institution's own integration frequently writes
+  RINGGOLD or FUNDREF. Matching on the ROR id alone dropped every organisation-asserted record:
+  Karolinska by ROR with the asserted-only filter returned nothing at all. Acronyms and names
+  under four characters are excluded, because `KI` as a substring matches a large part of ORCID.
+- **`assertedBy` is `null` in fast mode and `'unknown'` when the source is absent.** Neither is
+  `'self'`. Filling either in would report a guess as a finding.
+- **Every relative import carries `?v=N`, and every N is the same.** There is no bundler, so the
+  query string is the only cache-buster. Versioning only the entry module once served a cached
+  `orcid.js` against a fresh `ror.js` that imported a symbol it did not export: the module graph
+  aborted with no visible error and the tool came up blank while looking deployed.
+  `tests/cachebust.test.mjs` pins this; bump `index.html` and every import together.
 
 ## House rules inherited from the family
 

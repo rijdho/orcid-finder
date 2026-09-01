@@ -6,7 +6,31 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Who asserted the employment**, read from ORCID's `source` field: a column naming the writer,
+  a filter that keeps only the employments a member organisation wrote, and three export columns
+  (`asserted_by`, `assertion_source`, `assertion_origin`). The difference between a claim and a
+  claim a second party stands behind was invisible until now.
+- **ROR name resolution.** Each ROR id is resolved to the names the registry holds for it and
+  those are matched on too, so employments disambiguated with RINGGOLD or FUNDREF are recognised.
+  Registered acronyms and names under four characters are excluded, because a needle that matches
+  everything turns the filter off while the result still looks filtered. The names used are shown
+  with the result and carried in the JSON export.
+
+### Fixed
+
+- **Organisation-asserted employments were being dropped by the ROR match.** Institutions'
+  own ORCID integrations often stamp a RINGGOLD id rather than a ROR one, so matching employments
+  on the ROR id alone discarded exactly the most corroborated records: Karolinska by ROR with the
+  asserted-only filter returned nothing. Resolving the ROR id to its names is what fixes it.
+- **A linked search emptied itself.** The boot sequence wrote the query string before reading it,
+  so opening a URL that carried a search produced a blank form.
+
+### Changed
+
+- The interface moves onto the family's rail and command-bar shell, with How it works, Caveats
+  and About as views in the rail rather than accordions under the tool.
 
 ## [1.0.0] - 2026-08-31
 

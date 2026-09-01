@@ -1,11 +1,11 @@
 export const de = {
   'meta.description':
-    'ORCID nach den Konten durchsuchen, die eine Einrichtung angeben: nach ROR-ID oder Organisationsnamen, eingegrenzt nach Funktionsbezeichnung, Startdatum und laufenden Anstellungen. Ergebnis als CSV oder JSON herunterladbar.',
+    'ORCID nach den Konten durchsuchen, die eine Einrichtung angeben: nach ROR-ID oder Organisationsnamen, eingegrenzt nach Funktionsbezeichnung, Startdatum, laufenden Anstellungen und danach, wer den Eintrag vorgenommen hat. Ergebnis als CSV oder JSON herunterladbar.',
 
   'ui.brand.tagline': 'Die ORCID-Konten finden, die eine Einrichtung angeben',
   'ui.brand.source': 'Quellcode ↗',
   'ui.lede':
-    'Geben Sie eine <b>ROR-ID</b> oder einen Organisationsnamen ein, und das Werkzeug listet die ORCID-Konten auf, die diese Zugehörigkeit angeben. Danach lässt sich die Liste nach Funktionsbezeichnung, Startdatum und laufender Anstellung eingrenzen. Die Tabelle steht als <b>CSV</b> oder <b>JSON</b> zum Download bereit. Alles läuft in Ihrem Browser gegen die öffentliche ORCID-API: ohne Konto, ohne Schlüssel, und nichts läuft über einen Server von uns.',
+    'Geben Sie eine <b>ROR-ID</b> oder einen Organisationsnamen ein, und das Werkzeug listet die ORCID-Konten auf, die diese Zugehörigkeit angeben. Danach lässt sich die Liste nach Funktionsbezeichnung, Startdatum, laufender Anstellung und danach eingrenzen, ob eine Organisation den Eintrag vorgenommen hat statt der Person selbst. Die Tabelle steht als <b>CSV</b> oder <b>JSON</b> zum Download bereit. Alles läuft in Ihrem Browser gegen die öffentlichen APIs von ORCID und ROR: ohne Konto, ohne Schlüssel, und nichts läuft über einen Server von uns.',
   'ui.lang.aria': 'Sprache',
   'ui.theme.title': 'Helles/dunkles Design umschalten',
   'ui.theme.aria': 'Helles/dunkles Design umschalten',
@@ -28,7 +28,7 @@ export const de = {
   'form.currentOnly': 'Nur laufende Anstellungen',
   'form.requireStartDate': 'Muss ein Startdatum haben',
   'form.employmentsHint':
-    'Diese drei lesen den ORCID-Anstellungsdatensatz jeder Kandidatin und jedes Kandidaten: eine zusätzliche Anfrage pro Person, also langsamer, aber deutlich genauer.',
+    'Diese vier lesen den ORCID-Anstellungsdatensatz jeder Kandidatin und jedes Kandidaten: eine zusätzliche Anfrage pro Person, also langsamer, aber deutlich genauer.',
   'form.maxRows.label': 'Maximale Anzahl Kandidaten',
   'form.maxRows.hint':
     'Wie viele der passenden Konten abgerufen und geprüft werden. ORCID liefert sie in Seiten zu 100; 1000 ist hier die Obergrenze.',
@@ -55,6 +55,7 @@ export const de = {
   'res.empty': 'Kein Konto passte. Lockern Sie einen Filter, oder prüfen Sie die ROR-ID.',
   'res.query': 'An ORCID gesendete Abfrage',
 
+  'res.rorNames': 'Zusätzlich abgeglichen mit den Namen, die ROR für die ID führt: {names}',
   'bd.title': 'Was die Filter aussortiert haben',
   'bd.noOrgMatch': '{n} ohne Übereinstimmung der Zugehörigkeit',
   'bd.noRoleMatch': '{n} Funktionsbezeichnung passte nicht',
@@ -81,18 +82,42 @@ export const de = {
   'matched.ror_only.title':
     'ORCID hat die ROR-ID getroffen, der dort geführte Einrichtungsname ist aber anders geschrieben. Das ist normal, der Treffer ist echt.',
 
+
+  'nav.label': 'Ansicht',
+  'nav.search': 'Suche',
+  'rail.data': 'Daten von ORCID und ROR',
+  'form.assertedOnly': 'Nur von einer Organisation eingetragene Datensätze',
+  'bd.selfAsserted': '{n} nur selbst eingetragen',
+  'col.asserted': 'Eingetragen von',
+  'asserted.self': 'selbst',
+  'asserted.organization': 'Organisation',
+  'asserted.other': 'andere iD',
+  'asserted.unknown': 'unbekannt',
+  'asserted.unknown.title':
+    'Die Anstellung trägt keine Quelle, wer sie eingetragen hat, lässt sich also nicht sagen. Das heißt nicht, dass die Person selbst es war.',
+  'asserted.self.title':
+    'Die Person hat diese Anstellung selbst eingetragen. Das kann völlig zutreffen, aber außerhalb des Datensatzes steht nichts dafür ein.',
+  'asserted.organization.title':
+    'Das System einer Mitgliedsorganisation hat diese Anstellung in den Datensatz geschrieben, es steht also eine zweite Partei dafür ein.',
+  'asserted.other.title':
+    'Eine andere ORCID iD hat diese Anstellung eingetragen, was ORCID über eine Delegation an eine vertraute Person erlaubt.',
+
   'how.title': 'Wie es funktioniert',
   'how.body':
     '<p>Das Werkzeug nutzt zwei Endpunkte der öffentlichen ORCID-API. Welcher davon läuft, entscheiden die gesetzten Filter.</p>' +
     '<p>Der <b>schnelle Modus</b> ist ein einziger Aufruf von <code>expanded-search</code>, der Ihre Kriterien mit ODER zu einer Abfrage verbindet. Er liefert Namen und die von ORCID indexierten Einrichtungsnamen je Konto und beantwortet damit in Sekunden, wer diese Zugehörigkeit angibt, unabhängig von der Größe des Ergebnisses.</p>' +
-    '<p>Der <b>vollständige Modus</b> beginnt, sobald Sie nach Funktionsbezeichnung, Startdatum oder laufenden Anstellungen filtern. Diese drei Felder stehen nur im Dokument <code>/employments</code> eines Datensatzes, das Werkzeug liest also eines pro Kandidat. Das ist je eine HTTP-Anfrage: genau, und entsprechend langsamer.</p>' +
+    '<p>Der <b>vollständige Modus</b> beginnt, sobald Sie nach Funktionsbezeichnung, Startdatum, laufenden Anstellungen oder danach filtern, wer den Eintrag vorgenommen hat. Diese Felder stehen nur im Dokument <code>/employments</code> eines Datensatzes, das Werkzeug liest also eines pro Kandidat. Das ist je eine HTTP-Anfrage: genau, und entsprechend langsamer.</p>' +
+    '<p><b>Wer den Eintrag vorgenommen hat</b> ist das Feld, das ORCID Quelle nennt. Eine selbst eingetragene Anstellung trägt die eigene iD als Quelle; eine, die das System einer Mitgliedsorganisation geschrieben hat, typischerweise die Hochschule selbst, trägt stattdessen deren Client, und die Tabelle nennt ihn. Beides wird gezeigt, denn der Unterschied liegt zwischen einer Behauptung und einer, für die eine zweite Partei einsteht.</p>' +
     '<p>Ein über ROR gefundener Kandidat wird auch dann behalten, wenn der Einrichtungsname im Datensatz anders lautet, denn <code>expanded-search</code> liefert diese Namen ohne ROR-IDs je Eintrag. Sie zu verwerfen hieße, genau die Datensätze wegzuwerfen, für die das ROR-Kriterium gewählt wurde. Solche Zeilen sind mit <b>nur ROR</b> gekennzeichnet.</p>' +
+    '<p><b>Die ROR-ID allein genügt nicht</b>, um eine Anstellung zu erkennen. ORCID lässt jedes Schema zur Eindeutigmachung zu, und die Kennungen, die das System einer Einrichtung selbst schreibt, sind häufig RINGGOLD oder FUNDREF statt ROR. Genau die von Organisationen eingetragenen Datensätze fielen damit heraus. Deshalb wird jede ROR-ID zuerst zu den Namen aufgelöst, die das Register für sie führt, und auch diese werden abgeglichen. Das Ergebnis nennt die verwendeten Namen. Eingetragene Akronyme bleiben außen vor: ein zweibuchstabiger Suchbegriff trifft einen großen Teil von ORCID.</p>' +
     '<p>Jede Zahl darüber, was ein Filter aussortiert hat, wird dem Filter zugeschrieben, der tatsächlich aussortiert hat. Ein Filter, der nichts tut, ist so als Null sichtbar statt hinter einem früheren verborgen.</p>',
 
   'caveats.title': 'Einschränkungen',
   'caveats.body':
     '<ul>' +
-    '<li><b>ORCID beruht auf Selbstauskunft.</b> Ein Datensatz sagt, was seine Inhaberin oder sein Inhaber eingetragen hat. Der tatsächliche Personalbestand einer Einrichtung ist größer als das, was ORCID zeigt, und kann in Funktionsbezeichnungen, Schreibweise und Daten abweichen.</li>' +
+    '<li><b>ORCID beruht überwiegend auf Selbstauskunft.</b> Ein Datensatz sagt meist, was seine Inhaberin oder sein Inhaber eingetragen hat. Der tatsächliche Personalbestand einer Einrichtung ist größer als das, was ORCID zeigt, und kann in Funktionsbezeichnungen, Schreibweise und Daten abweichen.</li>' +
+    '<li><b>Eine von einer Organisation eingetragene Anstellung ist ein Beleg, kein Beweis für die Gegenwart.</b> Sie besagt, dass das System einer Mitgliedsorganisation den Eintrag irgendwann geschrieben hat. Sie besagt nicht, dass die Anstellung noch läuft, und auch nicht, dass die eintragende Organisation die Arbeitgeberin ist: auch Förderorganisationen und nationale Aggregatoren tragen ein, weshalb die Tabelle die Quelle nennt.</li>' +
+    '<li><b>Im schnellen Modus wird gar keine Quelle gemeldet.</b> Wer eine Anstellung eingetragen hat, steht im Anstellungsdatensatz, die Spalte bleibt also leer, bis ein Filter ihn öffnet. Leer heißt unbekannt, nie selbst eingetragen.</li>' +
     '<li><b>Abwesenheit ist kein Beleg.</b> Wer die Zugehörigkeit nie eingetragen hat oder gar keine ORCID besitzt, kann hier nicht erscheinen. Das ist ein Suchwerkzeug, keine Personalzählung.</li>' +
     '<li><b>Namen werden als Teilzeichenketten abgeglichen.</b> „Vienna“ trifft jede Einrichtung, deren Name das enthält. Die ROR-ID ist das genaue Kriterium, der Name der Rückfall für Datensätze ohne ROR.</li>' +
     '<li><b>Gemeldet wird nur die erste passende Anstellung.</b> Wer mehrere Anstellungen an derselben Einrichtung hat, erscheint einmal, unter derjenigen, die Ihre Filter bestanden hat.</li>' +
@@ -102,8 +127,8 @@ export const de = {
 
   'about.title': 'Über dieses Werkzeug',
   'about.body':
-    '<p>orcid-finder ist eine einzelne statische Seite: kein Build-Schritt, kein Backend, kein Tracking, keine Cookies. Sie spricht direkt aus Ihrem Browser mit <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">der öffentlichen ORCID-API</a>, sodass kein Server von uns je sieht, wonach Sie suchen. Gespeichert wird allein Ihre Sprach- und Designwahl, im Speicher Ihres eigenen Browsers.</p>' +
+    '<p>orcid-finder ist eine einzelne statische Seite: kein Build-Schritt, kein Backend, kein Tracking, keine Cookies. Sie spricht direkt aus Ihrem Browser mit <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">der öffentlichen ORCID-API</a> und mit <a href="https://ror.readme.io/" target="_blank" rel="noreferrer">der ROR-API</a>, sodass kein Server von uns je sieht, wonach Sie suchen. Diese beiden sind die einzigen Hosts, die die Seite kontaktiert. Gespeichert wird allein Ihre Sprach- und Designwahl, im Speicher Ihres eigenen Browsers.</p>' +
     '<p>Der Filtersatz stammt aus der Personalsuche eines Forschungsinformationssystems und wurde aus dessen Datenbank herausgelöst, damit dieselbe Suche auch ohne ein solches System möglich ist.</p>',
   'about.footer':
-    'Erstellt von <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · MIT-Lizenz · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">Quellcode auf GitHub</a> · Daten von ORCID, genutzt gemäß deren Bedingungen für die öffentliche API',
+    'Erstellt von <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · MIT-Lizenz · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">Quellcode auf GitHub</a> · Daten von ORCID und ROR, genutzt gemäß deren Bedingungen für die öffentlichen APIs',
 };

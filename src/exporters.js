@@ -15,6 +15,9 @@ export const COLUMNS = [
   'start_date',
   'end_date',
   'matched_by',
+  'asserted_by',
+  'assertion_source',
+  'assertion_origin',
   'institutions',
 ];
 
@@ -36,6 +39,11 @@ export function toRecord(p) {
     start_date: p.startDate ?? '',
     end_date: p.endDate ?? '',
     matched_by: p.matchedBy ?? '',
+    // Empty, not 'self': fast mode never opens an employment, so the assertion
+    // is unknown rather than self-asserted.
+    asserted_by: p.assertedBy ?? '',
+    assertion_source: p.assertionSource ?? '',
+    assertion_origin: p.assertionOrigin ?? '',
     institutions: (p.institutions ?? []).join(' | '),
   };
 }
@@ -92,6 +100,9 @@ export function peopleToJson(people, meta = {}) {
       retrieved_at: (meta.retrievedAt ?? new Date()).toISOString(),
       query: meta.query ?? '',
       mode: meta.mode ?? null,
+      // The names resolved from ROR and matched on, so a reader can see exactly
+      // what the affiliation check compared against.
+      ror_names: meta.rorNames ?? [],
       filters: meta.filters ?? null,
       total_found: meta.totalFound ?? null,
       scanned: meta.scanned ?? null,

@@ -69,6 +69,21 @@ test('the match badges have a label in every locale', () => {
     for (const code of CODES) assert.ok(`matched.${kind}` in LOCALES[code]);
 });
 
+test('every assertion badge has a label and an explanation in every locale', () => {
+  // These are built as `asserted.${p.assertedBy}` at render time, so a missing
+  // one would surface as the raw key in the table rather than as an error.
+  for (const kind of ['self', 'organization', 'other', 'unknown'])
+    for (const code of CODES) {
+      assert.ok(`asserted.${kind}` in LOCALES[code], `${code} lacks asserted.${kind}`);
+      assert.ok(`asserted.${kind}.title` in LOCALES[code], `${code} lacks asserted.${kind}.title`);
+    }
+});
+
+test('every view the rail can select has a title in every locale', () => {
+  for (const key of ['nav.search', 'how.title', 'caveats.title', 'about.title'])
+    for (const code of CODES) assert.ok(key in LOCALES[code], `${code} lacks ${key}`);
+});
+
 test('t interpolates, falls back to English, then to the key itself', () => {
   setLang('es');
   assert.equal(t('bd.noStartDate', { n: 3 }), '3 sin fecha de inicio');
