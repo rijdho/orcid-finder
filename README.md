@@ -302,6 +302,8 @@ is not this tool's job.
 
 ## License
 
+Copyright (C) 2026 Ricardo Hartley Belmar.
+
 [AGPL-3.0-or-later](LICENSE): read, cite, fork and adapt freely; if you run a modified version
 as a network service, publish your changes under the same licence. This is a browser tool, so
 that clause is the one that bites: a rehosted derivative owes its source back. Nothing here was
