@@ -107,7 +107,7 @@ export const en = {
   'form.ringgolds.label': 'Ringgold id(s), comma-separated',
   'form.ringgolds.ph': 'e.g. 27106',
   'form.ringgolds.hint':
-    'ORCID indexes Ringgold ids separately, and an institution’s own system usually stamps one: adding it can more than double what the search sees. It is also coarser than a ROR id and may pull in a related organisation, such as a university hospital, so read the organisation column.',
+    'ORCID indexes Ringgold ids separately, and an institution’s own system may stamp one instead of a ROR id: adding it can more than double what the search sees. It is also coarser than a ROR id and may pull in a related organisation, such as a university hospital, so read the organisation column.',
   'form.status.label': 'Affiliation',
   'form.status.any': 'Any',
   'form.status.current': 'Current',
@@ -143,7 +143,7 @@ export const en = {
     '<p><b>Full mode</b> starts when you filter on role title, start date, current appointments or who asserted the record. Those fields exist only inside a record’s <code>/employments</code> document, so the tool reads one per candidate. That is one HTTP request each: precise, and proportionally slower.</p>' +
     '<p><b>Who asserted the record</b> is the field ORCID calls the source. An employment the researcher typed in carries their own iD as its source; one written by a member organisation’s system, typically the university itself, carries that client instead, and the table names it. Both are shown, because the difference is between a claim and a claim a second party stands behind.</p>' +
     '<p>A candidate found by ROR is kept even when the institution name on the record reads differently, because <code>expanded-search</code> returns those names without per-entry ROR ids. Dropping them would throw away exactly the records the ROR criterion was chosen to find. Such rows are marked <b>ROR only</b>.</p>' +
-    '<p><b>The ROR id alone is not enough</b> to recognise an employment. ORCID lets one be disambiguated with any scheme, and the identifiers an institution’s own system writes are frequently RINGGOLD or FUNDREF rather than ROR, which would drop exactly the organisation-asserted records. So each ROR id is first resolved to the names the registry holds for it, and those are matched on too. The result says which names it used. Registered acronyms are left out: a two-letter needle matches a large part of ORCID.</p>' +
+    '<p><b>The ROR id alone is not enough</b> to recognise an employment. ORCID lets one be disambiguated with any scheme, and the identifiers an institution’s own system writes are not always ROR: they may be RINGGOLD or FUNDREF, which would drop exactly the organisation-asserted records. So each ROR id is first resolved to the names the registry holds for it, and those are matched on too. The result says which names it used. Registered acronyms are left out: a two-letter needle matches a large part of ORCID.</p>' +
     '<p>Every count of what a filter dropped is attributed to the filter that actually dropped it, so a filter doing nothing is visible as a zero rather than hidden behind an earlier one.</p>',
 
   'caveats.title': 'Caveats',

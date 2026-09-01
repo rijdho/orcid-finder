@@ -30,7 +30,7 @@ itself reports about that person's appointment at the institution you asked abou
 | Filter | What it matches | Cost |
 | --- | --- | --- |
 | ROR id(s) | `ror-org-id`, plus the `grid-org-id` resolved from it | one request per ROR id |
-| Ringgold id(s) | `ringgold-org-id`, which is what institutional systems usually stamp | free |
+| Ringgold id(s) | `ringgold-org-id`, which an institutional system may stamp instead of ROR | free |
 | Organisation name(s) | the affiliation name field, as a substring, case-insensitive | free |
 | Affiliation: any, current, past | switches to `current-` or `past-institution-affiliation-name` | free |
 | Keyword(s) | `keyword` on the record, AND-ed onto the institution | free |
@@ -135,7 +135,7 @@ be a deliberate act rather than a silent default.
 
 The same registry lookup fixes a second problem, on the matching side. ORCID lets an employment
 be disambiguated with any scheme, and the ones an institution's own system writes are
-frequently RINGGOLD or FUNDREF rather than ROR: Karolinska stamps `27106 / RINGGOLD` on the
+not always ROR: they may be RINGGOLD or FUNDREF. Karolinska stamps `27106 / RINGGOLD` on the
 employments it asserts. Matching employments on the ROR id alone therefore dropped precisely
 the organisation-asserted records, and searching Karolinska by ROR with the asserted-only
 filter returned nothing at all. The names ROR registers for the id are matched on as well, and

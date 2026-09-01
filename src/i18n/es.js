@@ -107,7 +107,7 @@ export const es = {
   'form.ringgolds.label': 'Identificador(es) Ringgold, separados por comas',
   'form.ringgolds.ph': 'p. ej. 27106',
   'form.ringgolds.hint':
-    'ORCID indexa los identificadores Ringgold por separado, y el sistema de la propia institución suele estampar uno: añadirlo puede más que duplicar lo que ve la búsqueda. También es más grueso que un ROR y puede arrastrar organizaciones relacionadas, como un hospital universitario, así que revisa la columna de organización.',
+    'ORCID indexa los identificadores Ringgold por separado, y el sistema de la propia institución puede estampar uno en vez de un ROR: añadirlo puede más que duplicar lo que ve la búsqueda. También es más grueso que un ROR y puede arrastrar organizaciones relacionadas, como un hospital universitario, así que revisa la columna de organización.',
   'form.status.label': 'Afiliación',
   'form.status.any': 'Cualquiera',
   'form.status.current': 'Vigente',
@@ -143,7 +143,7 @@ export const es = {
     '<p>El <b>modo completo</b> se activa en cuanto filtras por cargo, fecha de inicio, nombramientos vigentes o quién declaró el registro. Esos campos solo existen dentro del documento <code>/employments</code> de cada registro, así que la herramienta lee uno por candidato. Eso es una petición HTTP por persona: preciso y proporcionalmente más lento.</p>' +
     '<p><b>Quién declaró el registro</b> es el campo que ORCID llama fuente. Un empleo que escribió la propia persona lleva su iD como fuente; uno escrito por el sistema de una organización miembro, típicamente la propia universidad, lleva ese cliente, y la tabla lo nombra. Se muestran ambos, porque la diferencia está entre una afirmación y una afirmación que respalda una segunda parte.</p>' +
     '<p>Un candidato encontrado por ROR se conserva aunque el nombre de la institución en el registro esté escrito de otra manera, porque <code>expanded-search</code> devuelve esos nombres sin identificadores ROR por entrada. Descartarlos sería tirar justo los registros que el criterio ROR sirve para encontrar. Esas filas van marcadas como <b>solo ROR</b>.</p>' +
-    '<p><b>El identificador ROR por sí solo no basta</b> para reconocer un empleo. ORCID admite cualquier esquema de desambiguación, y los identificadores que escribe el sistema de la propia institución suelen ser RINGGOLD o FUNDREF en lugar de ROR, con lo que se caerían justo los registros declarados por la organización. Por eso cada identificador ROR se resuelve primero a los nombres que el registro guarda para él, y también se compara con esos. El resultado dice qué nombres usó. Los acrónimos registrados quedan fuera: una aguja de dos letras coincide con buena parte de ORCID.</p>' +
+    '<p><b>El identificador ROR por sí solo no basta</b> para reconocer un empleo. ORCID admite cualquier esquema de desambiguación, y los identificadores que escribe el sistema de la propia institución no siempre son ROR: pueden ser RINGGOLD o FUNDREF, con lo que se caerían justo los registros declarados por la organización. Por eso cada identificador ROR se resuelve primero a los nombres que el registro guarda para él, y también se compara con esos. El resultado dice qué nombres usó. Los acrónimos registrados quedan fuera: una aguja de dos letras coincide con buena parte de ORCID.</p>' +
     '<p>Cada recuento de lo que descartó un filtro se atribuye al filtro que realmente lo descartó, de modo que un filtro que no hace nada se ve como un cero en lugar de quedar oculto tras otro anterior.</p>',
 
   'caveats.title': 'Limitaciones',

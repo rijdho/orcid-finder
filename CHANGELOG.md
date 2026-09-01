@@ -6,6 +6,18 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **An overclaim, in the README, the changelog, the interface in three languages and the
+  release notes.** They said an institution's own integration "frequently" or "usually"
+  stamps a RINGGOLD identifier rather than a ROR one. That was generalised from the single
+  case that motivated the fix. Sampling twenty-five records at six institutions does not
+  support it: only two had any organisation-asserted employments at all, one of those used
+  RINGGOLD and the other was evenly split between RINGGOLD and ROR. The claim is now what
+  was actually measured, that the identifier is not always ROR and may be RINGGOLD or
+  FUNDREF, which is all the argument needed anyway. The coverage numbers and the 0-to-26
+  result that motivated the whole thing were measured directly and stand unchanged.
+
 ### Changed
 
 - **Two controls that look like they overlap now say how they differ.** "Affiliation: current"
@@ -57,7 +69,7 @@ claim a second party stands behind was not visible in ORCID's own search.
 
 **ROR name resolution.** Each ROR id is also resolved to the names the registry holds for it,
 and those are matched against employments. Without this the affiliation check drops precisely
-the organisation-asserted records, because an institution's own integration frequently stamps a
+the organisation-asserted records, because an institution's own integration may stamp a
 RINGGOLD or FUNDREF id rather than a ROR one: searching Karolinska by ROR with the
 asserted-only filter returned nothing at all. Registered acronyms and names under four
 characters are excluded, because a needle that matches everything turns the filter off while

@@ -51,8 +51,8 @@ three locale strings, and a control in `index.html`. In that order.
   `REJECTED_BY` walks forward to the next active counter. Add a check without adding its stage and
   every count below it becomes fiction.
 - **ROR ids are resolved to names before the employment checks run.** ORCID lets an employment
-  be disambiguated with any scheme, and an institution's own integration frequently writes
-  RINGGOLD or FUNDREF. Matching on the ROR id alone dropped every organisation-asserted record:
+  be disambiguated with any scheme, and an institution's own integration may write RINGGOLD
+  or FUNDREF instead. Matching on the ROR id alone dropped every organisation-asserted record:
   Karolinska by ROR with the asserted-only filter returned nothing at all. Acronyms and names
   under four characters are excluded, because `KI` as a substring matches a large part of ORCID.
 - **`assertedBy` is `null` in fast mode and `'unknown'` when the source is absent.** Neither is
