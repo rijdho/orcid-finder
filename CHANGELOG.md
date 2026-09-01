@@ -10,6 +10,8 @@ Nothing yet.
 
 ## [1.0.0] - 2026-09-01
 
+Version DOI: [10.5281/zenodo.22227425](https://doi.org/10.5281/zenodo.22227425).
+
 First public version.
 
 ### Added

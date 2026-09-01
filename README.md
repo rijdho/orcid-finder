@@ -1,5 +1,7 @@
 # orcid-finder
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22227424.svg)](https://doi.org/10.5281/zenodo.22227424)
+
 **Find the ORCID accounts that declare an institution, narrow them by keyword, role,
 department, country, dates and who asserted the record, and export the table as CSV or JSON.**
 
@@ -313,3 +315,7 @@ ever published under another licence.
 
 If you use this tool in a piece of work, please cite it: see `CITATION.cff`, or the "Cite this
 repository" button in the sidebar of the GitHub page.
+
+Archived on Zenodo: concept DOI <https://doi.org/10.5281/zenodo.22227424>, which always resolves
+to the latest version. Cite that one unless you need to pin a specific snapshot; each release
+also has its own version DOI, recorded in the CHANGELOG.
