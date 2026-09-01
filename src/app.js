@@ -2,9 +2,9 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { discoverPeople, normaliseRor, parseList, validateOptions } from './discover.js?v=4';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=4';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=4';
+import { discoverPeople, normaliseRor, parseList, validateOptions } from './discover.js?v=5';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=5';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=5';
 
 const $ = (id) => document.getElementById(id);
 const el = {

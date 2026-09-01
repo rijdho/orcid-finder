@@ -147,6 +147,7 @@ export const en = {
   'caveats.title': 'Caveats',
   'caveats.body':
     '<ul>' +
+    '<li><b>The email field is never shown or exported.</b> ORCID returns one for records whose owner made it public; this tool drops it. A downloaded list of people is personal data, and what it is used for is your responsibility: building a mailing list should not be the easy path.</li>' +
     '<li><b>Most of ORCID is self-asserted.</b> A record usually says what its owner typed. An institution’s real roster is larger than what ORCID shows and may differ in role titles, spelling and dates.</li>' +
     '<li><b>An organisation-asserted employment is evidence, not proof of the present.</b> It says that a member’s system wrote the entry at some point. It does not say the appointment still runs, and it does not mean the asserting organisation is the employer: funders and national aggregators assert too, which is why the table names the source.</li>' +
     '<li><b>Fast mode reports no source at all.</b> Who asserted an employment lives in the employment record, so the column is empty until a filter opens it. Empty means unknown, never self-asserted.</li>' +

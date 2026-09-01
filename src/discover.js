@@ -15,8 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=4';
-import { fetchRorFacts } from './ror.js?v=4';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=5';
+import { fetchRorFacts } from './ror.js?v=5';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;

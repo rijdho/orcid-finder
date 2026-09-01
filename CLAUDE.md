@@ -57,6 +57,13 @@ three locale strings, and a control in `index.html`. In that order.
   under four characters are excluded, because `KI` as a substring matches a large part of ORCID.
 - **`assertedBy` is `null` in fast mode and `'unknown'` when the source is absent.** Neither is
   `'self'`. Filling either in would report a guess as a finding.
+- **Nothing inline in `index.html`.** No `style="..."`, no `onclick=`, no inline `<script>`. Each
+  would force `'unsafe-inline'` back into the Content-Security-Policy, which is the one defence
+  here that survives a forgotten escape. The theme bootstrap is a separate blocking script for
+  exactly this reason, and `tests/csp.test.mjs` fails if any of it comes back.
+- **A new API host means a new `connect-src` entry.** The browser blocks the request otherwise,
+  and it blocks it in production as readily as locally. The test compares the policy against the
+  API constants, so the suite catches it first.
 - **Every relative import carries `?v=N`, and every N is the same.** There is no bundler, so the
   query string is the only cache-buster. Versioning only the entry module once served a cached
   `orcid.js` against a fresh `ror.js` that imported a symbol it did not export: the module graph

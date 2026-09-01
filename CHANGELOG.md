@@ -72,5 +72,12 @@ wiring between the page, the script and the stylesheet), validated by injecting 
 defects and confirming each turned the suite red. One of those injections proved a branch
 unreachable and it was removed rather than kept.
 
+**A Content-Security-Policy of `default-src 'none'`**, so the page's central claim is enforced by
+the browser rather than promised: scripts, styles and fonts only from this origin, and connections
+only to `pub.orcid.org` and `api.ror.org`. Everything the two APIs return is escaped before it
+reaches the page; the policy is what stands behind that if an escape is ever missed. Pinned by
+tests to the hosts the code actually calls. Clickjacking is not covered, because `frame-ancestors`
+needs a response header that GitHub Pages cannot set.
+
 **`docs/screenshots.mjs`**, which drives the real app with Puppeteer so the README images can
 be regenerated rather than quietly aging.

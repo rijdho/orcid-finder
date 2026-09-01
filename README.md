@@ -230,6 +230,33 @@ GitHub Pages via the Actions workflow in `.github/workflows/deploy.yml`, which g
 on the test suite and uploads the tree verbatim. The legacy Jekyll builder is bypassed on
 purpose.
 
+## Security and privacy
+
+There is nothing here to steal and nothing here to trust. The tool is a static page: no
+backend, no accounts, no cookies, no analytics, and no API key, because the ORCID public API
+does not need one. The only thing it stores is the language and theme you picked, in your own
+browser. Both the working tree and the full commit history were swept for credentials before
+the repository was opened.
+
+Everything ORCID and ROR return is escaped before it reaches the page, and a
+Content-Security-Policy of `default-src 'none'` stands behind that: scripts, styles and fonts
+may come only from this origin, and the browser refuses to connect anywhere except
+`pub.orcid.org` and `api.ror.org`. That turns the page's central claim into something enforced
+rather than promised, and it means a missed escape in some future edit cannot load a script or
+send anything anywhere. `tests/csp.test.mjs` pins the policy to the hosts the code actually
+calls, so adding an API and forgetting the policy fails the suite instead of the deployed page.
+
+Two things it does not cover, stated rather than glossed. Clickjacking protection needs
+`frame-ancestors` or `X-Frame-Options`, which are response headers GitHub Pages cannot set. And
+the code is served to the browser in full, as all client-side code is: it can be read, copied
+and rehosted, which is what the licence is for and not something a technical measure can
+change.
+
+ORCID's search returns an email address for records whose owner made it public. This tool never
+displays or exports it. A downloaded list of people is personal data, and what it is used for
+is the downloader's responsibility under their own rules; making a mailing list the easy path
+is not this tool's job.
+
 ## Caveats
 
 - **Most of ORCID is self-asserted.** A record usually says what its owner typed. An
@@ -242,6 +269,7 @@ purpose.
 - **Fast mode reports no source at all.** Who asserted an employment lives in the employment
   record, so the column is empty until a filter opens it. Empty means unknown, never
   self-asserted.
+- **The email field is never shown or exported.** See Security and privacy above.
 - **A Ringgold id is coarser than a ROR id.** `27106` returns both Karolinska Institutet and
   Karolinska University Hospital. It is the largest coverage gain on offer and the likeliest to
   reach past the institution you meant, so read the organisation column before trusting a

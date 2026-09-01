@@ -147,6 +147,7 @@ export const es = {
   'caveats.title': 'Limitaciones',
   'caveats.body':
     '<ul>' +
+    '<li><b>El campo de correo nunca se muestra ni se exporta.</b> ORCID devuelve uno en los registros cuya titular o titular lo hizo público; esta herramienta lo descarta. Una lista de personas descargada son datos personales, y para qué se use es responsabilidad tuya: armar una lista de correo no debería ser el camino fácil.</li>' +
     '<li><b>ORCID es autodeclarado en su mayor parte.</b> Un registro suele decir lo que escribió su titular. La plantilla real de una institución es mayor que lo que muestra ORCID y puede diferir en cargos, grafía y fechas.</li>' +
     '<li><b>Un empleo declarado por una organización es evidencia, no prueba del presente.</b> Dice que el sistema de una organización miembro escribió la entrada en algún momento. No dice que el nombramiento siga vigente, ni que la organización que declara sea la empleadora: también declaran financiadores y agregadores nacionales, y por eso la tabla nombra la fuente.</li>' +
     '<li><b>El modo rápido no informa de ninguna fuente.</b> Quién declaró un empleo vive en el registro de empleo, así que la columna queda vacía hasta que un filtro lo abre. Vacío significa desconocido, nunca autodeclarado.</li>' +

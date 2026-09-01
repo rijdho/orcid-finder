@@ -146,6 +146,7 @@ export const de = {
   'caveats.title': 'Einschränkungen',
   'caveats.body':
     '<ul>' +
+    '<li><b>Das E-Mail-Feld wird nie angezeigt und nie exportiert.</b> ORCID liefert eines für Datensätze, deren Inhaberinnen und Inhaber es öffentlich gemacht haben; dieses Werkzeug verwirft es. Eine heruntergeladene Personenliste sind personenbezogene Daten, und wozu sie dient, liegt in Ihrer Verantwortung: ein Verteiler soll nicht der bequemste Weg sein.</li>' +
     '<li><b>ORCID beruht überwiegend auf Selbstauskunft.</b> Ein Datensatz sagt meist, was seine Inhaberin oder sein Inhaber eingetragen hat. Der tatsächliche Personalbestand einer Einrichtung ist größer als das, was ORCID zeigt, und kann in Funktionsbezeichnungen, Schreibweise und Daten abweichen.</li>' +
     '<li><b>Eine von einer Organisation eingetragene Anstellung ist ein Beleg, kein Beweis für die Gegenwart.</b> Sie besagt, dass das System einer Mitgliedsorganisation den Eintrag irgendwann geschrieben hat. Sie besagt nicht, dass die Anstellung noch läuft, und auch nicht, dass die eintragende Organisation die Arbeitgeberin ist: auch Förderorganisationen und nationale Aggregatoren tragen ein, weshalb die Tabelle die Quelle nennt.</li>' +
     '<li><b>Im schnellen Modus wird gar keine Quelle gemeldet.</b> Wer eine Anstellung eingetragen hat, steht im Anstellungsdatensatz, die Spalte bleibt also leer, bis ein Filter ihn öffnet. Leer heißt unbekannt, nie selbst eingetragen.</li>' +
