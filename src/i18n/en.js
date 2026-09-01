@@ -83,6 +83,7 @@ export const en = {
 
   'nav.label': 'View',
   'nav.search': 'Search',
+  'rail.cite': 'Cite this tool',
   'rail.data': 'Data from ORCID and ROR',
   'form.assertedOnly': 'Only records asserted by an organisation',
   'bd.selfAsserted': '{n} self-asserted only',

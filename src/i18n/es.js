@@ -83,6 +83,7 @@ export const es = {
 
   'nav.label': 'Vista',
   'nav.search': 'Búsqueda',
+  'rail.cite': 'Citar esta herramienta',
   'rail.data': 'Datos de ORCID y ROR',
   'form.assertedOnly': 'Solo registros declarados por una organización',
   'bd.selfAsserted': '{n} solo autodeclarados',
