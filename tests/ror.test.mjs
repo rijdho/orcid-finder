@@ -6,11 +6,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { usableNames, childIds, fetchRorNames } from '../src/ror.js';
+import { usableNames, childIds, gridId, fetchRorFacts } from '../src/ror.js';
 import { discoverPeople } from '../src/discover.js';
 
 // Karolinska Institutet's live ROR v2 record, trimmed to the fields used here.
 const KAROLINSKA = {
+  external_ids: [
+    { type: 'fundref', preferred: '501100004047', all: ['501100004047'] },
+    { type: 'grid', preferred: 'grid.4714.6', all: ['grid.4714.6'] },
+    { type: 'isni', preferred: null, all: ['0000 0004 1937 0626'] },
+  ],
   names: [
     { value: 'KI', types: ['acronym'] },
     { value: 'Karoliininen instituutti', types: ['label'] },
@@ -51,20 +56,31 @@ test('only child relationships count as children', () => {
   assert.deepEqual(childIds(KAROLINSKA), ['00dgqhm63']);
 });
 
-test('an unreachable ROR record yields no names rather than an error', () => {
-  // The search must still run; it simply matches on the ROR id alone, which is
-  // the behaviour it had before this existed.
-  return fetchRorNames('056d84691', { get: async () => null }).then((names) => assert.deepEqual(names, []));
+test('the GRID id is taken from the registry record, preferring the preferred one', () => {
+  assert.equal(gridId(KAROLINSKA), 'grid.4714.6');
+  assert.equal(gridId({ external_ids: [{ type: 'grid', all: ['grid.9.9'] }] }), 'grid.9.9');
+  assert.equal(gridId({ external_ids: [{ type: 'isni', all: ['x'] }] }), null, 'only GRID counts');
+  assert.equal(gridId(null), null);
 });
 
-test('fetchRorNames asks ROR v2 for the id it was given', () => {
+test('an unreachable ROR record yields empty facts rather than an error', () => {
+  // The search must still run; it simply matches on the ROR id alone, which is
+  // the behaviour it had before this existed.
+  return fetchRorFacts('056d84691', { get: async () => null }).then((f) => {
+    assert.deepEqual(f.names, []);
+    assert.equal(f.grid, null);
+  });
+});
+
+test('fetchRorFacts asks ROR v2 for the id it was given', () => {
   const urls = [];
-  return fetchRorNames('056d84691', {
+  return fetchRorFacts('056d84691', {
     get: async (url) => { urls.push(url); return KAROLINSKA; },
-  }).then((names) => {
+  }).then((f) => {
     assert.equal(urls.length, 1);
     assert.match(urls[0], /api\.ror\.org\/v2\/organizations\/056d84691$/);
-    assert.ok(names.includes('Karolinska Institutet'));
+    assert.ok(f.names.includes('Karolinska Institutet'));
+    assert.equal(f.grid, 'grid.4714.6');
   });
 });
 
@@ -94,14 +110,14 @@ const ringgoldAsserted = {
 };
 
 const OPTS = { rors: ['056d84691'], byName: false, orgNames: [], assertedOnly: true };
-const deps = (resolve) => ({
+const deps = (names, grid = null) => ({
   search: async () => ({ rows: [row('0000-0001-0000-0090')], totalFound: 1 }),
   employments: async () => ringgoldAsserted,
-  resolveRorNames: resolve,
+  resolveRorFacts: async () => ({ names, grid }),
 });
 
 test('without ROR names, a RINGGOLD-identified employment is dropped', () => {
-  return discoverPeople(OPTS, deps(async () => [])).then((r) => {
+  return discoverPeople(OPTS, deps([])).then((r) => {
     assert.equal(r.people.length, 0);
     assert.equal(r.breakdown.noOrgMatch, 1, 'the affiliation check is what rejected it');
     assert.deepEqual(r.rorNames, []);
@@ -109,7 +125,7 @@ test('without ROR names, a RINGGOLD-identified employment is dropped', () => {
 });
 
 test('with ROR names, the same employment is kept and named as asserted', () => {
-  return discoverPeople(OPTS, deps(async () => usableNames(KAROLINSKA))).then((r) => {
+  return discoverPeople(OPTS, deps(usableNames(KAROLINSKA))).then((r) => {
     assert.equal(r.people.length, 1);
     assert.equal(r.people[0].assertedBy, 'organization');
     assert.equal(r.people[0].assertionSource, 'Karolinska Institutet');
@@ -118,15 +134,40 @@ test('with ROR names, the same employment is kept and named as asserted', () => 
   });
 });
 
-test('fast mode does not spend a request on ROR, and reports no names', () => {
-  let asked = 0;
+test('fast mode still resolves ROR, for the GRID id, but reports no names', () => {
+  // The names are only ever compared against an employment, and fast mode opens
+  // none. The GRID id is a different matter: it goes into the query.
   return discoverPeople(
     { rors: ['056d84691'], byName: false },
-    { search: async () => ({ rows: [row('0000-0001-0000-0091')], totalFound: 1 }), resolveRorNames: async () => { asked++; return ['x']; } },
+    {
+      search: async () => ({ rows: [row('0000-0001-0000-0091')], totalFound: 1 }),
+      resolveRorFacts: async () => ({ names: usableNames(KAROLINSKA), grid: 'grid.4714.6' }),
+    },
   ).then((r) => {
-    assert.equal(asked, 0, 'fast mode already trusts the ROR match, so the names buy nothing');
-    assert.deepEqual(r.rorNames, []);
+    assert.deepEqual(r.rorNames, [], 'names that cannot be used are not reported as used');
+    assert.deepEqual(r.gridIds, ['grid.4714.6']);
+    assert.match(r.query, /grid-org-id:"grid\.4714\.6"/);
   });
+});
+
+test('the GRID id is OR-ed into the query beside the ROR id', () => {
+  return discoverPeople(
+    { rors: ['056d84691'], byName: false },
+    {
+      search: async () => ({ rows: [], totalFound: 0 }),
+      resolveRorFacts: async () => ({ names: [], grid: 'grid.4714.6' }),
+    },
+  ).then((r) => {
+    assert.equal(r.query, 'ror-org-id:"https://ror.org/056d84691" OR grid-org-id:"grid.4714.6"');
+  });
+});
+
+test('no ROR criterion means no ROR request at all', () => {
+  let asked = 0;
+  return discoverPeople(
+    { rors: [], orgNames: ['Karolinska Institutet'] },
+    { search: async () => ({ rows: [], totalFound: 0 }), resolveRorFacts: async () => { asked++; return { names: [], grid: null }; } },
+  ).then(() => assert.equal(asked, 0));
 });
 
 test('the ROR lookup runs once per id, not once per candidate', () => {
@@ -137,7 +178,7 @@ test('the ROR lookup runs once per id, not once per candidate', () => {
     {
       search: async () => ({ rows, totalFound: 8 }),
       employments: async () => ringgoldAsserted,
-      resolveRorNames: async (id) => { asked.push(id); return usableNames(KAROLINSKA); },
+      resolveRorFacts: async (id) => { asked.push(id); return { names: usableNames(KAROLINSKA), grid: null }; },
     },
   ).then(() => assert.deepEqual(asked, ['056d84691', '03yrm5c26']));
 });

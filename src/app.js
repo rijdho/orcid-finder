@@ -2,9 +2,9 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { discoverPeople, isValidRor, normaliseRor, parseList } from './discover.js?v=3';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=3';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=3';
+import { discoverPeople, normaliseRor, parseList, validateOptions } from './discover.js?v=4';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=4';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=4';
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -94,13 +94,26 @@ function initTheme() {
 
 // ── form ↔ options ──────────────────────────────────────────────────────────
 
+const num = (v) => {
+  const n = parseInt(v, 10);
+  return Number.isInteger(n) ? n : null;
+};
+
 function readForm() {
   return {
     rors: parseList($('rors').value).map(normaliseRor),
+    ringgolds: parseList($('ringgolds').value),
     orgNames: parseList($('orgNames').value),
     byRor: $('byRor').checked,
     byName: $('byName').checked,
+    affiliationStatus: document.querySelector('#status input:checked')?.value ?? 'any',
+    keywords: parseList($('keywords').value),
     roleTitles: parseList($('roleTitles').value),
+    excludeRoleTitles: parseList($('excludeRoleTitles').value),
+    departments: parseList($('departments').value),
+    countries: parseList($('countries').value),
+    startFrom: num($('startFrom').value),
+    startTo: num($('startTo').value),
     currentOnly: $('currentOnly').checked,
     requireStartDate: $('requireStartDate').checked,
     assertedOnly: $('assertedOnly').checked,
@@ -109,11 +122,22 @@ function readForm() {
 }
 
 function writeForm(o) {
-  $('rors').value = (o.rors ?? []).join(', ');
-  $('orgNames').value = (o.orgNames ?? []).join(', ');
+  const list = (id, v) => { $(id).value = (v ?? []).join(', '); };
+  list('rors', o.rors);
+  list('ringgolds', o.ringgolds);
+  list('orgNames', o.orgNames);
+  list('keywords', o.keywords);
+  list('roleTitles', o.roleTitles);
+  list('excludeRoleTitles', o.excludeRoleTitles);
+  list('departments', o.departments);
+  list('countries', o.countries);
   $('byRor').checked = o.byRor !== false;
   $('byName').checked = o.byName !== false;
-  $('roleTitles').value = (o.roleTitles ?? []).join(', ');
+  const status = document.querySelector(`#status input[value="${o.affiliationStatus ?? 'any'}"]`)
+    ?? document.querySelector('#status input[value="any"]');
+  status.checked = true;
+  $('startFrom').value = o.startFrom ?? '';
+  $('startTo').value = o.startTo ?? '';
   $('currentOnly').checked = !!o.currentOnly;
   $('requireStartDate').checked = !!o.requireStartDate;
   $('assertedOnly').checked = !!o.assertedOnly;
@@ -129,11 +153,20 @@ function writeUrl(options) {
   const o = options ?? searched;
   const p = new URLSearchParams();
   if (o) {
-    if (o.rors.length) p.set('ror', o.rors.join(','));
-    if (o.orgNames.length) p.set('org', o.orgNames.join(','));
+    const list = (key, v) => { if (v?.length) p.set(key, v.join(',')); };
+    list('ror', o.rors);
+    list('ringgold', o.ringgolds);
+    list('org', o.orgNames);
+    list('kw', o.keywords);
+    list('role', o.roleTitles);
+    list('xrole', o.excludeRoleTitles);
+    list('dept', o.departments);
+    list('country', o.countries);
     if (!o.byRor) p.set('byRor', '0');
     if (!o.byName) p.set('byName', '0');
-    if (o.roleTitles.length) p.set('role', o.roleTitles.join(','));
+    if (o.affiliationStatus && o.affiliationStatus !== 'any') p.set('status', o.affiliationStatus);
+    if (o.startFrom !== null) p.set('from', String(o.startFrom));
+    if (o.startTo !== null) p.set('to', String(o.startTo));
     if (o.currentOnly) p.set('current', '1');
     if (o.requireStartDate) p.set('started', '1');
     if (o.assertedOnly) p.set('asserted', '1');
@@ -146,13 +179,21 @@ function writeUrl(options) {
 
 function readUrl() {
   const p = new URLSearchParams(location.search);
-  if (!p.has('ror') && !p.has('org')) return null;
+  if (!p.has('ror') && !p.has('org') && !p.has('ringgold')) return null;
   return {
     rors: parseList(p.get('ror')).map(normaliseRor),
+    ringgolds: parseList(p.get('ringgold')),
     orgNames: parseList(p.get('org')),
     byRor: p.get('byRor') !== '0',
     byName: p.get('byName') !== '0',
+    affiliationStatus: p.get('status') ?? 'any',
+    keywords: parseList(p.get('kw')),
     roleTitles: parseList(p.get('role')),
+    excludeRoleTitles: parseList(p.get('xrole')),
+    departments: parseList(p.get('dept')),
+    countries: parseList(p.get('country')),
+    startFrom: num(p.get('from')),
+    startTo: num(p.get('to')),
     currentOnly: p.get('current') === '1',
     requireStartDate: p.get('started') === '1',
     assertedOnly: p.get('asserted') === '1',
@@ -179,10 +220,10 @@ async function run(options) {
   const o = options ?? readForm();
   showError('');
 
-  const bad = o.rors.find((r) => !isValidRor(r));
-  if (bad) return showError(t('err.badRor', { id: bad }));
-  if (!((o.byRor && o.rors.length) || (o.byName && o.orgNames.length)))
-    return showError(t('err.noCriteria'));
+  // The rules live in discover.js, where they are testable; this only turns the
+  // key it returns into a sentence.
+  const invalid = validateOptions(o);
+  if (invalid) return showError(t(`err.${invalid.key}`, { id: invalid.id }));
 
   searched = o;
   writeUrl(o);
@@ -225,8 +266,12 @@ function render(r) {
   const b = r.breakdown;
   const chips = [
     ['bd.noOrgMatch', b.noOrgMatch],
+    ['bd.noCountryMatch', b.noCountryMatch],
+    ['bd.noDepartmentMatch', b.noDepartmentMatch],
     ['bd.noRoleMatch', b.noRoleMatch],
+    ['bd.roleExcluded', b.roleExcluded],
     ['bd.noStartDate', b.noStartDate],
+    ['bd.startOutOfRange', b.startOutOfRange],
     ['bd.selfAsserted', b.selfAsserted],
     ['bd.pastEmployment', b.pastEmployment],
     ['bd.unreachable', b.unreachable],
@@ -256,7 +301,7 @@ function render(r) {
   // through an employment by construction, so the column would repeat one word
   // down the table and push the columns that do carry information off the edge.
   const cols = r.mode === 'full'
-    ? ['col.orcid', 'col.name', 'col.role', 'col.department', 'col.organization', 'col.start', 'col.end', 'col.asserted']
+    ? ['col.orcid', 'col.name', 'col.role', 'col.department', 'col.organization', 'col.country', 'col.start', 'col.end', 'col.asserted']
     : ['col.orcid', 'col.name', 'col.organization', 'col.matched'];
 
   const head = cols.map((c) => `<th>${escapeHtml(t(c))}</th>`).join('');
@@ -266,6 +311,7 @@ function render(r) {
     const matched = () => badge(p.matchedBy, t(`matched.${p.matchedBy}`), p.matchedBy === 'ror_only' ? t('matched.ror_only.title') : null);
     return r.mode === 'full'
       ? `<tr>${idCell}${cell(p.name)}${cell(p.roleTitle)}${cell(p.department)}${cell(p.organization)}` +
+        `<td class="nowrap" title="${escapeHtml(p.city ?? '')}">${escapeHtml(p.country ?? '')}</td>` +
         `<td class="nowrap">${escapeHtml(p.startDate ?? '')}</td><td class="nowrap">${escapeHtml(p.endDate ?? '')}</td>` +
         `${assertionCell(p)}</tr>`
       : `<tr>${idCell}${cell(p.name)}${cell(p.organization)}${matched()}</tr>`;
@@ -294,7 +340,7 @@ function assertionCell(p) {
 function meta() {
   return {
     query: last.query, mode: last.mode, filters: last.filters,
-    totalFound: last.totalFound, scanned: last.scanned, rorNames: last.rorNames,
+    totalFound: last.totalFound, scanned: last.scanned, rorNames: last.rorNames, gridIds: last.gridIds,
     breakdown: last.breakdown, retrievedAt: last.retrievedAt,
   };
 }
@@ -310,7 +356,7 @@ for (const b of document.querySelectorAll('.nav-item'))
 el.form.addEventListener('submit', (e) => { e.preventDefault(); run(); });
 el.cancel.addEventListener('click', () => controller?.abort());
 el.reset.addEventListener('click', () => {
-  writeForm({ rors: [], orgNames: [], byRor: true, byName: true, roleTitles: [], maxRows: 200 });
+  writeForm({ byRor: true, byName: true, affiliationStatus: 'any', maxRows: 200 });
   last = null;
   searched = null;
   el.results.hidden = true;

@@ -15,13 +15,20 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=3';
-import { fetchRorNames } from './ror.js?v=3';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=4';
+import { fetchRorFacts } from './ror.js?v=4';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
 
 export const ORCID_RE = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
+
+/** A Ringgold id is a bare number. They run to eight digits today. */
+export const RINGGOLD_RE = /^\d{1,9}$/;
+
+/** How the affiliation is searched. ORCID indexes these as three separate
+ *  fields, and `current OR past` returns exactly what `any` returns. */
+export const AFFILIATION_STATUS = ['any', 'current', 'past'];
 
 /** Strip the resolver prefix and case, so `https://ror.org/03YRM5C26` == `03yrm5c26`. */
 export const normaliseRor = (s) =>
@@ -35,11 +42,22 @@ export const parseList = (s) => [
 ];
 
 export const DEFAULT_OPTIONS = {
+  // Who the institution is
   rors: [],
+  ringgolds: [],
   orgNames: [],
   byRor: true,
   byName: true,
+  affiliationStatus: 'any',
+  // What the person works on
+  keywords: [],
+  // What the employment must look like
   roleTitles: [],
+  excludeRoleTitles: [],
+  departments: [],
+  countries: [],
+  startFrom: null,
+  startTo: null,
   requireStartDate: false,
   currentOnly: false,
   assertedOnly: false,
@@ -47,45 +65,122 @@ export const DEFAULT_OPTIONS = {
 };
 
 /** Fill in the defaults and normalise the free-text fields exactly once. */
+const clean = (list) => [...new Set((list ?? []).map((x) => String(x).trim()).filter(Boolean))];
+const year = (v) => {
+  const n = parseInt(v, 10);
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+
 export function normaliseOptions(o = {}) {
-  const rors = (o.rors ?? []).map(normaliseRor).filter(Boolean);
+  const status = AFFILIATION_STATUS.includes(o.affiliationStatus) ? o.affiliationStatus : 'any';
   return {
     ...DEFAULT_OPTIONS,
     ...o,
-    rors: [...new Set(rors)],
-    orgNames: [...new Set((o.orgNames ?? []).map((n) => String(n).trim()).filter(Boolean))],
-    roleTitles: (o.roleTitles ?? []).map((s) => String(s).trim()).filter(Boolean),
+    rors: [...new Set((o.rors ?? []).map(normaliseRor).filter(Boolean))],
+    ringgolds: clean(o.ringgolds),
+    orgNames: clean(o.orgNames),
+    affiliationStatus: status,
+    keywords: clean(o.keywords),
+    roleTitles: clean(o.roleTitles),
+    excludeRoleTitles: clean(o.excludeRoleTitles),
+    departments: clean(o.departments),
+    countries: clean(o.countries).map((c) => c.toUpperCase()),
+    startFrom: year(o.startFrom),
+    startTo: year(o.startTo),
     maxRows: Math.min(Math.max(parseInt(o.maxRows ?? 200, 10) || 200, 1), 1000),
   };
 }
 
+/** The ORCID field that carries the organisation name, per affiliation status. */
+const NAME_FIELD = {
+  any: 'affiliation-org-name',
+  current: 'current-institution-affiliation-name',
+  past: 'past-institution-affiliation-name',
+};
+
 /**
- * Build the ORCID query string. Criteria are OR-ed: an account qualifies by
- * declaring ANY of the ROR ids or ANY of the organisation names. Returns null
- * when nothing is selected, which the caller must treat as "ask the user", not
- * as "no results".
+ * Build the ORCID query string.
+ *
+ * The institution criteria are OR-ed: an account qualifies by declaring ANY of
+ * the identifiers or ANY of the names. Keywords, when given, are AND-ed onto
+ * that block, so they narrow the institution rather than widening the search.
+ *
+ * `facts.gridIds` are the GRID ids resolved from the ROR ids. ORCID indexes ROR
+ * and GRID separately, so adding them is a coverage gain, not a synonym.
+ *
+ * Returns null when nothing is selected, which the caller must treat as "ask
+ * the user", not as "no results".
  */
-export function buildQuery(o) {
+export function buildQuery(o, facts = {}) {
   const opts = normaliseOptions(o);
   const terms = [];
-  if (opts.byRor) for (const r of opts.rors) terms.push(`ror-org-id:"https://ror.org/${r}"`);
-  if (opts.byName) for (const n of opts.orgNames) terms.push(`affiliation-org-name:"${n}"`);
-  return terms.length ? terms.join(' OR ') : null;
+
+  // An identifier criterion cannot carry a current/past distinction: ORCID
+  // indexes that only on the name fields. Including the ids anyway would return
+  // current staff in a search for former ones, which is worse than refusing.
+  if (opts.affiliationStatus === 'any') {
+    if (opts.byRor) {
+      for (const r of opts.rors) terms.push(`ror-org-id:"https://ror.org/${r}"`);
+      for (const g of facts.gridIds ?? []) terms.push(`grid-org-id:"${g}"`);
+    }
+    for (const rg of opts.ringgolds) terms.push(`ringgold-org-id:"${rg}"`);
+  }
+  if (opts.byName)
+    for (const n of opts.orgNames) terms.push(`${NAME_FIELD[opts.affiliationStatus]}:"${n}"`);
+
+  if (!terms.length) return null;
+  const affiliation = terms.join(' OR ');
+  if (!opts.keywords.length) return affiliation;
+  return `(${affiliation}) AND (${opts.keywords.map((k) => `keyword:"${k}"`).join(' OR ')})`;
 }
 
 /** Which criteria are usable: a ticked box with an empty field is not one. */
 export function activeCriteria(o) {
   const opts = normaliseOptions(o);
+  const byId = opts.affiliationStatus === 'any';
   return {
-    ror: opts.byRor && opts.rors.length > 0,
+    ror: byId && opts.byRor && opts.rors.length > 0,
+    ringgold: byId && opts.ringgolds.length > 0,
     name: opts.byName && opts.orgNames.length > 0,
   };
+}
+
+/**
+ * What is wrong with these options, as a key the caller turns into a message.
+ * Null when the search can run. Kept here rather than in the UI so the rules are
+ * testable and stated once.
+ */
+export function validateOptions(o) {
+  const opts = normaliseOptions(o);
+  const badRor = opts.rors.find((r) => !ROR_RE.test(r));
+  if (badRor) return { key: 'badRor', id: badRor };
+  const badRinggold = opts.ringgolds.find((r) => !RINGGOLD_RE.test(r));
+  if (badRinggold) return { key: 'badRinggold', id: badRinggold };
+  const active = activeCriteria(opts);
+  // A current/past search is name-only, so a user who set the status and gave
+  // only an identifier is told exactly that rather than "no criteria".
+  if (opts.affiliationStatus !== 'any' && !active.name)
+    return { key: 'statusNeedsName' };
+  if (!active.ror && !active.ringgold && !active.name) return { key: 'noCriteria' };
+  if (opts.startFrom && opts.startTo && opts.startFrom > opts.startTo)
+    return { key: 'badStartRange' };
+  return null;
 }
 
 /** Do the active filters need the per-candidate employments call? */
 export function needsEmployments(o) {
   const opts = normaliseOptions(o);
-  return opts.roleTitles.length > 0 || !!opts.requireStartDate || !!opts.currentOnly || !!opts.assertedOnly;
+  return (
+    opts.roleTitles.length > 0 ||
+    opts.excludeRoleTitles.length > 0 ||
+    opts.departments.length > 0 ||
+    opts.countries.length > 0 ||
+    opts.startFrom !== null ||
+    opts.startTo !== null ||
+    !!opts.requireStartDate ||
+    !!opts.currentOnly ||
+    !!opts.assertedOnly
+  );
 }
 
 /** The display name ORCID gives us, with the same precedence the API documents. */
@@ -158,14 +253,35 @@ export function classifyAssertion(emp, orcid) {
  * here IS the order of the checks in `matchEmployments`: moving one without the
  * other turns every count in the breakdown into fiction.
  */
-const STAGE = { NONE: 0, ORG: 1, ROLE: 2, START: 3, ASSERTED: 4, KEPT: 5 };
+const STAGE = {
+  NONE: 0, ORG: 1, COUNTRY: 2, DEPARTMENT: 3, ROLE: 4, ROLE_KEPT: 5,
+  START_PRESENT: 6, START_IN_RANGE: 7, ASSERTED: 8, KEPT: 9,
+};
+
+/** The breakdown counter a candidate lands in, by the last stage it passed:
+ *  a rejection belongs to the check that comes NEXT. */
+const REJECTED_BY = {
+  [STAGE.NONE]: 'noOrgMatch',
+  [STAGE.ORG]: 'noCountryMatch',
+  [STAGE.COUNTRY]: 'noDepartmentMatch',
+  [STAGE.DEPARTMENT]: 'noRoleMatch',
+  [STAGE.ROLE]: 'roleExcluded',
+  [STAGE.ROLE_KEPT]: 'noStartDate',
+  [STAGE.START_PRESENT]: 'startOutOfRange',
+  [STAGE.START_IN_RANGE]: 'selfAsserted',
+  [STAGE.ASSERTED]: 'pastEmployment',
+};
 
 /** Lower-cased needles, computed once per run rather than once per candidate. */
 function needles(opts, extraNames = []) {
+  const lower = (list) => list.map((x) => x.toLowerCase());
   return {
     rors: new Set(opts.rors),
-    names: [...new Set([...opts.orgNames, ...extraNames])].map((n) => n.toLowerCase()),
-    roles: opts.roleTitles.map((s) => s.toLowerCase()),
+    names: lower([...new Set([...opts.orgNames, ...extraNames])]),
+    roles: lower(opts.roleTitles),
+    excludeRoles: lower(opts.excludeRoleTitles),
+    departments: lower(opts.departments),
+    countries: new Set(opts.countries),
   };
 }
 
@@ -231,15 +347,40 @@ export function matchEmployments(data, row, opts, today = new Date(), n = needle
       if (!hit) continue;
       stage = Math.max(stage, STAGE.ORG);
 
-      if (n.roles.length) {
-        const role = String(emp['role-title'] ?? '').toLowerCase();
-        if (!n.roles.some((rt) => role.includes(rt))) continue;
+      const address = org.address ?? {};
+      const country = String(address.country ?? '').toUpperCase() || null;
+      if (n.countries.size && !(country && n.countries.has(country))) continue;
+      stage = Math.max(stage, STAGE.COUNTRY);
+
+      const department = emp['department-name'] ?? null;
+      if (n.departments.length) {
+        const d = String(department ?? '').toLowerCase();
+        if (!n.departments.some((needle) => d.includes(needle))) continue;
       }
+      stage = Math.max(stage, STAGE.DEPARTMENT);
+
+      const role = String(emp['role-title'] ?? '').toLowerCase();
+      if (n.roles.length && !n.roles.some((rt) => role.includes(rt))) continue;
       stage = Math.max(stage, STAGE.ROLE);
 
+      // ORCID's query language has no negation, so an exclusion can only be
+      // applied here, against the record we already hold.
+      if (n.excludeRoles.some((rt) => role.includes(rt))) continue;
+      stage = Math.max(stage, STAGE.ROLE_KEPT);
+
       const start = emp['start-date'];
-      if (o.requireStartDate && !start?.year?.value) continue;
-      stage = Math.max(stage, STAGE.START);
+      const startYear = start?.year?.value ? parseInt(start.year.value, 10) : null;
+      if (o.requireStartDate && startYear === null) continue;
+      stage = Math.max(stage, STAGE.START_PRESENT);
+
+      // A range implies a start date: an employment with no year cannot be
+      // shown to fall inside it, so it is out of range rather than undated.
+      if (o.startFrom !== null || o.startTo !== null) {
+        if (startYear === null) continue;
+        if (o.startFrom !== null && startYear < o.startFrom) continue;
+        if (o.startTo !== null && startYear > o.startTo) continue;
+      }
+      stage = Math.max(stage, STAGE.START_IN_RANGE);
 
       const assertion = classifyAssertion(emp, orcid);
       if (o.assertedOnly && assertion.assertedBy !== 'organization') continue;
@@ -256,8 +397,10 @@ export function matchEmployments(data, row, opts, today = new Date(), n = needle
           givenName: row['given-names'] ?? null,
           familyName: row['family-names'] ?? null,
           roleTitle: emp['role-title'] ?? null,
-          department: emp['department-name'] ?? null,
+          department,
           organization: org.name ?? null,
+          country,
+          city: address.city ?? null,
           startDate: formatOrcidDate(start),
           endDate: formatOrcidDate(end),
           institutions: row['institution-name'] ?? [],
@@ -274,8 +417,12 @@ export function matchEmployments(data, row, opts, today = new Date(), n = needle
 function emptyBreakdown(o) {
   return {
     noOrgMatch: 0,
+    noCountryMatch: o.countries.length ? 0 : null,
+    noDepartmentMatch: o.departments.length ? 0 : null,
     noRoleMatch: o.roleTitles.length ? 0 : null,
+    roleExcluded: o.excludeRoleTitles.length ? 0 : null,
     noStartDate: o.requireStartDate ? 0 : null,
+    startOutOfRange: o.startFrom !== null || o.startTo !== null ? 0 : null,
     selfAsserted: o.assertedOnly ? 0 : null,
     pastEmployment: o.currentOnly ? 0 : null,
     unreachable: 0,
@@ -290,35 +437,42 @@ function emptyBreakdown(o) {
  */
 export async function discoverPeople(options, deps = {}) {
   const o = normaliseOptions(options);
-  const query = buildQuery(o);
   const breakdown = emptyBreakdown(o);
-  if (!query)
-    return { people: [], breakdown, totalFound: 0, scanned: 0, query: '', rorNames: [], mode: 'fast', aborted: false };
-
   const search = deps.search ?? ((q, max) => expandedSearch(q, max, deps));
   const employments = deps.employments ?? ((id) => fetchEmployments(id, deps));
-  const resolveRorNames = deps.resolveRorNames ?? ((id) => fetchRorNames(id, deps));
+  const resolveRorFacts = deps.resolveRorFacts ?? ((id) => fetchRorFacts(id, deps));
   const onProgress = deps.onProgress ?? (() => {});
   const concurrency = deps.concurrency ?? 6;
   const today = deps.today ?? new Date();
   const full = needsEmployments(o);
+  const empty = { people: [], breakdown, totalFound: 0, scanned: 0, query: '', rorNames: [], gridIds: [], mode: 'fast', aborted: false };
 
-  // Full mode compares each employment against the institution, and ORCID lets
-  // an employment be disambiguated with RINGGOLD or FUNDREF instead of ROR, or
-  // with nothing at all. Matching on the ROR id alone would drop exactly the
-  // employments an institution's own system asserts, which is the opposite of
-  // what the asserted-only filter is for. So resolve the ROR ids to their
-  // registered names first and match on those too. One request per ROR id, run
-  // alongside the search rather than after it.
-  const wantsRorNames = full && o.byRor && o.rors.length > 0;
-  onProgress({ phase: 'search', done: 0, total: o.maxRows });
-  const [{ rows, totalFound }, rorNameLists] = await Promise.all([
-    search(query, o.maxRows),
-    wantsRorNames ? Promise.all(o.rors.map(resolveRorNames)) : Promise.resolve([]),
-  ]);
-  const rorNames = [...new Set(rorNameLists.flat())];
+  // ROR is resolved BEFORE the query is built, because it feeds two different
+  // things and one of them is the query itself:
+  //
+  //   the GRID id  goes into the query. ORCID indexes ROR and GRID separately,
+  //                so for Karolinska `ror-org-id` alone finds 4,206 accounts
+  //                where `ror-org-id OR grid-org-id` finds 5,318.
+  //   the names    go into the employment match. ORCID lets an employment be
+  //                disambiguated with RINGGOLD or FUNDREF instead of ROR, so
+  //                matching on the ROR id alone drops exactly the employments
+  //                an institution's own system asserts.
+  //
+  // One request per ROR id, and none at all when no ROR criterion is in play.
+  const wantsRor = o.byRor && o.rors.length > 0 && o.affiliationStatus === 'any';
+  const facts = wantsRor ? await Promise.all(o.rors.map(resolveRorFacts)) : [];
+  const gridIds = [...new Set(facts.map((f) => f?.grid).filter(Boolean))];
+  // The names are only ever compared against an employment, so in fast mode
+  // they are neither used nor reported.
+  const rorNames = full ? [...new Set(facts.flatMap((f) => f?.names ?? []))] : [];
+
+  const query = buildQuery(o, { gridIds });
+  if (!query) return empty;
+
   const n = needles(o, rorNames);
-  const base = { breakdown, totalFound, scanned: rows.length, query, rorNames, mode: full ? 'full' : 'fast' };
+  onProgress({ phase: 'search', done: 0, total: o.maxRows });
+  const { rows, totalFound } = await search(query, o.maxRows);
+  const base = { breakdown, totalFound, scanned: rows.length, query, rorNames, gridIds, mode: full ? 'full' : 'fast' };
 
   if (!full) {
     const people = [];
@@ -346,13 +500,16 @@ export async function discoverPeople(options, deps = {}) {
       }),
     );
     for (const res of outcomes) {
-      if (res.person) people.push(res.person);
-      else if (res.stage === -1) breakdown.unreachable++;
-      else if (res.stage === STAGE.ASSERTED) breakdown.pastEmployment = (breakdown.pastEmployment ?? 0) + 1;
-      else if (res.stage === STAGE.START) breakdown.selfAsserted = (breakdown.selfAsserted ?? 0) + 1;
-      else if (res.stage === STAGE.ROLE) breakdown.noStartDate = (breakdown.noStartDate ?? 0) + 1;
-      else if (res.stage === STAGE.ORG) breakdown.noRoleMatch = (breakdown.noRoleMatch ?? 0) + 1;
-      else breakdown.noOrgMatch++;
+      if (res.person) { people.push(res.person); continue; }
+      if (res.stage === -1) { breakdown.unreachable++; continue; }
+      // The counter this lands on is always an active one, and that is a
+      // property of the chain rather than luck: a check that is switched off
+      // still advances the stage, so the stage a candidate stops at is always
+      // the one immediately before the check that rejected it. Searching
+      // forward for an active counter was written here first and turned out to
+      // be unreachable, which an injected defect proved by changing nothing.
+      const key = REJECTED_BY[res.stage] ?? 'noOrgMatch';
+      breakdown[key] = (breakdown[key] ?? 0) + 1;
     }
     done += batch.length;
     onProgress({ phase: 'employments', done, total: rows.length });

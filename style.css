@@ -188,6 +188,9 @@ h1, h2, h3 { font-family: var(--disp); font-weight: 800; letter-spacing: -0.02em
 .chk { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink); cursor: pointer; }
 .chk input { accent-color: var(--brand); width: 15px; height: 15px; }
 .hint { font-size: 11.5px; color: var(--ink-2); line-height: 1.55; margin: 0; }
+.radios { display: flex; gap: 14px; flex-wrap: wrap; }
+.radios .chk input { accent-color: var(--brand); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hairline); }

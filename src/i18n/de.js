@@ -5,22 +5,19 @@ export const de = {
   'ui.brand.tagline': 'Die ORCID-Konten finden, die eine Einrichtung angeben',
   'ui.brand.source': 'Quellcode ↗',
   'ui.lede':
-    'Geben Sie eine <b>ROR-ID</b> oder einen Organisationsnamen ein, und das Werkzeug listet die ORCID-Konten auf, die diese Zugehörigkeit angeben. Danach lässt sich die Liste nach Funktionsbezeichnung, Startdatum, laufender Anstellung und danach eingrenzen, ob eine Organisation den Eintrag vorgenommen hat statt der Person selbst. Die Tabelle steht als <b>CSV</b> oder <b>JSON</b> zum Download bereit. Alles läuft in Ihrem Browser gegen die öffentlichen APIs von ORCID und ROR: ohne Konto, ohne Schlüssel, und nichts läuft über einen Server von uns.',
+    'Geben Sie eine <b>ROR-ID</b> oder einen Organisationsnamen ein, und das Werkzeug listet die ORCID-Konten auf, die diese Zugehörigkeit angeben. Danach lässt sich die Liste nach Schlagwort, Funktion, Abteilung, Land, Startdatum, laufender Anstellung und danach eingrenzen, ob eine Organisation den Eintrag vorgenommen hat statt der Person selbst. Die Tabelle steht als <b>CSV</b> oder <b>JSON</b> zum Download bereit. Alles läuft in Ihrem Browser gegen die öffentlichen APIs von ORCID und ROR: ohne Konto, ohne Schlüssel, und nichts läuft über einen Server von uns.',
   'ui.lang.aria': 'Sprache',
   'ui.theme.title': 'Helles/dunkles Design umschalten',
   'ui.theme.aria': 'Helles/dunkles Design umschalten',
 
-  'form.legend.searchBy': 'Suchen nach',
-  'form.legend.narrow': 'Ergebnis eingrenzen',
-  'form.legend.scope': 'Umfang',
   'form.byRor': 'ROR-ID',
   'form.byName': 'Organisationsname',
   'form.rors.label': 'ROR-ID(s), kommagetrennt',
-  'form.rors.ph': 'z. B. 03yrm5c26, 05gq02987',
+  'form.rors.ph': 'z. B. 056d84691',
   'form.rors.hint':
-    'Mehrere zugleich erfassen eine Einrichtung, die als übergeordnete ROR mit untergeordneten Einträgen für Fakultäten oder Standorte registriert ist: ein Datensatz kann jede davon angeben.',
+    'Mehrere zugleich erfassen eine Einrichtung, die als übergeordnete ROR mit untergeordneten Einträgen für Fakultäten oder Standorte registriert ist: ein Datensatz kann jede davon angeben. Die GRID-ID, die ROR zu jeder führt, kommt automatisch in die Abfrage, denn ORCID indexiert beide getrennt.',
   'form.orgNames.label': 'Organisationsname(n), kommagetrennt',
-  'form.orgNames.ph': 'z. B. Universität Wien, University of Vienna',
+  'form.orgNames.ph': 'z. B. Karolinska Institutet',
   'form.orgNames.hint':
     'Abgeglichen wird, was die Kontoinhaberin oder der Kontoinhaber geschrieben hat: alternative Schreibweisen und die landessprachliche Form lohnen sich.',
   'form.roleTitles.label': 'Funktionsbezeichnung enthält',
@@ -28,7 +25,7 @@ export const de = {
   'form.currentOnly': 'Nur laufende Anstellungen',
   'form.requireStartDate': 'Muss ein Startdatum haben',
   'form.employmentsHint':
-    'Diese vier lesen den ORCID-Anstellungsdatensatz jeder Kandidatin und jedes Kandidaten: eine zusätzliche Anfrage pro Person, also langsamer, aber deutlich genauer.',
+    'Alles in dieser Spalte liest den ORCID-Anstellungsdatensatz jeder Kandidatin und jedes Kandidaten: eine zusätzliche Anfrage pro Person, also langsamer, aber deutlich genauer. Der Ausschluss von Funktionsbezeichnungen geschieht hier, weil ORCIDs Abfragesprache keine Verneinung kennt.',
   'form.maxRows.label': 'Maximale Anzahl Kandidaten',
   'form.maxRows.hint':
     'Wie viele der passenden Konten abgerufen und geprüft werden. ORCID liefert sie in Seiten zu 100; 1000 ist hier die Obergrenze.',
@@ -102,6 +99,40 @@ export const de = {
   'asserted.other.title':
     'Eine andere ORCID iD hat diese Anstellung eingetragen, was ORCID über eine Delegation an eine vertraute Person erlaubt.',
 
+  'form.legend.institution': 'Die Einrichtung',
+  'form.legend.employment': 'Die Anstellung',
+  'form.legend.topic': 'Thema und Umfang',
+  'form.ringgolds.label': 'Ringgold-ID(s), kommagetrennt',
+  'form.ringgolds.ph': 'z. B. 27106',
+  'form.ringgolds.hint':
+    'ORCID indexiert Ringgold-IDs getrennt, und das System einer Einrichtung vergibt meist eine: sie hinzuzunehmen kann mehr als verdoppeln, was die Suche sieht. Sie ist zugleich gröber als eine ROR-ID und kann verwandte Organisationen mitbringen, etwa ein Universitätsklinikum. Lesen Sie also die Spalte Organisation.',
+  'form.status.label': 'Zugehörigkeit',
+  'form.status.any': 'Beliebig',
+  'form.status.current': 'Laufend',
+  'form.status.past': 'Früher',
+  'form.status.hint':
+    'Laufend und früher indexiert ORCID nur über den Organisationsnamen. Wird eines davon gewählt, wird allein nach Namen gesucht und die ID-Felder bleiben außen vor. Über „früher“ finden Sie ehemaliges Personal und Alumni.',
+  'form.keywords.label': 'Schlagwort(e), kommagetrennt',
+  'form.keywords.ph': 'Epidemiologie, Onkologie',
+  'form.keywords.hint':
+    'Die Schlagworte, die Forschende selbst in ihrem ORCID-Datensatz führen. Mehrere werden mit ODER verknüpft, und das Ganze grenzt die Einrichtung ein. So lässt sich fragen, wer hier woran arbeitet. Kostenlos: es geht in dieselbe eine Abfrage.',
+  'form.excludeRoleTitles.label': 'Funktionsbezeichnung darf nicht enthalten',
+  'form.excludeRoleTitles.ph': 'Promotion, Student',
+  'form.departments.label': 'Abteilung enthält',
+  'form.departments.ph': 'Molekulare Medizin',
+  'form.countries.label': 'Ländercode(s)',
+  'form.countries.ph': 'SE, AT',
+  'form.startFrom.label': 'Beginn ab',
+  'form.startTo.label': 'Beginn bis',
+  'err.badRinggold': '„{id}“ ist keine gültige Ringgold-ID. Das sind reine Zahlen, etwa 27106.',
+  'err.statusNeedsName':
+    'Eine Suche nach laufend oder früher braucht einen Organisationsnamen. ORCID indexiert diese beiden nur über den Namen, nie über eine ROR-, GRID- oder Ringgold-ID.',
+  'err.badStartRange': 'Der Zeitraum läuft rückwärts: das erste Jahr liegt nach dem letzten.',
+  'bd.noCountryMatch': '{n} in einem anderen Land',
+  'bd.noDepartmentMatch': '{n} Abteilung passte nicht',
+  'bd.roleExcluded': '{n} Funktionsbezeichnung ausgeschlossen',
+  'bd.startOutOfRange': '{n} Beginn außerhalb des Zeitraums',
+  'col.country': 'Land',
   'how.title': 'Wie es funktioniert',
   'how.body':
     '<p>Das Werkzeug nutzt zwei Endpunkte der öffentlichen ORCID-API. Welcher davon läuft, entscheiden die gesetzten Filter.</p>' +

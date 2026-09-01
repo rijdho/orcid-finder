@@ -7,7 +7,7 @@
   <meta name="description" data-i18n-attr="content:meta.description"
         content="Search ORCID for the accounts that declare an institution, by ROR id or organisation name, narrow by role title, start date, current appointments and who asserted the record, and download the result as CSV or JSON." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236d4aff'/%3E%3Ctext x='16' y='22' font-size='15' text-anchor='middle' fill='%23ffffff' font-family='monospace' font-weight='bold'%3EiD%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./style.css?v=3" />
+  <link rel="stylesheet" href="./style.css?v=4" />
   <script>
     /* Stamp the stored theme before first paint, so a dark-theme visitor never
        sees a white flash while the module graph loads. */
@@ -72,27 +72,61 @@
             <form class="panel" id="search" novalidate>
               <div class="cols">
                 <div class="col">
-                  <p class="col-title" data-i18n="form.legend.searchBy">Search by</p>
+                  <p class="col-title" data-i18n="form.legend.institution">The institution</p>
                   <label class="chk"><input type="checkbox" id="byRor" checked /> <span data-i18n="form.byRor">ROR id</span></label>
                   <label class="field"><span data-i18n="form.rors.label">ROR id(s), comma-separated</span>
                     <input class="input" id="rors" autocomplete="off" spellcheck="false"
-                           data-i18n-attr="placeholder:form.rors.ph" placeholder="e.g. 03yrm5c26, 05gq02987" />
+                           data-i18n-attr="placeholder:form.rors.ph" placeholder="e.g. 056d84691" />
                   </label>
                   <p class="hint" data-i18n="form.rors.hint"></p>
+                  <label class="field"><span data-i18n="form.ringgolds.label">Ringgold id(s), comma-separated</span>
+                    <input class="input" id="ringgolds" autocomplete="off" spellcheck="false"
+                           data-i18n-attr="placeholder:form.ringgolds.ph" placeholder="e.g. 27106" />
+                  </label>
+                  <p class="hint" data-i18n="form.ringgolds.hint"></p>
                   <label class="chk"><input type="checkbox" id="byName" checked /> <span data-i18n="form.byName">Organisation name</span></label>
                   <label class="field"><span data-i18n="form.orgNames.label">Organisation name(s), comma-separated</span>
                     <input class="input" id="orgNames" autocomplete="off"
-                           data-i18n-attr="placeholder:form.orgNames.ph" placeholder="e.g. University of Vienna" />
+                           data-i18n-attr="placeholder:form.orgNames.ph" placeholder="e.g. Karolinska Institutet" />
                   </label>
                   <p class="hint" data-i18n="form.orgNames.hint"></p>
+                  <div class="field">
+                    <span data-i18n="form.status.label">Affiliation</span>
+                    <div class="radios" id="status" role="radiogroup" data-i18n-attr="aria-label:form.status.label">
+                      <label class="chk"><input type="radio" name="status" value="any" checked /> <span data-i18n="form.status.any">Any</span></label>
+                      <label class="chk"><input type="radio" name="status" value="current" /> <span data-i18n="form.status.current">Current</span></label>
+                      <label class="chk"><input type="radio" name="status" value="past" /> <span data-i18n="form.status.past">Past</span></label>
+                    </div>
+                  </div>
+                  <p class="hint" data-i18n="form.status.hint"></p>
                 </div>
 
                 <div class="col">
-                  <p class="col-title" data-i18n="form.legend.narrow">Narrow the result</p>
+                  <p class="col-title" data-i18n="form.legend.employment">The employment</p>
                   <label class="field"><span data-i18n="form.roleTitles.label">Role title contains</span>
                     <input class="input" id="roleTitles" autocomplete="off"
                            data-i18n-attr="placeholder:form.roleTitles.ph" placeholder="professor, postdoc" />
                   </label>
+                  <label class="field"><span data-i18n="form.excludeRoleTitles.label">Role title must not contain</span>
+                    <input class="input" id="excludeRoleTitles" autocomplete="off"
+                           data-i18n-attr="placeholder:form.excludeRoleTitles.ph" placeholder="phd, student" />
+                  </label>
+                  <label class="field"><span data-i18n="form.departments.label">Department contains</span>
+                    <input class="input" id="departments" autocomplete="off"
+                           data-i18n-attr="placeholder:form.departments.ph" placeholder="molecular medicine" />
+                  </label>
+                  <label class="field"><span data-i18n="form.countries.label">Country code(s)</span>
+                    <input class="input" id="countries" autocomplete="off" spellcheck="false"
+                           data-i18n-attr="placeholder:form.countries.ph" placeholder="SE, AT" />
+                  </label>
+                  <div class="pair">
+                    <label class="field"><span data-i18n="form.startFrom.label">Started from</span>
+                      <input class="input" id="startFrom" type="number" min="1900" max="2100" placeholder="2020" />
+                    </label>
+                    <label class="field"><span data-i18n="form.startTo.label">Started to</span>
+                      <input class="input" id="startTo" type="number" min="1900" max="2100" placeholder="2026" />
+                    </label>
+                  </div>
                   <label class="chk"><input type="checkbox" id="currentOnly" /> <span data-i18n="form.currentOnly">Only current appointments</span></label>
                   <label class="chk"><input type="checkbox" id="requireStartDate" /> <span data-i18n="form.requireStartDate">Must have a start date</span></label>
                   <label class="chk"><input type="checkbox" id="assertedOnly" /> <span data-i18n="form.assertedOnly">Only records asserted by an organisation</span></label>
@@ -100,7 +134,12 @@
                 </div>
 
                 <div class="col">
-                  <p class="col-title" data-i18n="form.legend.scope">Scope</p>
+                  <p class="col-title" data-i18n="form.legend.topic">Topic and scope</p>
+                  <label class="field"><span data-i18n="form.keywords.label">Keyword(s), comma-separated</span>
+                    <input class="input" id="keywords" autocomplete="off"
+                           data-i18n-attr="placeholder:form.keywords.ph" placeholder="epidemiology, oncology" />
+                  </label>
+                  <p class="hint" data-i18n="form.keywords.hint"></p>
                   <label class="field"><span data-i18n="form.maxRows.label">Max candidates</span>
                     <!-- No `step`: with min=1 a step of 10 would only accept 1, 11, 21 … and the
                          browser silently rejects the default 200 on submit. -->
@@ -167,6 +206,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/app.js?v=3"></script>
+  <script type="module" src="./src/app.js?v=4"></script>
 </body>
 </html>

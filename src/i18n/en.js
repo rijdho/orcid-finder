@@ -7,22 +7,19 @@ export const en = {
   'ui.brand.tagline': 'Find the ORCID accounts that declare an institution',
   'ui.brand.source': 'source ↗',
   'ui.lede':
-    'Give it a <b>ROR id</b> or an organisation name and it lists the ORCID accounts that declare that affiliation, then lets you narrow the list by role title, start date, whether the appointment is still current, and whether an organisation asserted it rather than the researcher. The table downloads as <b>CSV</b> or <b>JSON</b>. Everything runs in your browser against the public ORCID and ROR APIs: no account, no key, and nothing passes through a server of ours.',
+    'Give it a <b>ROR id</b> or an organisation name and it lists the ORCID accounts that declare that affiliation, then lets you narrow the list by keyword, role, department, country, start date, whether the appointment is still current, and whether an organisation asserted it rather than the researcher. The table downloads as <b>CSV</b> or <b>JSON</b>. Everything runs in your browser against the public ORCID and ROR APIs: no account, no key, and nothing passes through a server of ours.',
   'ui.lang.aria': 'Language',
   'ui.theme.title': 'Toggle light/dark theme',
   'ui.theme.aria': 'Toggle light/dark theme',
 
-  'form.legend.searchBy': 'Search by',
-  'form.legend.narrow': 'Narrow the result',
-  'form.legend.scope': 'Scope',
   'form.byRor': 'ROR id',
   'form.byName': 'Organisation name',
   'form.rors.label': 'ROR id(s), comma-separated',
-  'form.rors.ph': 'e.g. 03yrm5c26, 05gq02987',
+  'form.rors.ph': 'e.g. 056d84691',
   'form.rors.hint':
-    'Several at once cover an institution registered as a parent ROR with children for faculties or campuses: a record may declare any of them.',
+    'Several at once cover an institution registered as a parent ROR with children for faculties or campuses: a record may declare any of them. The GRID id ROR holds for each is added to the query automatically, because ORCID indexes the two separately.',
   'form.orgNames.label': 'Organisation name(s), comma-separated',
-  'form.orgNames.ph': 'e.g. University of Vienna, Universität Wien',
+  'form.orgNames.ph': 'e.g. Karolinska Institutet',
   'form.orgNames.hint':
     'Matched as written by the account holder, so alternative spellings and the local-language form are worth adding.',
   'form.roleTitles.label': 'Role title contains',
@@ -30,7 +27,7 @@ export const en = {
   'form.currentOnly': 'Only current appointments',
   'form.requireStartDate': 'Must have a start date',
   'form.employmentsHint':
-    'These four read each candidate’s ORCID employment record: one extra request per candidate, so the search gets slower but far more precise.',
+    'Everything in this column reads each candidate’s ORCID employment record: one extra request per candidate, so the search gets slower but far more precise. Role exclusion happens here because ORCID’s query language has no negation.',
   'form.maxRows.label': 'Max candidates',
   'form.maxRows.hint':
     'How many of the matching accounts to pull and examine. ORCID pages them 100 at a time; 1000 is the ceiling here.',
@@ -103,6 +100,40 @@ export const en = {
   'asserted.other.title':
     'Another ORCID iD wrote this employment, which ORCID allows through a trusted-individual delegation.',
 
+  'form.legend.institution': 'The institution',
+  'form.legend.employment': 'The employment',
+  'form.legend.topic': 'Topic and scope',
+  'form.ringgolds.label': 'Ringgold id(s), comma-separated',
+  'form.ringgolds.ph': 'e.g. 27106',
+  'form.ringgolds.hint':
+    'ORCID indexes Ringgold ids separately, and an institution’s own system usually stamps one: adding it can more than double what the search sees. It is also coarser than a ROR id and may pull in a related organisation, such as a university hospital, so read the organisation column.',
+  'form.status.label': 'Affiliation',
+  'form.status.any': 'Any',
+  'form.status.current': 'Current',
+  'form.status.past': 'Past',
+  'form.status.hint':
+    'Current and past are indexed by ORCID only on the organisation name, so choosing one searches by name alone and the identifier fields sit out. Past is how you find former staff and alumni.',
+  'form.keywords.label': 'Keyword(s), comma-separated',
+  'form.keywords.ph': 'epidemiology, oncology',
+  'form.keywords.hint':
+    'The keywords researchers put on their own ORCID record. Several are OR-ed together and the whole set narrows the institution, so this answers "who here works on this". Free: it goes into the same single query.',
+  'form.excludeRoleTitles.label': 'Role title must not contain',
+  'form.excludeRoleTitles.ph': 'phd, student',
+  'form.departments.label': 'Department contains',
+  'form.departments.ph': 'molecular medicine',
+  'form.countries.label': 'Country code(s)',
+  'form.countries.ph': 'SE, AT',
+  'form.startFrom.label': 'Started from',
+  'form.startTo.label': 'Started to',
+  'err.badRinggold': '“{id}” is not a valid Ringgold id. They are plain numbers, for instance 27106.',
+  'err.statusNeedsName':
+    'A current or past search needs an organisation name. ORCID indexes those two only on the name, never on a ROR, GRID or Ringgold id.',
+  'err.badStartRange': 'The start range runs backwards: the first year is later than the last.',
+  'bd.noCountryMatch': '{n} in another country',
+  'bd.noDepartmentMatch': '{n} department did not match',
+  'bd.roleExcluded': '{n} role title excluded',
+  'bd.startOutOfRange': '{n} started outside the range',
+  'col.country': 'Country',
   'how.title': 'How it works',
   'how.body':
     '<p>The tool uses two endpoints of the ORCID public API. Which one runs is decided by the filters you tick.</p>' +

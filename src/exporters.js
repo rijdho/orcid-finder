@@ -12,6 +12,8 @@ export const COLUMNS = [
   'role_title',
   'department',
   'organization',
+  'country',
+  'city',
   'start_date',
   'end_date',
   'matched_by',
@@ -36,6 +38,11 @@ export function toRecord(p) {
     role_title: p.roleTitle ?? '',
     department: p.department ?? '',
     organization: p.organization ?? '',
+    // The employment's own address, as ORCID holds it: an ISO-2 country code
+    // and a city. Empty in fast mode, like everything else that lives inside
+    // the employment record.
+    country: p.country ?? '',
+    city: p.city ?? '',
     start_date: p.startDate ?? '',
     end_date: p.endDate ?? '',
     matched_by: p.matchedBy ?? '',
@@ -103,6 +110,7 @@ export function peopleToJson(people, meta = {}) {
       // The names resolved from ROR and matched on, so a reader can see exactly
       // what the affiliation check compared against.
       ror_names: meta.rorNames ?? [],
+      grid_ids: meta.gridIds ?? [],
       filters: meta.filters ?? null,
       total_found: meta.totalFound ?? null,
       scanned: meta.scanned ?? null,

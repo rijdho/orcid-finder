@@ -1,7 +1,7 @@
 # orcid-finder
 
-**Find the ORCID accounts that declare an institution, narrow them by role title, start date,
-current appointments and who asserted the record, and export the table as CSV or JSON.**
+**Find the ORCID accounts that declare an institution, narrow them by keyword, role,
+department, country, dates and who asserted the record, and export the table as CSV or JSON.**
 
 Give it a ROR id or an organisation name and it lists the ORCID records that declare that
 affiliation. Everything runs in the browser against the public ORCID and ROR APIs, the only two
@@ -16,9 +16,9 @@ Caveats say where that answer stops.
 
 Available in **English, German and Spanish** (auto-detected from the browser, switchable).
 
-![The tool on arrival: a rail listing Search, How it works, Caveats and About, and a filter
-panel holding ROR id 056d84691 with "Only records asserted by an organisation" ticked and max
-candidates set to 40.](docs/app.png)
+![The tool on arrival: a rail listing Search, How it works, Caveats and About, and a three-column
+filter panel holding ROR id 056d84691, country code SE and "Only records asserted by an
+organisation" ticked, with max candidates set to 40.](docs/app.png)
 
 ## What it does
 
@@ -27,17 +27,31 @@ itself reports about that person's appointment at the institution you asked abou
 
 | Filter | What it matches | Cost |
 | --- | --- | --- |
-| ROR id(s) | `ror-org-id` on the account, several at once for a parent ROR with children | free |
-| Organisation name(s) | `affiliation-org-name`, as a substring, case-insensitive | free |
+| ROR id(s) | `ror-org-id`, plus the `grid-org-id` resolved from it | one request per ROR id |
+| Ringgold id(s) | `ringgold-org-id`, which is what institutional systems usually stamp | free |
+| Organisation name(s) | the affiliation name field, as a substring, case-insensitive | free |
+| Affiliation: any, current, past | switches to `current-` or `past-institution-affiliation-name` | free |
+| Keyword(s) | `keyword` on the record, AND-ed onto the institution | free |
 | Role title contains | the employment's `role-title`, any of several terms | one request per candidate |
+| Role title must not contain | the same field, as an exclusion | one request per candidate |
+| Department contains | the employment's `department-name` | one request per candidate |
+| Country code(s) | the employment organisation's address country | one request per candidate |
+| Started from / to | the year of the employment's `start-date` | one request per candidate |
 | Must have a start date | drops appointments with no `start-date` at all | one request per candidate |
 | Only current appointments | drops appointments whose `end-date` has passed | one request per candidate |
 | Only organisation-asserted | keeps only employments a member organisation wrote, not the researcher | one request per candidate |
 | Max candidates | how many matching accounts to pull and examine, 1 to 1000 | free |
 
-The ROR criteria and the name criteria are OR-ed into one query: an account qualifies by
-declaring **any** of them. Ticking a box whose field is empty contributes nothing, and a search
-with no usable criterion is refused rather than run against everything.
+The institution criteria are OR-ed into one query: an account qualifies by declaring **any** of
+the identifiers or **any** of the names. Keywords, when given, are AND-ed onto that block, so
+they narrow the institution rather than widening the search. Ticking a box whose field is empty
+contributes nothing, and a search with no usable criterion is refused rather than run against
+everything.
+
+Two limits of the ORCID query language shape the rest. There is no negation, so role exclusion
+happens on the record already in hand rather than in the query. And `role-title` is not a
+searchable field at all, which is why any filter on a role costs a request per candidate and
+can never be free.
 
 ## The two modes
 
@@ -45,15 +59,15 @@ Which endpoint runs is decided by the filters, not by a mode switch in the inter
 
 ```mermaid
 flowchart TD
-  accTitle: How orcid-finder chooses between fast and full mode
-  accDescr: A search always begins with one expanded-search call. If no filter needs employment data the result is returned immediately as fast mode. If a role title, start date, current-appointment or organisation-asserted filter is active, the tool also resolves each ROR id to the names the registry holds for it, then reads the employments document of every candidate and returns full mode. Both paths end in the same table, with the count of what each filter dropped.
+  accTitle: How orcid-finder resolves, queries and filters
+  accDescr: Each ROR id is first resolved against the ROR registry, which yields its GRID id for the query and its registered names for matching. One expanded-search call follows, OR-ing the identifiers and names and AND-ing any keywords. If no filter needs employment data the result is returned immediately as fast mode. If any filter reads the employment, the tool reads the employments document of every candidate and returns full mode. Both paths end in the same table, with the count of what each filter dropped.
 
-  A[Filters] --> B[One expanded-search call]
-  B --> C{Role title, start date, current<br/>or organisation-asserted?}
-  C -- no --> D[Fast mode:<br/>match on institution-name]
-  C -- yes --> E[Resolve each ROR id to<br/>its registered names]
-  E --> F[Full mode:<br/>read /employments per candidate]
-  D --> G[Table plus per-filter drop counts]
+  A[Filters] --> B[Resolve each ROR id:<br/>GRID id and registered names]
+  B --> C[One expanded-search call:<br/>ROR OR GRID OR Ringgold OR name,<br/>AND keywords]
+  C --> D{Any filter that reads<br/>the employment?}
+  D -- no --> E[Fast mode:<br/>match on institution-name]
+  D -- yes --> F[Full mode:<br/>read /employments per candidate]
+  E --> G[Table plus per-filter drop counts]
   F --> G
 ```
 
@@ -77,7 +91,8 @@ one doing all the work.
 
 ![The results card for ROR 056d84691 in full mode: 3 kept of 40 candidates examined, ORCID
 reports 4,206 matching accounts, the filters dropped 6 with no affiliation match and 31 as
-self-asserted only, and all three kept rows are asserted by Karolinska Institutet.](docs/results.png)
+self-asserted only, and all three kept rows are asserted by Karolinska
+Institutet.](docs/results.png)
 
 ## Who asserted the record
 
@@ -98,20 +113,53 @@ all). In fast mode it is empty, because no employment was opened; empty means un
 
 ### Why the ROR id alone is not enough
 
-ORCID lets an employment be disambiguated with any scheme, and the ones an institution's own
-system writes are frequently RINGGOLD or FUNDREF rather than ROR. Karolinska Institutet's ORCID
-integration, for one, stamps `27106 / RINGGOLD` on the employments it asserts.
+An institution has more than one identifier, and ORCID indexes each of them separately.
+Counting the accounts ORCID reports as declaring Karolinska Institutet:
 
-Matching employments on the ROR id alone therefore drops precisely the organisation-asserted
-records, which are the most corroborated ones in the result: searching Karolinska by ROR with
-the asserted-only filter returned nothing at all. So before the employment checks run, the tool
-resolves each ROR id to the names the registry holds for it and matches on those as well. One
-request per ROR id, run alongside the search. The result says which names it used.
+| Query | Accounts ORCID reports |
+| --- | --- |
+| `ror-org-id` alone | 4,206 |
+| `ror-org-id OR grid-org-id` | 5,318 |
+| `ror-org-id OR grid-org-id OR ringgold-org-id` | 9,547 |
+
+The ROR id alone sees under half. So each ROR id is resolved against the ROR registry before
+the query is built, and the **GRID id** it holds is OR-ed in automatically: ROR was seeded from
+GRID, the mapping is one to one, and it costs nothing the user has to think about.
+
+The **Ringgold id** stays a field you fill in deliberately. ROR does not carry Ringgold ids,
+and a Ringgold id is coarser than a ROR one: `27106` covers both Karolinska Institutet and
+Karolinska University Hospital. It is the largest single gain available and the one most likely
+to widen a result past the institution you meant, which is exactly the combination that should
+be a deliberate act rather than a silent default.
+
+The same registry lookup fixes a second problem, on the matching side. ORCID lets an employment
+be disambiguated with any scheme, and the ones an institution's own system writes are
+frequently RINGGOLD or FUNDREF rather than ROR: Karolinska stamps `27106 / RINGGOLD` on the
+employments it asserts. Matching employments on the ROR id alone therefore dropped precisely
+the organisation-asserted records, and searching Karolinska by ROR with the asserted-only
+filter returned nothing at all. The names ROR registers for the id are matched on as well, and
+the result says which ones it used.
 
 Registered acronyms are deliberately excluded and anything shorter than four characters is
 dropped: Karolinska's registered acronym is `KI`, and `KI` as a substring matches a large part
 of ORCID. A needle that matches everything turns the filter off while the result still looks
 filtered.
+
+
+### Current, past and keywords
+
+`current-institution-affiliation-name` and `past-institution-affiliation-name` are separate
+ORCID fields, and `current OR past` returns exactly what the plain name field returns, so the
+three are a clean partition. **Past** is how you find former staff and alumni, which nothing
+else here reaches.
+
+ORCID indexes those two only on the name, never on an identifier. Choosing current or past
+therefore searches by organisation name alone and the identifier fields sit out. Leaving them
+in would return current staff in a search for former ones, so the tool refuses rather than
+pretending, and says why.
+
+**Keywords** are the terms researchers put on their own ORCID record. They are AND-ed onto the
+institution block, so they answer "who here works on this" inside one query, at no extra cost.
 
 ## The output
 
@@ -122,6 +170,7 @@ Both downloads carry every row of the table, not the page on screen.
 | `orcid`, `orcid_url` | the account |
 | `name`, `given_name`, `family_name` | the search record, falling back to the credit name |
 | `role_title`, `department`, `organization` | the matching employment (full mode only) |
+| `country`, `city` | the employment organisation's address, as ORCID holds it |
 | `start_date`, `end_date` | the matching employment, at the precision ORCID holds |
 | `matched_by` | `employment`, `name` or `ror_only` |
 | `asserted_by` | `organization`, `self`, `other` or `unknown`; empty in fast mode |
@@ -130,8 +179,9 @@ Both downloads carry every row of the table, not the page on screen.
 | `institutions` | every institution name ORCID indexed, pipe-separated |
 
 The JSON file additionally carries the query sent to ORCID, the mode, the filter set, the names
-resolved from ROR, the totals and the per-filter drop counts. A file of results without the
-query that produced it cannot be checked or repeated, which is what that block is for.
+and GRID ids resolved from ROR, the totals and the per-filter drop counts. A file of results
+without the query that produced it cannot be checked or repeated, which is what that block is
+for.
 
 CSV is written per RFC 4180 with CRLF line endings, and any value that a spreadsheet would
 execute as a formula is neutralised with a leading apostrophe. ORCID records are written by the
@@ -172,7 +222,7 @@ ships:
 
 ```bash
 npm i puppeteer
-node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=40&asserted=1&lang=en"
+node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=40&asserted=1&country=SE&lang=en"
 ```
 
 ## Deploy
@@ -193,6 +243,16 @@ purpose.
 - **Fast mode reports no source at all.** Who asserted an employment lives in the employment
   record, so the column is empty until a filter opens it. Empty means unknown, never
   self-asserted.
+- **A Ringgold id is coarser than a ROR id.** `27106` returns both Karolinska Institutet and
+  Karolinska University Hospital. It is the largest coverage gain on offer and the likeliest to
+  reach past the institution you meant, so read the organisation column before trusting a
+  count.
+- **Keywords are sparse.** Most ORCID records carry none, so a keyword filter returns the
+  subset who happen to have filled that field in, never everyone at the institution who works
+  on the topic. It is a way in, not a census of a research area.
+- **Current and past are the account holder's account of themselves.** ORCID derives them from
+  the end dates on the record, so someone who left and never updated it still counts as
+  current.
 - **Resolving a ROR id to its names widens the affiliation match.** It is what keeps the
   organisation-asserted records, but a registered name that is also a common word will match
   more than the institution. The names actually used are printed with the result so the

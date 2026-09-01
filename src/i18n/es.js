@@ -5,22 +5,19 @@ export const es = {
   'ui.brand.tagline': 'Encuentra las cuentas ORCID que declaran una institución',
   'ui.brand.source': 'código ↗',
   'ui.lede':
-    'Indica un <b>identificador ROR</b> o el nombre de una organización y la herramienta lista las cuentas ORCID que declaran esa afiliación; después puedes acotar la lista por cargo, fecha de inicio, si el nombramiento sigue vigente y si lo declaró una organización en lugar de la propia persona. La tabla se descarga en <b>CSV</b> o <b>JSON</b>. Todo se ejecuta en tu navegador contra las API públicas de ORCID y ROR: sin cuenta, sin clave y sin pasar por ningún servidor nuestro.',
+    'Indica un <b>identificador ROR</b> o el nombre de una organización y la herramienta lista las cuentas ORCID que declaran esa afiliación; después puedes acotar la lista por palabra clave, cargo, departamento, país, fecha de inicio, si el nombramiento sigue vigente y si lo declaró una organización en lugar de la propia persona. La tabla se descarga en <b>CSV</b> o <b>JSON</b>. Todo se ejecuta en tu navegador contra las API públicas de ORCID y ROR: sin cuenta, sin clave y sin pasar por ningún servidor nuestro.',
   'ui.lang.aria': 'Idioma',
   'ui.theme.title': 'Cambiar entre tema claro y oscuro',
   'ui.theme.aria': 'Cambiar entre tema claro y oscuro',
 
-  'form.legend.searchBy': 'Buscar por',
-  'form.legend.narrow': 'Acotar el resultado',
-  'form.legend.scope': 'Alcance',
   'form.byRor': 'Identificador ROR',
   'form.byName': 'Nombre de la organización',
   'form.rors.label': 'Identificador(es) ROR, separados por comas',
-  'form.rors.ph': 'p. ej. 03yrm5c26, 05gq02987',
+  'form.rors.ph': 'p. ej. 056d84691',
   'form.rors.hint':
-    'Varios a la vez cubren una institución registrada como ROR matriz con entradas hijas para facultades o sedes: un registro puede declarar cualquiera de ellas.',
+    'Varios a la vez cubren una institución registrada como ROR matriz con entradas hijas para facultades o sedes: un registro puede declarar cualquiera de ellas. El identificador GRID que ROR guarda para cada uno se añade a la consulta automáticamente, porque ORCID indexa los dos por separado.',
   'form.orgNames.label': 'Nombre(s) de la organización, separados por comas',
-  'form.orgNames.ph': 'p. ej. Universidad de Chile, University of Chile',
+  'form.orgNames.ph': 'p. ej. Karolinska Institutet',
   'form.orgNames.hint':
     'Se compara con lo que escribió la persona titular de la cuenta, así que conviene añadir grafías alternativas y la forma en el idioma local.',
   'form.roleTitles.label': 'El cargo contiene',
@@ -28,7 +25,7 @@ export const es = {
   'form.currentOnly': 'Solo nombramientos vigentes',
   'form.requireStartDate': 'Debe tener fecha de inicio',
   'form.employmentsHint':
-    'Estos cuatro leen el registro de empleo de cada candidato en ORCID: una petición adicional por candidato, así que la búsqueda es más lenta pero mucho más precisa.',
+    'Todo lo de esta columna lee el registro de empleo de cada candidato en ORCID: una petición adicional por candidato, así que la búsqueda es más lenta pero mucho más precisa. La exclusión de cargos ocurre aquí porque el lenguaje de consulta de ORCID no tiene negación.',
   'form.maxRows.label': 'Máximo de candidatos',
   'form.maxRows.hint':
     'Cuántas de las cuentas coincidentes se descargan y se examinan. ORCID las pagina de 100 en 100; aquí el techo es 1000.',
@@ -103,6 +100,40 @@ export const es = {
   'asserted.other.title':
     'Otra iD de ORCID escribió este empleo, algo que ORCID permite mediante delegación en una persona de confianza.',
 
+  'form.legend.institution': 'La institución',
+  'form.legend.employment': 'El empleo',
+  'form.legend.topic': 'Tema y alcance',
+  'form.ringgolds.label': 'Identificador(es) Ringgold, separados por comas',
+  'form.ringgolds.ph': 'p. ej. 27106',
+  'form.ringgolds.hint':
+    'ORCID indexa los identificadores Ringgold por separado, y el sistema de la propia institución suele estampar uno: añadirlo puede más que duplicar lo que ve la búsqueda. También es más grueso que un ROR y puede arrastrar organizaciones relacionadas, como un hospital universitario, así que revisa la columna de organización.',
+  'form.status.label': 'Afiliación',
+  'form.status.any': 'Cualquiera',
+  'form.status.current': 'Vigente',
+  'form.status.past': 'Pasada',
+  'form.status.hint':
+    'ORCID indexa vigente y pasada solo por el nombre de la organización, así que elegir una busca solo por nombre y los campos de identificador quedan fuera. Con «pasada» encuentras ex personal y egresados.',
+  'form.keywords.label': 'Palabra(s) clave, separadas por comas',
+  'form.keywords.ph': 'epidemiología, oncología',
+  'form.keywords.hint':
+    'Las palabras clave que cada persona pone en su propio registro ORCID. Varias se unen con O, y el conjunto acota la institución, así que esto responde a quién trabaja aquí en algo. Sale gratis: va en la misma consulta única.',
+  'form.excludeRoleTitles.label': 'El cargo no debe contener',
+  'form.excludeRoleTitles.ph': 'doctorando, estudiante',
+  'form.departments.label': 'El departamento contiene',
+  'form.departments.ph': 'medicina molecular',
+  'form.countries.label': 'Código(s) de país',
+  'form.countries.ph': 'SE, AT',
+  'form.startFrom.label': 'Inicio desde',
+  'form.startTo.label': 'Inicio hasta',
+  'err.badRinggold': '«{id}» no es un identificador Ringgold válido. Son números simples, por ejemplo 27106.',
+  'err.statusNeedsName':
+    'Una búsqueda por vigente o pasada necesita un nombre de organización. ORCID indexa esas dos solo por el nombre, nunca por un identificador ROR, GRID o Ringgold.',
+  'err.badStartRange': 'El rango de inicio va al revés: el primer año es posterior al último.',
+  'bd.noCountryMatch': '{n} en otro país',
+  'bd.noDepartmentMatch': '{n} el departamento no coincidió',
+  'bd.roleExcluded': '{n} cargo excluido',
+  'bd.startOutOfRange': '{n} inicio fuera del rango',
+  'col.country': 'País',
   'how.title': 'Cómo funciona',
   'how.body':
     '<p>La herramienta usa dos puntos de acceso de la API pública de ORCID. Cuál de ellos se ejecuta lo deciden los filtros que marques.</p>' +

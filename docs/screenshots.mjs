@@ -3,7 +3,7 @@
 //
 //   python3 -m http.server 8777 &          # from the repo root
 //   npm i puppeteer                        # or point CHROME_PATH at an existing Chrome
-//   node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=40&asserted=1&lang=en"
+//   node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=40&asserted=1&country=SE&lang=en"
 //
 // Karolinska Institutet (ROR 056d84691) at max=40 with the asserted-only filter
 // is the reference sample: it is the case that exposed the RINGGOLD matching

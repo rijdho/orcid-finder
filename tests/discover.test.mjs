@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {
   buildQuery, isValidRor, normaliseRor, parseList, needsEmployments, activeCriteria,
   matchSearchRow, matchEmployments, hasEnded, formatOrcidDate, discoverPeople, normaliseOptions,
-  classifyAssertion,
+  classifyAssertion, validateOptions,
 } from '../src/discover.js';
 import { expandedSearch } from '../src/orcid.js';
 
@@ -32,10 +32,11 @@ const employments = (...summaries) => ({
   'affiliation-group': summaries.map((s) => ({ summaries: [{ 'employment-summary': s }] })),
 });
 
-const emp = ({ name = 'Institute of Digital Sciences Austria', ror = null, role = null, dept = null, start = null, end = null, source = null } = {}) => ({
+const emp = ({ name = 'Institute of Digital Sciences Austria', ror = null, role = null, dept = null, start = null, end = null, source = null, country = null, city = null } = {}) => ({
   organization: {
     name,
     ...(ror ? { 'disambiguated-organization': { 'disambiguated-organization-identifier': ror } } : {}),
+    ...(country || city ? { address: { country, city } } : {}),
   },
   'role-title': role,
   'department-name': dept,
@@ -103,7 +104,7 @@ test('buildQuery honours the two criterion switches', () => {
 
 test('buildQuery returns null when a ticked box has an empty field', () => {
   assert.equal(buildQuery({ rors: [], orgNames: [], byRor: true, byName: true }), null);
-  assert.deepEqual(activeCriteria({ rors: [], orgNames: ['IT:U'] }), { ror: false, name: true });
+  assert.deepEqual(activeCriteria({ rors: [], orgNames: ['IT:U'] }), { ror: false, ringgold: false, name: true });
 });
 
 test('normaliseOptions clamps maxRows into the ORCID paging range', () => {
@@ -177,11 +178,14 @@ test('fast mode falls back to the credit name, then to the iD', () => {
 
 const OPTS = { rors: ['03yrm5c26'], orgNames: ['institute of digital sciences'] };
 const TODAY = new Date('2026-06-15');
+/** No ROR lookup. Every test in this file injects it: a suite that reaches the
+ *  network is not testing the logic, it is testing today's registry. */
+const NO_ROR = async () => ({ names: [], grid: null });
 
 test('full mode matches an employment by ROR id and reports its fields', () => {
   const doc = employments(emp({ name: 'Differently Worded', ror: 'https://ror.org/03yrm5c26', role: 'Professor', dept: 'CS', start: date(2024, 9, 1) }));
   const { stage, person } = matchEmployments(doc, row('0000-0001-0000-0007'), OPTS, TODAY);
-  assert.equal(stage, 5, 'a kept candidate has passed every stage');
+  assert.equal(stage, 9, 'a kept candidate has passed every stage');
   assert.equal(person.roleTitle, 'Professor');
   assert.equal(person.department, 'CS');
   assert.equal(person.startDate, '2024-09-01');
@@ -190,25 +194,40 @@ test('full mode matches an employment by ROR id and reports its fields', () => {
 
 test('full mode rejects at the stage the filter actually applies', () => {
   const r = row('0000-0001-0000-0008');
+  // The stage is the last check the candidate PASSED, and a check that is not
+  // configured still counts as passed, so these numbers move when the chain
+  // gains a step. That is deliberate: the numbers are the chain's order.
   const elsewhere = employments(emp({ name: 'Unrelated University' }));
   assert.equal(matchEmployments(elsewhere, r, { ...OPTS, roleTitles: ['professor'] }, TODAY).stage, 0);
 
+  const wrongCountry = employments(emp({ country: 'AT' }));
+  assert.equal(matchEmployments(wrongCountry, r, { ...OPTS, countries: ['SE'] }, TODAY).stage, 1);
+
+  const wrongDept = employments(emp({ dept: 'Physics' }));
+  assert.equal(matchEmployments(wrongDept, r, { ...OPTS, departments: ['chemistry'] }, TODAY).stage, 2);
+
   const wrongRole = employments(emp({ role: 'Administrator' }));
-  assert.equal(matchEmployments(wrongRole, r, { ...OPTS, roleTitles: ['professor'] }, TODAY).stage, 1);
+  assert.equal(matchEmployments(wrongRole, r, { ...OPTS, roleTitles: ['professor'] }, TODAY).stage, 3);
+
+  const excluded = employments(emp({ role: 'PhD Student' }));
+  assert.equal(matchEmployments(excluded, r, { ...OPTS, excludeRoleTitles: ['phd'] }, TODAY).stage, 4);
 
   const noStart = employments(emp({ role: 'Professor' }));
-  assert.equal(matchEmployments(noStart, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true }, TODAY).stage, 2);
+  assert.equal(matchEmployments(noStart, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true }, TODAY).stage, 5);
 
-  const ended = employments(emp({ role: 'Professor', start: date(2019, 1), end: date(2021, 6) }));
-  assert.equal(matchEmployments(ended, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true, currentOnly: true }, TODAY).stage, 4);
+  const tooEarly = employments(emp({ role: 'Professor', start: date(2001, 1) }));
+  assert.equal(matchEmployments(tooEarly, r, { ...OPTS, startFrom: 2020 }, TODAY).stage, 6);
 
   const selfOnly = employments(emp({ role: 'Professor', start: date(2019, 1), source: selfSource(r['orcid-id']) }));
-  assert.equal(matchEmployments(selfOnly, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true, assertedOnly: true }, TODAY).stage, 3);
+  assert.equal(matchEmployments(selfOnly, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true, assertedOnly: true }, TODAY).stage, 7);
+
+  const ended = employments(emp({ role: 'Professor', start: date(2019, 1), end: date(2021, 6) }));
+  assert.equal(matchEmployments(ended, r, { ...OPTS, roleTitles: ['professor'], requireStartDate: true, currentOnly: true }, TODAY).stage, 8);
 });
 
 test('full mode matches role titles case-insensitively, as a substring', () => {
   const doc = employments(emp({ role: 'Assistant Professor of Computer Science' }));
-  assert.equal(matchEmployments(doc, row('0000-0001-0000-0009'), { ...OPTS, roleTitles: ['PROFESSOR'] }, TODAY).stage, 5);
+  assert.equal(matchEmployments(doc, row('0000-0001-0000-0009'), { ...OPTS, roleTitles: ['PROFESSOR'] }, TODAY).stage, 9);
 });
 
 test('full mode takes the first employment that passes, not the first that matches us', () => {
@@ -268,14 +287,15 @@ test('full run: the breakdown attributes every rejection to one filter', async (
 
   const r = await discoverPeople(
     { ...OPTS, roleTitles: ['professor'], requireStartDate: true, currentOnly: true },
-    { search: async () => ({ rows, totalFound: 5 }), employments: async (id) => byId[id], today: TODAY, concurrency: 2 },
+    { search: async () => ({ rows, totalFound: 5 }), employments: async (id) => byId[id], today: TODAY, concurrency: 2, resolveRorFacts: NO_ROR },
   );
 
   assert.equal(r.mode, 'full');
   assert.equal(r.people.length, 1);
   assert.equal(r.people[0].orcid, '0000-0001-0000-0030');
   assert.deepEqual(r.breakdown, {
-    noOrgMatch: 1, noRoleMatch: 1, noStartDate: 1, selfAsserted: null, pastEmployment: 1, unreachable: 0,
+    noOrgMatch: 1, noCountryMatch: null, noDepartmentMatch: null, noRoleMatch: 1, roleExcluded: null,
+    noStartDate: 1, startOutOfRange: null, selfAsserted: null, pastEmployment: 1, unreachable: 0,
   });
 });
 
@@ -283,7 +303,7 @@ test('an unreadable record is counted apart from a filter verdict', async () => 
   const rows = [row('0000-0001-0000-0041')];
   const r = await discoverPeople(
     { ...OPTS, roleTitles: ['professor'] },
-    { search: async () => ({ rows, totalFound: 1 }), employments: async () => null },
+    { search: async () => ({ rows, totalFound: 1 }), employments: async () => null, resolveRorFacts: NO_ROR },
   );
   assert.equal(r.breakdown.unreachable, 1);
   assert.equal(r.breakdown.noOrgMatch, 0, 'a network failure is not "this person does not work here"');
@@ -303,6 +323,7 @@ test('cancelling mid-run keeps what was already examined', async () => {
       },
       signal: ctrl.signal,
       concurrency: 2,
+      resolveRorFacts: NO_ROR,
     },
   );
   assert.equal(r.aborted, true);
@@ -319,6 +340,7 @@ test('progress is reported per batch, not per record', async () => {
       search: async () => ({ rows, totalFound: 5 }),
       employments: async () => employments(emp({})),
       concurrency: 2,
+      resolveRorFacts: NO_ROR,
       onProgress: (p) => seen.push(`${p.phase}:${p.done}/${p.total}`),
     },
   );
@@ -448,11 +470,131 @@ test('the self-asserted drop is counted under its own filter', () => {
   };
   return discoverPeople(
     { ...OPTS, roleTitles: ['professor'], assertedOnly: true },
-    { search: async () => ({ rows, totalFound: 2 }), employments: async (id) => docs[id], today: TODAY },
+    { search: async () => ({ rows, totalFound: 2 }), employments: async (id) => docs[id], today: TODAY, resolveRorFacts: NO_ROR },
   ).then((r) => {
     assert.equal(r.people.length, 1);
     assert.equal(r.breakdown.selfAsserted, 1);
     assert.equal(r.breakdown.noRoleMatch, 0, 'the role filter ran and dropped nobody');
     assert.equal(r.breakdown.pastEmployment, null, 'the current-appointment filter was not applied');
+  });
+});
+
+// ── keywords, affiliation status and the identifier schemes ─────────────────
+
+test('keywords are AND-ed onto the affiliation block, not OR-ed into it', () => {
+  // OR-ing them would widen the search to everyone with the keyword anywhere in
+  // ORCID, which is the opposite of narrowing an institution.
+  const q = buildQuery({ rors: ['056d84691'], byName: false, keywords: ['epidemiology', 'oncology'] });
+  assert.equal(
+    q,
+    '(ror-org-id:"https://ror.org/056d84691") AND (keyword:"epidemiology" OR keyword:"oncology")',
+  );
+});
+
+test('a Ringgold id is its own criterion, independent of the ROR switch', () => {
+  const q = buildQuery({ rors: ['056d84691'], ringgolds: ['27106'], byRor: false, byName: false });
+  assert.equal(q, 'ringgold-org-id:"27106"', 'unticking ROR must not silently drop Ringgold too');
+});
+
+test('a Ringgold id must be a bare number', () => {
+  assert.deepEqual(validateOptions({ ringgolds: ['27106'] }), null);
+  assert.deepEqual(validateOptions({ ringgolds: ['grid.4714.6'] }), { key: 'badRinggold', id: 'grid.4714.6' });
+});
+
+test('the affiliation status switches which name field is queried', () => {
+  const base = { rors: [], orgNames: ['Karolinska Institutet'] };
+  assert.match(buildQuery({ ...base }), /^affiliation-org-name:/);
+  assert.match(buildQuery({ ...base, affiliationStatus: 'current' }), /^current-institution-affiliation-name:/);
+  assert.match(buildQuery({ ...base, affiliationStatus: 'past' }), /^past-institution-affiliation-name:/);
+  assert.match(buildQuery({ ...base, affiliationStatus: 'nonsense' }), /^affiliation-org-name:/, 'an unknown status falls back to any');
+});
+
+test('a current or past search drops the identifier criteria, and says why', () => {
+  // ORCID indexes current and past only on the name fields. Leaving the ROR
+  // term in would return current staff in a search for former ones.
+  const q = buildQuery({ rors: ['056d84691'], orgNames: ['Karolinska Institutet'], affiliationStatus: 'past' },
+    { gridIds: ['grid.4714.6'] });
+  assert.equal(q, 'past-institution-affiliation-name:"Karolinska Institutet"');
+  assert.deepEqual(
+    validateOptions({ rors: ['056d84691'], byName: false, affiliationStatus: 'past' }),
+    { key: 'statusNeedsName' },
+  );
+});
+
+test('a start range the wrong way round is refused rather than returning nothing', () => {
+  assert.deepEqual(validateOptions({ rors: ['056d84691'], startFrom: 2025, startTo: 2020 }), { key: 'badStartRange' });
+  assert.equal(validateOptions({ rors: ['056d84691'], startFrom: 2020, startTo: 2025 }), null);
+});
+
+// ── the filters that read the employment record ─────────────────────────────
+
+test('the country filter compares the employment address, case-insensitively', () => {
+  const r = row('0000-0001-0000-0080');
+  const se = employments(emp({ country: 'SE', city: 'Stockholm' }));
+  const at = employments(emp({ country: 'AT' }));
+  assert.equal(matchEmployments(se, r, { ...OPTS, countries: ['se'] }, TODAY).person.country, 'SE');
+  assert.equal(matchEmployments(at, r, { ...OPTS, countries: ['SE'] }, TODAY).person, null);
+  // An employment with no address cannot be shown to be in the country asked for.
+  assert.equal(matchEmployments(employments(emp({})), r, { ...OPTS, countries: ['SE'] }, TODAY).person, null);
+});
+
+test('the city travels onto the row even when nothing filters on it', () => {
+  const { person } = matchEmployments(employments(emp({ country: 'SE', city: 'Stockholm' })), row('0000-0001-0000-0081'), OPTS, TODAY);
+  assert.equal(person.city, 'Stockholm');
+});
+
+test('the department filter is a substring, like the role title', () => {
+  const r = row('0000-0001-0000-0082');
+  const doc = employments(emp({ dept: 'Department of Molecular Medicine and Surgery' }));
+  assert.ok(matchEmployments(doc, r, { ...OPTS, departments: ['molecular medicine'] }, TODAY).person);
+  assert.equal(matchEmployments(doc, r, { ...OPTS, departments: ['physics'] }, TODAY).person, null);
+});
+
+test('an excluded role title drops the employment even when it was included', () => {
+  // ORCID's query language has no negation, so this can only happen here.
+  const r = row('0000-0001-0000-0083');
+  const doc = employments(emp({ role: 'Visiting PhD Student' }));
+  assert.ok(matchEmployments(doc, r, { ...OPTS, roleTitles: ['student'] }, TODAY).person);
+  assert.equal(matchEmployments(doc, r, { ...OPTS, roleTitles: ['student'], excludeRoleTitles: ['phd'] }, TODAY).person, null);
+});
+
+test('the start range is inclusive at both ends', () => {
+  const r = row('0000-0001-0000-0084');
+  const at = (y) => employments(emp({ start: date(y) }));
+  const opts = { ...OPTS, startFrom: 2020, startTo: 2024 };
+  assert.ok(matchEmployments(at(2020), r, opts, TODAY).person, '2020 is inside [2020, 2024]');
+  assert.ok(matchEmployments(at(2024), r, opts, TODAY).person, '2024 is inside [2020, 2024]');
+  assert.equal(matchEmployments(at(2019), r, opts, TODAY).person, null);
+  assert.equal(matchEmployments(at(2025), r, opts, TODAY).person, null);
+});
+
+test('an open-ended range constrains only the end it names', () => {
+  const r = row('0000-0001-0000-0085');
+  assert.ok(matchEmployments(employments(emp({ start: date(2030) })), r, { ...OPTS, startFrom: 2020 }, TODAY).person);
+  assert.ok(matchEmployments(employments(emp({ start: date(1990) })), r, { ...OPTS, startTo: 2020 }, TODAY).person);
+});
+
+test('an employment with no year cannot satisfy a range', () => {
+  const { person } = matchEmployments(employments(emp({})), row('0000-0001-0000-0086'), { ...OPTS, startFrom: 2020 }, TODAY);
+  assert.equal(person, null);
+});
+
+test('a rejection lands on the next ACTIVE filter, not on an unused counter', () => {
+  // With country and department off, an employment that fails the role check
+  // must be counted under the role filter rather than vanishing into a null.
+  const rows = [row('0000-0001-0000-0087')];
+  return discoverPeople(
+    { ...OPTS, roleTitles: ['professor'] },
+    {
+      search: async () => ({ rows, totalFound: 1 }),
+      employments: async () => employments(emp({ role: 'Administrator' })),
+      today: TODAY,
+      resolveRorFacts: NO_ROR,
+    },
+  ).then((r) => {
+    assert.equal(r.breakdown.noRoleMatch, 1);
+    assert.equal(r.breakdown.noCountryMatch, null);
+    assert.equal(r.breakdown.noDepartmentMatch, null);
+    assert.equal(r.breakdown.noOrgMatch, 0, 'the affiliation matched, so this must stay zero');
   });
 });

@@ -14,6 +14,8 @@ const person = (over = {}) => ({
   roleTitle: 'Professor',
   department: 'Psychoceramics',
   organization: 'Brown University',
+  country: 'US',
+  city: 'Providence',
   startDate: '1990-01',
   endDate: null,
   institutions: ['Brown University', 'Wesleyan University'],
@@ -139,4 +141,11 @@ test('an unknown assertion exports empty, never "self"', () => {
   const r = toRecord(person({ assertedBy: null, assertionSource: null }));
   assert.equal(r.asserted_by, '');
   assert.equal(r.assertion_source, '');
+});
+
+test('the employment address is exported as country and city', () => {
+  const r = toRecord(person());
+  assert.equal(r.country, 'US');
+  assert.equal(r.city, 'Providence');
+  assert.equal(toRecord(person({ country: null, city: null })).country, '');
 });

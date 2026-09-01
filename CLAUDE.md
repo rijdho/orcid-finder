@@ -37,6 +37,19 @@ three locale strings, and a control in `index.html`. In that order.
   staff from a roster in silence.
 - **`maxRows` has no `step`.** With `min=1`, a step of 10 makes the browser silently reject the
   default 200 on submit.
+- **ROR is resolved BEFORE the query is built, not alongside the search.** The lookup feeds two
+  different things and one of them is the query: the GRID id goes into it, the registered names go
+  into the employment match. Moving the lookup back to run in parallel with the search silently
+  drops the GRID coverage.
+- **Keywords are AND-ed, identifiers and names are OR-ed.** OR-ing a keyword would widen the
+  search to everyone in ORCID carrying it, which is the opposite of narrowing an institution.
+- **A current or past search drops the identifier criteria.** ORCID indexes those two only on the
+  name fields, so leaving a ROR term in would return current staff in a search for former ones.
+  `validateOptions` refuses that combination with its own message rather than a generic one.
+- **The stage numbers ARE the order of the checks in `matchEmployments`.** A rejection is
+  attributed to the check that comes next, and an inactive filter still advances the stage, so
+  `REJECTED_BY` walks forward to the next active counter. Add a check without adding its stage and
+  every count below it becomes fiction.
 - **ROR ids are resolved to names before the employment checks run.** ORCID lets an employment
   be disambiguated with any scheme, and an institution's own integration frequently writes
   RINGGOLD or FUNDREF. Matching on the ROR id alone dropped every organisation-asserted record:

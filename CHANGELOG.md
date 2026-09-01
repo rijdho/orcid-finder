@@ -8,6 +8,24 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **The GRID id is resolved from each ROR id and OR-ed into the query.** ORCID indexes ROR and
+  GRID separately, so this is coverage, not a synonym: for Karolinska, `ror-org-id` alone reports
+  4,206 accounts where `ror-org-id OR grid-org-id` reports 5,318.
+- **A Ringgold id field.** ORCID indexes Ringgold separately again, and it is what institutional
+  systems usually stamp: adding it takes the same institution from 5,318 to 9,547. It is typed in
+  deliberately rather than derived, because ROR does not carry Ringgold ids and a Ringgold id is
+  coarser than a ROR one, covering related organisations such as a university hospital.
+- **Affiliation status: any, current or past.** ORCID indexes these as three separate name fields,
+  and `current OR past` returns exactly what `any` returns. Past is how former staff and alumni
+  are found, which nothing else here reaches. The identifier criteria sit out when a status is
+  chosen, because ORCID indexes current and past only on the name; the tool says so rather than
+  silently returning current people.
+- **Keyword filter**, AND-ed onto the institution block so it narrows rather than widens, at no
+  extra request.
+- **Filters that were already free inside the employment record**: department contains, country
+  code, started-from and started-to years, and a role-title exclusion. Exclusion has to happen on
+  the record in hand because ORCID's query language has no negation.
+- **Country and city columns**, from the employment organisation's address.
 - **Who asserted the employment**, read from ORCID's `source` field: a column naming the writer,
   a filter that keeps only the employments a member organisation wrote, and three export columns
   (`asserted_by`, `assertion_source`, `assertion_origin`). The difference between a claim and a
