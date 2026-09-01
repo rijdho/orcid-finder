@@ -55,14 +55,6 @@ export function gridId(record) {
   return e?.preferred ?? e?.all?.[0] ?? null;
 }
 
-/** The child organisations ROR records for this id, as bare ROR ids. */
-export function childIds(record) {
-  return (record?.relationships ?? [])
-    .filter((r) => r.type === 'child')
-    .map((r) => String(r.id ?? '').replace(/^https?:\/\/ror\.org\//, ''))
-    .filter(Boolean);
-}
-
 /**
  * Resolve one ROR id to the facts the search uses: its registered names and its
  * GRID id. Returns empties rather than throwing when ROR cannot be reached: the

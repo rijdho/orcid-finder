@@ -101,7 +101,6 @@ a { color: var(--brand); text-underline-offset: 2px; }
 code { font-family: var(--mono); font-size: 0.9em; }
 h1, h2, h3 { font-family: var(--disp); font-weight: 800; letter-spacing: -0.02em; text-wrap: balance; }
 .mono { font-family: var(--mono); }
-.muted { color: var(--ink-2); }
 .eyebrow {
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--brand); margin: 0;

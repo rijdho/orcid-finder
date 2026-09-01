@@ -3,11 +3,12 @@
 //
 //   python3 -m http.server 8777 &          # from the repo root
 //   npm i puppeteer                        # or point CHROME_PATH at an existing Chrome
-//   node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=40&asserted=1&country=SE&lang=en"
+//   node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=12&asserted=1&country=SE&lang=en"
 //
-// Karolinska Institutet (ROR 056d84691) at max=40 with the asserted-only filter
+// Karolinska Institutet (ROR 056d84691) at max=12 with the asserted-only filter
 // is the reference sample: it is the case that exposed the RINGGOLD matching
-// defect, so it exercises ROR name resolution and the assertion column at once.
+// defect, so it exercises the GRID id in the query, ROR name resolution and the
+// assertion column at once, and it is small enough to read in a README.
 // ORCID is live data, so the counts drift. Change the query and the README alt
 // text needs updating with the numbers actually on screen.
 
@@ -25,7 +26,7 @@ mkdirSync(OUT, { recursive: true });
 const browser = await puppeteer.launch({
   headless: 'new',
   executablePath: process.env.CHROME_PATH || undefined,
-  defaultViewport: { width: 1180, height: 1000, deviceScaleFactor: 2 },
+  defaultViewport: { width: 1400, height: 1000, deviceScaleFactor: 2 },
 });
 const page = await browser.newPage();
 await page.goto(URL, { waitUntil: 'networkidle2', timeout: 90000 });

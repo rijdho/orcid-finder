@@ -21,8 +21,6 @@ import { fetchRorFacts } from './ror.js?v=4';
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
 
-export const ORCID_RE = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
-
 /** A Ringgold id is a bare number. They run to eight digits today. */
 export const RINGGOLD_RE = /^\d{1,9}$/;
 
@@ -152,7 +150,7 @@ export function activeCriteria(o) {
  */
 export function validateOptions(o) {
   const opts = normaliseOptions(o);
-  const badRor = opts.rors.find((r) => !ROR_RE.test(r));
+  const badRor = opts.rors.find((r) => !isValidRor(r));
   if (badRor) return { key: 'badRor', id: badRor };
   const badRinggold = opts.ringgolds.find((r) => !RINGGOLD_RE.test(r));
   if (badRinggold) return { key: 'badRinggold', id: badRinggold };

@@ -70,6 +70,10 @@ export function t(key, vars) {
   return str == null ? key : interpolate(str, vars);
 }
 
+// The two helpers below are for the test suite, not the page: they live here
+// because the catalogues do, and a lint that ships with the thing it lints does
+// not go stale.
+
 /** Keys present in English but missing from `code`. Empty is the passing state. */
 export function missingKeys(code) {
   const table = LOCALES[code] ?? {};

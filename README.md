@@ -16,9 +16,9 @@ Caveats say where that answer stops.
 
 Available in **English, German and Spanish** (auto-detected from the browser, switchable).
 
-![The tool on arrival: a rail listing Search, How it works, Caveats and About, and a three-column
-filter panel holding ROR id 056d84691, country code SE and "Only records asserted by an
-organisation" ticked, with max candidates set to 40.](docs/app.png)
+![The tool on arrival: a rail listing Search, How it works, Caveats and About, and a
+three-column filter panel holding ROR id 056d84691, country code SE and "Only records asserted
+by an organisation" ticked, with max candidates set to 12.](docs/app.png)
 
 ## What it does
 
@@ -89,10 +89,9 @@ Every count of what a filter dropped is attributed to the filter that actually d
 using the stage the candidate reached. Without that, a filter doing nothing looks identical to
 one doing all the work.
 
-![The results card for ROR 056d84691 in full mode: 3 kept of 40 candidates examined, ORCID
-reports 4,206 matching accounts, the filters dropped 6 with no affiliation match and 31 as
-self-asserted only, and all three kept rows are asserted by Karolinska
-Institutet.](docs/results.png)
+![The results card for ROR 056d84691 in full mode: 8 kept of 12 candidates examined, ORCID
+reports 5,318 matching accounts once the GRID id is OR-ed into the query, 4 dropped as
+self-asserted only, and every kept row asserted by Karolinska Institutet.](docs/results.png)
 
 ## Who asserted the record
 
@@ -222,7 +221,7 @@ ships:
 
 ```bash
 npm i puppeteer
-node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=40&asserted=1&country=SE&lang=en"
+node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=12&asserted=1&country=SE&lang=en"
 ```
 
 ## Deploy

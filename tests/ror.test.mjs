@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { usableNames, childIds, gridId, fetchRorFacts } from '../src/ror.js';
+import { usableNames, gridId, fetchRorFacts } from '../src/ror.js';
 import { discoverPeople } from '../src/discover.js';
 
 // Karolinska Institutet's live ROR v2 record, trimmed to the fields used here.
@@ -52,9 +52,6 @@ test('usableNames survives a record with nothing in it', () => {
   assert.deepEqual(usableNames({ names: [{ value: 'X' }] }), [], 'a name with no types is not usable');
 });
 
-test('only child relationships count as children', () => {
-  assert.deepEqual(childIds(KAROLINSKA), ['00dgqhm63']);
-});
 
 test('the GRID id is taken from the registry record, preferring the preferred one', () => {
   assert.equal(gridId(KAROLINSKA), 'grid.4714.6');
