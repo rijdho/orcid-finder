@@ -113,7 +113,7 @@ export const es = {
   'form.status.current': 'Vigente',
   'form.status.past': 'Pasada',
   'form.status.hint':
-    'ORCID indexa vigente y pasada solo por el nombre de la organización, así que elegir una busca solo por nombre y los campos de identificador quedan fuera. Con «pasada» encuentras ex personal y egresados.',
+    'ORCID indexa vigente y pasada solo por el nombre de la organización, así que elegir una busca solo por nombre y los campos de identificador quedan fuera. Con «pasada» encuentras ex personal y egresados. No es lo mismo que «Solo nombramientos vigentes»: esto le pregunta a ORCID qué cuentas indexa como vigentes, aquello lee la fecha de fin de cada empleo. Elegir «pasada» y marcar esa casilla pide personas que tengan aquí a la vez un nombramiento terminado y uno en curso, que rara vez es lo que se quiere.',
   'form.keywords.label': 'Palabra(s) clave, separadas por comas',
   'form.keywords.ph': 'epidemiología, oncología',
   'form.keywords.hint':
@@ -124,6 +124,7 @@ export const es = {
   'form.departments.ph': 'medicina molecular',
   'form.countries.label': 'Código(s) de país',
   'form.countries.ph': 'SE, AT',
+  'form.range.hint': 'Un rango ya exige fecha de inicio, así que «Debe tener fecha de inicio» no añade nada mientras haya uno puesto: solo cambia qué recuento informa del descarte.',
   'form.startFrom.label': 'Inicio desde',
   'form.startTo.label': 'Inicio hasta',
   'err.badRinggold': '«{id}» no es un identificador Ringgold válido. Son números simples, por ejemplo 27106.',

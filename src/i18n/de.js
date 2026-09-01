@@ -112,7 +112,7 @@ export const de = {
   'form.status.current': 'Laufend',
   'form.status.past': 'Früher',
   'form.status.hint':
-    'Laufend und früher indexiert ORCID nur über den Organisationsnamen. Wird eines davon gewählt, wird allein nach Namen gesucht und die ID-Felder bleiben außen vor. Über „früher“ finden Sie ehemaliges Personal und Alumni.',
+    'Laufend und früher indexiert ORCID nur über den Organisationsnamen. Wird eines davon gewählt, wird allein nach Namen gesucht und die ID-Felder bleiben außen vor. Über „früher“ finden Sie ehemaliges Personal und Alumni. Das ist nicht dasselbe wie „Nur laufende Anstellungen“: hier wird ORCID gefragt, welche Konten es als laufend führt, dort wird das Enddatum jeder Anstellung gelesen. „Früher“ zusammen mit jenem Häkchen fragt nach Personen, die hier zugleich eine beendete und eine laufende Anstellung haben, was selten gemeint ist.',
   'form.keywords.label': 'Schlagwort(e), kommagetrennt',
   'form.keywords.ph': 'Epidemiologie, Onkologie',
   'form.keywords.hint':
@@ -123,6 +123,7 @@ export const de = {
   'form.departments.ph': 'Molekulare Medizin',
   'form.countries.label': 'Ländercode(s)',
   'form.countries.ph': 'SE, AT',
+  'form.range.hint': 'Ein Zeitraum setzt ein Startdatum bereits voraus. „Muss ein Startdatum haben“ bewirkt daneben nichts und ändert nur, welche Zahl den Ausschluss meldet.',
   'form.startFrom.label': 'Beginn ab',
   'form.startTo.label': 'Beginn bis',
   'err.badRinggold': '„{id}“ ist keine gültige Ringgold-ID. Das sind reine Zahlen, etwa 27106.',

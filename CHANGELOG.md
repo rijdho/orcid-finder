@@ -6,7 +6,16 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- **Two controls that look like they overlap now say how they differ.** "Affiliation: current"
+  asks ORCID which accounts its index calls current, on the organisation name alone;
+  "Only current appointments" reads the end date on each employment we fetched. They are not
+  the same question, and combining Past with the checkbox asks for people who hold both a
+  finished and a running appointment at the institution, which is almost never the intent.
+- **A start-date range makes "Must have a start date" a no-op**, since a range cannot be
+  satisfied without a year: ticking both changes only which count reports the drop. The hint
+  says so rather than leaving it to be discovered.
 
 ## [1.0.0] - 2026-09-01
 

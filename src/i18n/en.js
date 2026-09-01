@@ -113,7 +113,7 @@ export const en = {
   'form.status.current': 'Current',
   'form.status.past': 'Past',
   'form.status.hint':
-    'Current and past are indexed by ORCID only on the organisation name, so choosing one searches by name alone and the identifier fields sit out. Past is how you find former staff and alumni.',
+    'Current and past are indexed by ORCID only on the organisation name, so choosing one searches by name alone and the identifier fields sit out. Past is how you find former staff and alumni. This is not the same as “Only current appointments”: this asks ORCID which accounts it indexes as current, while that one reads each employment’s end date. Choosing Past and ticking that box asks for people who have both a finished and a running appointment here, which is rarely what anyone means.',
   'form.keywords.label': 'Keyword(s), comma-separated',
   'form.keywords.ph': 'epidemiology, oncology',
   'form.keywords.hint':
@@ -124,6 +124,7 @@ export const en = {
   'form.departments.ph': 'molecular medicine',
   'form.countries.label': 'Country code(s)',
   'form.countries.ph': 'SE, AT',
+  'form.range.hint': 'A range already requires a start date, so “Must have a start date” adds nothing while one is set: it only changes which count reports the drop.',
   'form.startFrom.label': 'Started from',
   'form.startTo.label': 'Started to',
   'err.badRinggold': '“{id}” is not a valid Ringgold id. They are plain numbers, for instance 27106.',
