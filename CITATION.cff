@@ -19,7 +19,7 @@ authors:
     orcid: "https://orcid.org/0000-0001-5058-9309"
 repository-code: "https://github.com/rijdho/orcid-finder"
 url: "https://rijdho.github.io/orcid-finder/"
-license: MIT
+license: AGPL-3.0-or-later
 version: "1.0.0"
 date-released: "2026-09-01"
 keywords:

@@ -163,5 +163,5 @@ export const en = {
     '<p>orcid-finder is a single static page: no build step, no backend, no tracking, no cookies. It talks to <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">the ORCID public API</a> and to <a href="https://ror.readme.io/" target="_blank" rel="noreferrer">the ROR API</a> directly from your browser, so no server of ours ever sees what you search for. Those two are the only hosts the page contacts. The only thing it keeps is the language and theme you picked, in your browser’s own storage.</p>' +
     '<p>The filter set comes from a research-information system’s roster discovery, lifted out of its database so anyone can run the same search without one.</p>',
   'about.footer':
-    'Built by <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · MIT licensed · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">source on GitHub</a> · data from ORCID and ROR, used under their public API terms',
+    'Built by <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · AGPL-3.0-or-later · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">source on GitHub</a> · data from ORCID and ROR, used under their public API terms',
 };
