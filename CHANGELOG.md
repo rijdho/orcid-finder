@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.2.0] - 2026-09-03
 
+Version DOI: [10.5281/zenodo.22285905](https://doi.org/10.5281/zenodo.22285905).
+
 ### Added
 
 - **The CSV signs itself.** It opens with `#` comment lines naming the tool, its version, its
