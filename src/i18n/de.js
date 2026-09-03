@@ -28,7 +28,7 @@ export const de = {
     'Alles in dieser Spalte liest den ORCID-Anstellungsdatensatz jeder Kandidatin und jedes Kandidaten: eine zusätzliche Anfrage pro Person, also langsamer, aber deutlich genauer. Der Ausschluss von Funktionsbezeichnungen geschieht hier, weil ORCIDs Abfragesprache keine Verneinung kennt.',
   'form.maxRows.label': 'Maximale Anzahl Kandidaten',
   'form.maxRows.hint':
-    'Wie viele der passenden Konten abgerufen und geprüft werden. ORCID liefert sie in Seiten zu 100; 2000 ist hier die Obergrenze.',
+    'Wie viele der passenden Konten abgerufen und geprüft werden. ORCID liefert sie in Seiten zu 100; 2000 ist hier die Obergrenze. Jeder Filter in der mittleren Spalte kostet eine Anfrage pro Kandidat, ein Lauf an der Obergrenze also rund 2000 weitere, und dauert Minuten.',
   'form.submit': 'ORCID durchsuchen',
   'form.searching': 'Suche läuft…',
   'form.cancel': 'Abbrechen',

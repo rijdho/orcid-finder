@@ -28,7 +28,7 @@ export const es = {
     'Todo lo de esta columna lee el registro de empleo de cada candidato en ORCID: una petición adicional por candidato, así que la búsqueda es más lenta pero mucho más precisa. La exclusión de cargos ocurre aquí porque el lenguaje de consulta de ORCID no tiene negación.',
   'form.maxRows.label': 'Máximo de candidatos',
   'form.maxRows.hint':
-    'Cuántas de las cuentas coincidentes se descargan y se examinan. ORCID las pagina de 100 en 100; aquí el techo es 2000.',
+    'Cuántas de las cuentas coincidentes se descargan y se examinan. ORCID las pagina de 100 en 100; aquí el techo es 2000. Cualquier filtro de la columna central añade una petición por candidato, así que una búsqueda en el techo supone unas 2000 más y tarda minutos.',
   'form.submit': 'Buscar en ORCID',
   'form.searching': 'Buscando…',
   'form.cancel': 'Cancelar',

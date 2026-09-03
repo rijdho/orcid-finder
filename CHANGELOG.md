@@ -6,6 +6,16 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **The ceiling now says what it costs.** Raising it to 2000 made a full-mode run expensive
+  without saying so anywhere: fast mode is one request per 100 candidates, but any filter in
+  the middle column adds one per candidate, so 2000 candidates is roughly 2020 requests rather
+  than 20. The hint says this in all three languages, and a Caveat carries the measurement:
+  two runs against the live API at concurrency 6 took 36 s for 120 candidates and 65 s for 360,
+  which puts the ceiling in the region of several minutes. Stated as an order of magnitude
+  rather than a figure, because it moves with the network and with ORCID's load.
+
 ## [1.1.0] - 2026-09-03
 
 Version DOI: [10.5281/zenodo.22274103](https://doi.org/10.5281/zenodo.22274103).

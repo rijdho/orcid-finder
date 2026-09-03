@@ -296,6 +296,13 @@ is not this tool's job.
 - **A partial end date is read at its latest instant.** "Ended 2026" counts as current for all
   of 2026, so that current staff are not silently dropped. The opposite error would delete
   people from a roster without saying so.
+- **Full mode at the ceiling is a long run, and the ceiling does not warn you.** Fast mode costs
+  one request per 100 candidates; any filter in the middle column costs one request per
+  candidate on top, so 2000 candidates is roughly 2020 requests rather than 20. Two runs
+  measured against the live API at concurrency 6 took 36 s for 120 candidates and 65 s for 360,
+  which puts the ceiling in the region of several minutes. The exact figure depends on the
+  network and on ORCID's load, so treat it as an order of magnitude, not a promise. Raise the
+  cap deliberately: it is a cost, not a quality setting.
 - **The public API rate-limits.** A large full-mode run can be throttled. The tool backs off
   and retries, and reports separately any record it still could not read, so a network failure
   is never counted as a filter verdict.

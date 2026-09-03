@@ -30,7 +30,7 @@ export const en = {
     'Everything in this column reads each candidate’s ORCID employment record: one extra request per candidate, so the search gets slower but far more precise. Role exclusion happens here because ORCID’s query language has no negation.',
   'form.maxRows.label': 'Max candidates',
   'form.maxRows.hint':
-    'How many of the matching accounts to pull and examine. ORCID pages them 100 at a time; 2000 is the ceiling here.',
+    'How many of the matching accounts to pull and examine. ORCID pages them 100 at a time; 2000 is the ceiling here. Any filter in the middle column adds one request per candidate, so a run at the ceiling means about 2000 more of them and takes minutes.',
   'form.submit': 'Search ORCID',
   'form.searching': 'Searching…',
   'form.cancel': 'Cancel',
