@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.1.0] - 2026-09-03
 
+Version DOI: [10.5281/zenodo.22274103](https://doi.org/10.5281/zenodo.22274103).
+
 ### Added
 
 - **The page shows its DOI.** A visitor writing a methods section can cite the tool without
