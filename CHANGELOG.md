@@ -6,6 +6,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-03
+
 ### Changed
 
 - **The ceiling now says what it costs.** Raising it to 2000 made a full-mode run expensive
