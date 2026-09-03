@@ -109,7 +109,7 @@ test('buildQuery returns null when a ticked box has an empty field', () => {
 
 test('normaliseOptions clamps maxRows into the ORCID paging range', () => {
   assert.equal(normaliseOptions({ maxRows: 0 }).maxRows, 200, 'a falsy value falls back to the default');
-  assert.equal(normaliseOptions({ maxRows: 5000 }).maxRows, 1000);
+  assert.equal(normaliseOptions({ maxRows: 5000 }).maxRows, 2000);
   assert.equal(normaliseOptions({ maxRows: '50' }).maxRows, 50);
 });
 

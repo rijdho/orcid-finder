@@ -15,8 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=7';
-import { fetchRorFacts } from './ror.js?v=7';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=8';
+import { fetchRorFacts } from './ror.js?v=8';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
@@ -85,7 +85,7 @@ export function normaliseOptions(o = {}) {
     countries: clean(o.countries).map((c) => c.toUpperCase()),
     startFrom: year(o.startFrom),
     startTo: year(o.startTo),
-    maxRows: Math.min(Math.max(parseInt(o.maxRows ?? 200, 10) || 200, 1), 1000),
+    maxRows: Math.min(Math.max(parseInt(o.maxRows ?? 200, 10) || 200, 1), 2000),
   };
 }
 

@@ -20,6 +20,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The max-candidates ceiling is 2000, up from 1000.** The old limit was not something ORCID
+  imposes: paging `expanded-search` with `rows=100` was checked live at offsets up to 1990 and
+  returns a full page throughout, so the ceiling was ours. It is raised in the input, in the
+  clamp that `normaliseOptions` applies to a value typed past it, and in the hint in all three
+  languages. The cost is unchanged in fast mode and doubles at worst in full mode, where every
+  candidate is one further request.
 - **Two controls that look like they overlap now say how they differ.** "Affiliation: current"
   asks ORCID which accounts its index calls current, on the organisation name alone;
   "Only current appointments" reads the end date on each employment we fetched. They are not

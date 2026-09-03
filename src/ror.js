@@ -10,7 +10,7 @@
 // the result. Resolving the ROR id to its registered names and matching on
 // those as well is what keeps them.
 
-import { getJson } from './orcid.js?v=7';
+import { getJson } from './orcid.js?v=8';
 
 export const ROR_API = 'https://api.ror.org/v2/organizations';
 

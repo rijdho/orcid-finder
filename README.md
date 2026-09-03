@@ -42,7 +42,7 @@ itself reports about that person's appointment at the institution you asked abou
 | Must have a start date | drops appointments with no `start-date` at all | one request per candidate |
 | Only current appointments | drops appointments whose `end-date` has passed | one request per candidate |
 | Only organisation-asserted | keeps only employments a member organisation wrote, not the researcher | one request per candidate |
-| Max candidates | how many matching accounts to pull and examine, 1 to 1000 | free |
+| Max candidates | how many matching accounts to pull and examine, 1 to 2000 | free |
 
 The institution criteria are OR-ed into one query: an account qualifies by declaring **any** of
 the identifiers or **any** of the names. Keywords, when given, are AND-ed onto that block, so

@@ -23,8 +23,8 @@
   <meta name="description" data-i18n-attr="content:meta.description"
         content="Search ORCID for the accounts that declare an institution, by ROR id or organisation name, narrow by role title, start date, current appointments and who asserted the record, and download the result as CSV or JSON." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236d4aff'/%3E%3Ctext x='16' y='22' font-size='15' text-anchor='middle' fill='%23ffffff' font-family='monospace' font-weight='bold'%3EiD%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./style.css?v=7" />
-  <script src="./src/theme-boot.js?v=7"></script>
+  <link rel="stylesheet" href="./style.css?v=8" />
+  <script src="./src/theme-boot.js?v=8"></script>
 </head>
 <body>
   <div class="app">
@@ -153,7 +153,7 @@
                   <label class="field"><span data-i18n="form.maxRows.label">Max candidates</span>
                     <!-- No `step`: with min=1 a step of 10 would only accept 1, 11, 21 … and the
                          browser silently rejects the default 200 on submit. -->
-                    <input class="input" id="maxRows" type="number" min="1" max="1000" value="200" />
+                    <input class="input" id="maxRows" type="number" min="1" max="2000" value="200" />
                   </label>
                   <p class="hint" data-i18n="form.maxRows.hint"></p>
                 </div>
@@ -216,6 +216,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/app.js?v=7"></script>
+  <script type="module" src="./src/app.js?v=8"></script>
 </body>
 </html>
