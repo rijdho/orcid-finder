@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {
   buildQuery, isValidRor, normaliseRor, parseList, needsEmployments, activeCriteria,
   matchSearchRow, matchEmployments, hasEnded, formatOrcidDate, discoverPeople, normaliseOptions,
-  classifyAssertion, validateOptions, clampMaxRows, MAX_ROWS,
+  classifyAssertion, validateOptions, clampMaxRows, nameVariants, MAX_ROWS,
 } from '../src/discover.js';
 import { expandedSearch } from '../src/orcid.js';
 
@@ -610,4 +610,59 @@ test('a rejection lands on the next ACTIVE filter, not on an unused counter', ()
     assert.equal(r.breakdown.noDepartmentMatch, null);
     assert.equal(r.breakdown.noOrgMatch, 0, 'the affiliation matched, so this must stay zero');
   });
+});
+
+// ── Name variants ───────────────────────────────────────────────────────────
+
+/** A search row that carries the two name-variant fields expanded-search returns. */
+const variantRow = (over = {}) => ({
+  ...row('0000-0001-8690-8594', ['Karolinska Institutet'], 'James Abbott', 'Eqdam'),
+  'credit-name': 'Aboozar Eghdam',
+  'other-name': ['Aboozar Eghdam', 'A. Eghdam'],
+  ...over,
+});
+
+test('fast mode carries the credit name and the other names as ORCID returned them', () => {
+  // Both fields come back from expanded-search itself, so they cost no extra
+  // request and are as available in fast mode as in full.
+  const p = matchSearchRow(variantRow(), { byName: true, orgNames: ['karolinska'] });
+  assert.equal(p.creditName, 'Aboozar Eghdam');
+  assert.deepEqual(p.otherNames, ['Aboozar Eghdam', 'A. Eghdam']);
+});
+
+test('full mode carries the same two fields', () => {
+  const doc = employments(emp({ name: 'Karolinska Institutet' }));
+  const { person } = matchEmployments(doc, variantRow(), { byName: true, orgNames: ['karolinska'] }, TODAY);
+  assert.equal(person.creditName, 'Aboozar Eghdam');
+  assert.deepEqual(person.otherNames, ['Aboozar Eghdam', 'A. Eghdam']);
+});
+
+test('an account with no variants exports empty lists, not undefined', () => {
+  const p = matchSearchRow(variantRow({ 'credit-name': null, 'other-name': undefined }), { byName: true, orgNames: ['karolinska'] });
+  assert.equal(p.creditName, null);
+  assert.deepEqual(p.otherNames, []);
+});
+
+test('the merged variant list drops the display name and the duplicates', () => {
+  // This is the case the feature exists for: the display name is built from
+  // given + family, and this record publishes under a different one entirely.
+  const p = matchSearchRow(variantRow(), { byName: true, orgNames: ['karolinska'] });
+  assert.equal(p.name, 'James Abbott Eqdam');
+  // 'Aboozar Eghdam' appears in credit-name AND other-name; it is listed once.
+  assert.deepEqual(nameVariants(p), ['Aboozar Eghdam', 'A. Eghdam']);
+});
+
+test('a variant that only differs in case or spacing from the display name is not repeated', () => {
+  // Showing "Ada Lovelace, also known as ada lovelace" is noise that makes the
+  // reader distrust the column that is telling them something real elsewhere.
+  assert.deepEqual(nameVariants({ name: 'Ada Lovelace', creditName: '  ada lovelace ', otherNames: ['ADA LOVELACE'] }), []);
+});
+
+test('nameVariants survives a person with nothing on it', () => {
+  assert.deepEqual(nameVariants({}), []);
+  assert.deepEqual(nameVariants(null), []);
+});
+
+test('an empty string in other-name is dropped rather than shown as a blank variant', () => {
+  assert.deepEqual(nameVariants({ name: 'Ada Lovelace', creditName: '', otherNames: ['', '  ', 'A. Lovelace'] }), ['A. Lovelace']);
 });

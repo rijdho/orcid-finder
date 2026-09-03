@@ -220,6 +220,7 @@ h1, h2, h3 { font-family: var(--disp); font-weight: 800; letter-spacing: -0.02em
 .query { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); word-break: break-all;
   background: var(--surface-2); border-radius: var(--r-sm); padding: 8px 10px; margin-top: 12px; }
 .export-note { margin-top: 10px; }
+.export-sign { margin-top: 14px; font-size: 12.5px; }
 .tablewrap { overflow-x: auto; margin: 16px -22px -22px; border-top: 1px solid var(--hairline);
   border-radius: 0 0 var(--r) var(--r); }
 /* The wrapper scrolls; without a floor the columns squeeze to three words per
@@ -231,6 +232,11 @@ th { text-align: left; font-family: var(--mono); font-size: 10px; letter-spacing
 td { padding: 9px 12px; border-top: 1px solid var(--hairline); vertical-align: top; }
 tbody tr:hover { background: var(--surface-2); }
 td.nowrap { white-space: nowrap; }
+/* The name variants sit under the display name rather than in a column of their
+   own: most rows have none, and an empty column that wide costs every row the
+   width it needs for the ones that do. */
+.alt-names { display: block; margin-top: 3px; font-size: 11px; line-height: 1.45;
+  color: var(--ink-2); }
 .badge { font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
 .badge.employment, .badge.organization { background: var(--d-green-soft); color: var(--d-green); }
 .badge.name { background: var(--d-blue-soft); color: var(--d-blue); }

@@ -3,8 +3,12 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-import { COLUMNS, csvField, toCsv, toRecord, peopleToCsv, peopleToJson, exportFilename } from '../src/exporters.js';
+import {
+  CITATION, COLUMNS, TOOL, csvField, toCsv, toRecord, peopleToCsv, peopleToJson, exportFilename,
+} from '../src/exporters.js';
 
 const person = (over = {}) => ({
   orcid: '0000-0002-1825-0097',
@@ -148,4 +152,84 @@ test('the employment address is exported as country and city', () => {
   assert.equal(r.country, 'US');
   assert.equal(r.city, 'Providence');
   assert.equal(toRecord(person({ country: null, city: null })).country, '');
+});
+
+// ── The provenance header and the name variants ────────────────────────────
+
+const cff = readFileSync(fileURLToPath(new URL('../CITATION.cff', import.meta.url)), 'utf8');
+const cffField = (name) => new RegExp(`^${name}:\\s*"?([^"\\n]+?)"?\\s*$`, 'm').exec(cff)?.[1];
+
+test('the identity written into every export is the one CITATION.cff publishes', () => {
+  // Three copies of a version number is three chances to hand out a stale one,
+  // and the copy that ends up in a stranger's supplementary table is the one
+  // nobody can correct afterwards. CITATION.cff is what Zenodo and GitHub read,
+  // so it is the side that wins.
+  assert.equal(TOOL.version, cffField('version'), 'TOOL.version and CITATION.cff disagree');
+  assert.equal(TOOL.doi, `https://doi.org/${cffField('doi')}`, 'the concept DOI disagrees');
+  assert.equal(TOOL.url, cffField('url'));
+  assert.equal(TOOL.repository, cffField('repository-code'));
+  assert.equal(TOOL.license, cffField('license'));
+  // The author as a citation renders them: family name, then the given initial.
+  const family = /^\s*-?\s*family-names:\s*"([^"]+)"/m.exec(cff)[1];
+  const given = /^\s*given-names:\s*"([^"]+)"/m.exec(cff)[1];
+  assert.equal(TOOL.author, `${family}, ${given[0]}.`);
+});
+
+test('the citation names the tool, its version and the concept DOI', () => {
+  assert.match(CITATION, /orcid-finder \(v\d+\.\d+\.\d+\)/);
+  assert.ok(CITATION.includes(TOOL.doi), 'a citation without the DOI is not one');
+  // The CONCEPT DOI, not a version one: it has to keep resolving after the next
+  // release, which is exactly when someone reads the file.
+  assert.ok(!/zenodo\.\d+\/\d/.test(CITATION));
+});
+
+test('a signed CSV opens with comments and the header is still the first data line', () => {
+  const csv = peopleToCsv([person()], { query: 'ror-org-id:"x"', mode: 'full', retrievedAt: new Date('2026-09-03T10:00:00Z') });
+  const lines = csv.split('\r\n');
+  const head = lines.findIndex((l) => !l.startsWith('#'));
+  assert.ok(head > 0, 'the file carries no preamble');
+  for (const l of lines.slice(0, head)) assert.match(l, /^# /, 'a preamble line that a reader cannot skip');
+  assert.equal(lines[head], COLUMNS.join(','), 'the header moved or was rewritten');
+  assert.equal(lines.length, head + 2, 'the preamble added or lost a data row');
+  assert.ok(csv.includes(CITATION));
+  assert.ok(csv.includes('Retrieved: 2026-09-03T10:00:00.000Z'));
+});
+
+test('an unsigned CSV is byte-for-byte the table, so a pipeline sees no change', () => {
+  // The checkbox exists for readers with no comment handling. If the "off"
+  // position still wrote a line, it would be a checkbox that does nothing.
+  assert.equal(peopleToCsv([person()]).split('\r\n')[0], COLUMNS.join(','));
+  assert.equal(peopleToCsv([person()], null), peopleToCsv([person()]));
+});
+
+test('a line break in the query cannot break out of the comment block', () => {
+  // The query is user input. A raw newline inside it would end the comment and
+  // leave the remainder sitting where a data row goes, which a reader that skips
+  // `#` would then parse as one.
+  const csv = peopleToCsv([], { query: 'evil\r\nnot,a,row' });
+  for (const l of csv.split('\r\n').slice(0, -1)) assert.match(l, /^# /);
+  assert.ok(csv.includes('# Query: evil not,a,row'));
+});
+
+test('the preamble reports the rows it actually carries, not the number it was told', () => {
+  const csv = peopleToCsv([person(), person()], { kept: 999, mode: 'fast' });
+  assert.ok(csv.includes('kept 2'), 'the count came from the caller rather than the file');
+  assert.ok(!csv.includes('kept 999'));
+});
+
+test('the name variants are exported as their own columns', () => {
+  const r = toRecord(person({ creditName: 'A. Eghdam', otherNames: ['Aboozar Eghdam', 'اBoozar'] }));
+  assert.equal(r.credit_name, 'A. Eghdam');
+  // Piped, not comma-joined, for the same reason `institutions` is.
+  assert.equal(r.other_names, 'Aboozar Eghdam | اBoozar');
+  assert.equal(toRecord(person()).other_names, '', 'an account with no variants must not export "undefined"');
+});
+
+test('the JSON export names itself the same way the CSV does', () => {
+  const doc = JSON.parse(peopleToJson([]));
+  assert.equal(doc.tool, TOOL.name);
+  assert.equal(doc.version, TOOL.version);
+  assert.equal(doc.cite_as, CITATION);
+  assert.equal(doc.doi, TOOL.doi);
+  assert.equal(doc.license, TOOL.license);
 });

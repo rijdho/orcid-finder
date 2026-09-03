@@ -63,6 +63,10 @@ export const de = {
   'export.csv': 'CSV herunterladen',
   'export.json': 'JSON herunterladen',
   'export.hint': 'Die Datei enthält alle Zeilen der Tabelle, nicht nur die angezeigte Seite.',
+  'export.provenance': 'CSV signieren: Zitations- und Abfragekopf',
+  'export.provenance.hint': 'Fügt über der Tabelle Kommentarzeilen ein, die das Werkzeug, seinen DOI und die Abfrage nennen, aus der die Zeilen stammen. Jede Zeile beginnt mit #; ein Programm, das Kommentare nicht überspringt (pandas: comment=\'#\'), zeigt sie als Datenzeilen. Der JSON-Export enthält diese Angaben immer.',
+  'alt.names': 'auch bekannt als',
+  'alt.names.title': 'Weitere Namen, die dieser ORCID-Datensatz führt: der Publikationsname und die Einträge unter „auch bekannt als“. Exportiert als credit_name und other_names.',
 
   'col.orcid': 'ORCID iD',
   'col.name': 'Name',
@@ -143,7 +147,8 @@ export const de = {
     '<p><b>Wer den Eintrag vorgenommen hat</b> ist das Feld, das ORCID Quelle nennt. Eine selbst eingetragene Anstellung trägt die eigene iD als Quelle; eine, die das System einer Mitgliedsorganisation geschrieben hat, typischerweise die Hochschule selbst, trägt stattdessen deren Client, und die Tabelle nennt ihn. Beides wird gezeigt, denn der Unterschied liegt zwischen einer Behauptung und einer, für die eine zweite Partei einsteht.</p>' +
     '<p>Ein über ROR gefundener Kandidat wird auch dann behalten, wenn der Einrichtungsname im Datensatz anders lautet, denn <code>expanded-search</code> liefert diese Namen ohne ROR-IDs je Eintrag. Sie zu verwerfen hieße, genau die Datensätze wegzuwerfen, für die das ROR-Kriterium gewählt wurde. Solche Zeilen sind mit <b>nur ROR</b> gekennzeichnet.</p>' +
     '<p><b>Die ROR-ID allein genügt nicht</b>, um eine Anstellung zu erkennen. ORCID lässt jedes Schema zur Eindeutigmachung zu, und die Kennungen, die das System einer Einrichtung selbst schreibt, sind nicht immer ROR: sie können RINGGOLD oder FUNDREF sein. Genau die von Organisationen eingetragenen Datensätze fielen damit heraus. Deshalb wird jede ROR-ID zuerst zu den Namen aufgelöst, die das Register für sie führt, und auch diese werden abgeglichen. Das Ergebnis nennt die verwendeten Namen. Eingetragene Akronyme bleiben außen vor: ein zweibuchstabiger Suchbegriff trifft einen großen Teil von ORCID.</p>' +
-    '<p>Jede Zahl darüber, was ein Filter aussortiert hat, wird dem Filter zugeschrieben, der tatsächlich aussortiert hat. Ein Filter, der nichts tut, ist so als Null sichtbar statt hinter einem früheren verborgen.</p>',
+    '<p>Jede Zahl darüber, was ein Filter aussortiert hat, wird dem Filter zugeschrieben, der tatsächlich aussortiert hat. Ein Filter, der nichts tut, ist so als Null sichtbar statt hinter einem früheren verborgen.</p>' +
+    '<p><b>Was mit der Datei hinausgeht.</b> Beide Exporte nennen sich selbst. Die CSV-Datei beginnt mit Kommentarzeilen, die das Werkzeug, seine Version, seinen DOI und die Abfrage nennen, aus der die Zeilen stammen: Eine weitergereichte Tabelle bleibt so zitierbar und wiederholbar; die JSON-Datei enthält dies seit jeher. Die Signatur lässt sich abschalten, wenn die Datei an ein Programm geht, das Kommentare nicht überspringt. Beide Dateien führen außerdem die weiteren Namen eines Datensatzes als <code>credit_name</code> und <code>other_names</code>: Der angezeigte Name entsteht aus Vor- und Nachnamensfeld, und das ist häufig eine amtliche oder transliterierte Form, unter der niemand publiziert.</p>',
 
   'caveats.title': 'Einschränkungen',
   'caveats.body':
@@ -157,6 +162,8 @@ export const de = {
     '<li><b>Gemeldet wird nur die erste passende Anstellung.</b> Wer mehrere Anstellungen an derselben Einrichtung hat, erscheint einmal, unter derjenigen, die Ihre Filter bestanden hat.</li>' +
     '<li><b>Ein unvollständiges Enddatum zählt bis zu seinem spätesten Zeitpunkt.</b> „Beendet 2026“ gilt für das ganze Jahr 2026 als laufend, damit aktives Personal nicht stillschweigend entfällt.</li>' +
     '<li><b>Die öffentliche API drosselt.</b> Ein großer Lauf im vollständigen Modus kann gebremst werden; das Werkzeug wartet ab und versucht es erneut und meldet jeden Datensatz, den es dennoch nicht lesen konnte.</li>' +
+    '<li><b>Die Namensvarianten sind so unvollständig wie der übrige Datensatz.</b> Sie sind das, was die Person selbst als Publikationsname und unter „auch bekannt als“ eingetragen hat. Eine leere Spalte heißt, dass nichts angegeben wurde, nicht, dass die Person nur einen Namen führt.</li>' +
+    '<li><b>Die CSV-Signatur besteht aus Kommentarzeilen, und das ist eine Konvention, kein Standard.</b> Jede beginnt mit <code>#</code>, und ein Programm, das Kommentare nicht überspringt, liest sie als Datenzeilen. Das Häkchen entfernen, wenn die Datei dorthin geht.</li>' +
     '</ul>',
 
   'about.title': 'Über dieses Werkzeug',

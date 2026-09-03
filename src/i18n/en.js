@@ -64,6 +64,10 @@ export const en = {
   'export.csv': 'Download CSV',
   'export.json': 'Download JSON',
   'export.hint': 'The file carries every row of the table, not the page on screen.',
+  'export.provenance': 'Sign the CSV: cite and query header',
+  'export.provenance.hint': 'Adds comment lines above the table naming the tool, its DOI and the query that produced the rows. Every line starts with #; a reader that does not skip comments (pandas: comment=\'#\') shows them as rows. The JSON export always carries this.',
+  'alt.names': 'also known as',
+  'alt.names.title': 'Other names this ORCID record carries: its published name and its “also known as” entries. Exported as credit_name and other_names.',
 
   'col.orcid': 'ORCID iD',
   'col.name': 'Name',
@@ -144,7 +148,8 @@ export const en = {
     '<p><b>Who asserted the record</b> is the field ORCID calls the source. An employment the researcher typed in carries their own iD as its source; one written by a member organisation’s system, typically the university itself, carries that client instead, and the table names it. Both are shown, because the difference is between a claim and a claim a second party stands behind.</p>' +
     '<p>A candidate found by ROR is kept even when the institution name on the record reads differently, because <code>expanded-search</code> returns those names without per-entry ROR ids. Dropping them would throw away exactly the records the ROR criterion was chosen to find. Such rows are marked <b>ROR only</b>.</p>' +
     '<p><b>The ROR id alone is not enough</b> to recognise an employment. ORCID lets one be disambiguated with any scheme, and the identifiers an institution’s own system writes are not always ROR: they may be RINGGOLD or FUNDREF, which would drop exactly the organisation-asserted records. So each ROR id is first resolved to the names the registry holds for it, and those are matched on too. The result says which names it used. Registered acronyms are left out: a two-letter needle matches a large part of ORCID.</p>' +
-    '<p>Every count of what a filter dropped is attributed to the filter that actually dropped it, so a filter doing nothing is visible as a zero rather than hidden behind an earlier one.</p>',
+    '<p>Every count of what a filter dropped is attributed to the filter that actually dropped it, so a filter doing nothing is visible as a zero rather than hidden behind an earlier one.</p>' +
+    '<p><b>What leaves with the file.</b> Both exports name themselves. The CSV opens with comment lines carrying the tool, its version, its DOI and the query that produced the rows, so a table that has been mailed on can still be cited and re-run; the JSON has always carried the same. The signature can be switched off for a reader that does not skip comments. Both files also carry the other names an account answers to, as <code>credit_name</code> and <code>other_names</code>: the display name is built from the given and family fields, and those are often a legal or transliterated form that no publication uses.</p>',
 
   'caveats.title': 'Caveats',
   'caveats.body':
@@ -158,6 +163,8 @@ export const en = {
     '<li><b>Only the first employment that qualifies is reported.</b> A person with several appointments at the same institution is shown once, under the one that passed your filters.</li>' +
     '<li><b>A partial end date is read at its latest instant.</b> "Ended 2026" counts as current for all of 2026, so that current staff are not silently dropped.</li>' +
     '<li><b>The public API rate-limits.</b> A large full-mode run can be throttled; the tool backs off and retries, and reports any record it still could not read.</li>' +
+    '<li><b>The name variants are as incomplete as the rest of the record.</b> They are what the account holder chose to enter as a published name and under “also known as”. An empty column means nothing was declared, not that the person publishes under a single name.</li>' +
+    '<li><b>The CSV signature is comment lines, which is a convention rather than a standard.</b> Every one starts with <code>#</code>, and a reader that does not skip comments parses them as rows. Untick the box when the file is going somewhere that will not.</li>' +
     '</ul>',
 
   'about.title': 'About',

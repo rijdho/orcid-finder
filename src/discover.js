@@ -15,8 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=10';
-import { fetchRorFacts } from './ror.js?v=10';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=11';
+import { fetchRorFacts } from './ror.js?v=11';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
@@ -197,6 +197,35 @@ export function needsEmployments(o) {
 export const nameOf = (r) =>
   [r['given-names'], r['family-names']].filter(Boolean).join(' ') || r['credit-name'] || r['orcid-id'];
 
+/**
+ * The other names this account answers to, as one deduplicated list with the
+ * display name itself taken out: the published (credit) name first, then the
+ * "also known as" entries.
+ *
+ * Both fields come back from `expanded-search` itself, so this costs nothing and
+ * is as available in fast mode as in full. It matters because the display name is
+ * built from `given-names` + `family-names`, and those two are frequently a
+ * transliteration, a maiden name or a legal name that no publication carries:
+ * ORCID 0000-0001-8690-8594 is "James Abbott Eqdam" by that rule and publishes as
+ * "Aboozar Eghdam". Matching a bibliography against the display name alone misses
+ * that person entirely, which is the whole reason the variants are worth carrying.
+ *
+ * It takes a discovered person, not a search row: the export keeps `creditName`
+ * and `otherNames` exactly as ORCID returned them, and the merged list is a
+ * reading of those two rather than a third field to keep in step with them.
+ */
+export function nameVariants(p) {
+  const seen = new Set([String(p?.name ?? '').trim().toLowerCase()]);
+  const out = [];
+  for (const v of [p?.creditName, ...(p?.otherNames ?? [])]) {
+    const name = String(v ?? '').trim();
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push(name);
+  }
+  return out;
+}
+
 /** ORCID dates are per-part objects; render the most precise ISO prefix available. */
 export function formatOrcidDate(d) {
   const y = d?.year?.value;
@@ -315,6 +344,8 @@ export function matchSearchRow(row, opts, n = needles(normaliseOptions(opts))) {
     name: nameOf(row),
     givenName: row['given-names'] ?? null,
     familyName: row['family-names'] ?? null,
+    creditName: row['credit-name'] ?? null,
+    otherNames: row['other-name'] ?? [],
     roleTitle: null,
     department: null,
     organization: row['institution-name']?.[0] ?? o.orgNames[0] ?? null,
@@ -406,6 +437,8 @@ export function matchEmployments(data, row, opts, today = new Date(), n = needle
           name: nameOf(row),
           givenName: row['given-names'] ?? null,
           familyName: row['family-names'] ?? null,
+          creditName: row['credit-name'] ?? null,
+          otherNames: row['other-name'] ?? [],
           roleTitle: emp['role-title'] ?? null,
           department,
           organization: org.name ?? null,

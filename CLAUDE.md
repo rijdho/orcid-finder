@@ -64,6 +64,23 @@ three locale strings, and a control in `index.html`. In that order.
 - **A new API host means a new `connect-src` entry.** The browser blocks the request otherwise,
   and it blocks it in production as readily as locally. The test compares the policy against the
   API constants, so the suite catches it first.
+- **`TOOL` in `exporters.js` is the only copy of the version, the DOI and the author.** Both
+  exports write it out and `tests/exporters.test.mjs` pins every field of it against
+  `CITATION.cff`, which is what Zenodo and GitHub read. A second copy is a second chance to hand
+  out a stale one, and the copy that ends up in a stranger's supplementary table is the one
+  nobody can correct afterwards. Bumping the version therefore means editing `CITATION.cff` and
+  `TOOL` together, or the suite goes red.
+- **The CSV preamble is optional and off by default in the module, on by default in the page.**
+  `peopleToCsv(people)` returns the bare table; the preamble is written only when a `meta` is
+  passed. The checkbox decides, because `#` is a convention rather than part of RFC 4180 and a
+  reader with no comment handling parses those lines as rows. Anything interpolated into a
+  comment line has its line breaks stripped first: a raw newline in the query would end the
+  comment and leave the remainder sitting where a data row goes.
+- **`creditName` and `otherNames` are stored raw; `nameVariants` is the reading of them.** The
+  export carries the two fields exactly as ORCID returned them, and the merged, deduplicated,
+  display-name-removed list is computed on demand rather than stored as a third field that can
+  fall out of step with the two it derives from. Both fields come back from `expanded-search`
+  itself, so they are as available in fast mode as in full and cost no request.
 - **Every relative import carries `?v=N`, and every N is the same.** There is no bundler, so the
   query string is the only cache-buster. Versioning only the entry module once served a cached
   `orcid.js` against a fresh `ror.js` that imported a symbol it did not export: the module graph

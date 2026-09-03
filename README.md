@@ -92,8 +92,9 @@ using the stage the candidate reached. Without that, a filter doing nothing look
 one doing all the work.
 
 ![The results card for ROR 056d84691 in full mode: 8 kept of 12 candidates examined, ORCID
-reports 5,318 matching accounts once the GRID id is OR-ed into the query, 4 dropped as
-self-asserted only, and every kept row asserted by Karolinska Institutet.](docs/results.png)
+reports 5,340 matching accounts once the GRID id is OR-ed into the query, 4 dropped as
+self-asserted only, and every kept row asserted by Karolinska Institutet. Above the table, the
+"Sign the CSV" box is ticked.](docs/results.png)
 
 ## Who asserted the record
 
@@ -170,6 +171,7 @@ Both downloads carry every row of the table, not the page on screen.
 | --- | --- |
 | `orcid`, `orcid_url` | the account |
 | `name`, `given_name`, `family_name` | the search record, falling back to the credit name |
+| `credit_name`, `other_names` | the published name and the "also known as" entries, pipe-separated |
 | `role_title`, `department`, `organization` | the matching employment (full mode only) |
 | `country`, `city` | the employment organisation's address, as ORCID holds it |
 | `start_date`, `end_date` | the matching employment, at the precision ORCID holds |
@@ -183,6 +185,65 @@ The JSON file additionally carries the query sent to ORCID, the mode, the filter
 and GRID ids resolved from ROR, the totals and the per-filter drop counts. A file of results
 without the query that produced it cannot be checked or repeated, which is what that block is
 for.
+
+### Name variants
+
+`credit_name` is the name the account publishes under and `other_names` its "also known as"
+entries. Both come back from `expanded-search` itself, so they cost no extra request and are as
+available in fast mode as in full, and the table shows them under the display name.
+
+They are worth carrying because the displayed name is assembled from `given-names` and
+`family-names`, and that pair is frequently a legal or transliterated form that no publication
+uses. ORCID `0000-0001-8690-8594` reads as "James Abbott Eqdam" by that rule and publishes as
+"Aboozar Eghdam"; a bibliography matched against the display name alone misses that person
+entirely. In a live run of 60 Karolinska accounts, 9 carried a variant, among them a changed
+surname and two initialised forms.
+
+Like everything else in a record, they are self-declared: an empty column means nothing was
+entered, not that the person publishes under one name.
+
+![The results card for the same ROR id in fast mode, 16 kept of 16 candidates examined out of
+5,340 matching accounts, every row marked ROR only. One of the sixteen, Kelly Marcela Velasco
+Pinto, carries a second line under the name reading "also known as: Kelly
+Velasco".](docs/names.png)
+
+### The CSV signs itself
+
+The CSV opens with a block of `#` comment lines naming the tool, its version, its concept DOI,
+the licence, the data sources, the timestamp, the query sent to ORCID, the mode and the counts:
+
+```
+# orcid-finder v1.2.0 · https://rijdho.github.io/orcid-finder/
+# Cite: Hartley Belmar, R. (2026). orcid-finder (v1.2.0) [Software]. https://doi.org/10.5281/zenodo.22227424
+# License: AGPL-3.0-or-later · Source: https://github.com/rijdho/orcid-finder
+# Data: ORCID public API v3.0, ROR API v2
+# Retrieved: 2026-09-03T15:56:45.845Z
+# Query: ror-org-id:"https://ror.org/056d84691" OR grid-org-id:"grid.4714.6"
+# Mode: fast · found 5340 · scanned 60 · kept 60
+# GRID ids: grid.4714.6
+# These comment lines are not data. Skip lines starting with # when reading.
+orcid,orcid_url,name,…
+```
+
+The JSON export has always carried this. The CSV is the file that actually gets opened, mailed
+on and pasted into a supplementary table, and it was the one leaving with no name on it.
+
+`#` is a convention rather than part of RFC 4180, so a reader that does not skip comments will
+parse those lines as rows. The ones that do need telling:
+
+```python
+pandas.read_csv("orcid-finder-….csv", comment="#")
+```
+
+```r
+read.csv("orcid-finder-….csv", comment.char = "#")
+```
+
+A checkbox above the table turns the signature off for anywhere that will not.
+
+The version, DOI, URL, repository and author written into both exports are pinned against
+`CITATION.cff` by a test, because the copy that ends up in a stranger's supplementary table is
+the one nobody can correct afterwards.
 
 CSV is written per RFC 4180 with CRLF line endings, and any value that a spreadsheet would
 execute as a formula is neutralised with a leading apostrophe. ORCID records are written by the
@@ -205,8 +266,11 @@ executes on open, a column that quietly went missing); and i18n key and placehol
 across the three locales, including a check that every `data-i18n` key the page asks for
 exists.
 
-The suite was validated by injecting five deliberate defects, one per layer, and confirming
-each one turned the suite red before reverting it.
+The suite was validated by injecting deliberate defects and confirming each one turned it red
+before reverting: originally five, one per layer, and five more when the provenance header and
+the name variants were added (a `nameVariants` that stops deduplicating, a full mode that drops
+`other-name`, a signature checkbox that does nothing, a comment line a newline can break out of,
+and a version that has gone stale against `CITATION.cff`).
 
 ## Run locally
 
@@ -223,7 +287,8 @@ ships:
 
 ```bash
 npm i puppeteer
-node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=12&asserted=1&country=SE&lang=en"
+node docs/screenshots.mjs docs "http://localhost:8777/?ror=056d84691&byName=0&max=12&asserted=1&country=SE&lang=en" \
+  "http://localhost:8777/?ror=056d84691&byName=0&max=16&lang=en"
 ```
 
 ## Deploy
@@ -272,6 +337,13 @@ is not this tool's job.
   record, so the column is empty until a filter opens it. Empty means unknown, never
   self-asserted.
 - **The email field is never shown or exported.** See Security and privacy above.
+- **The name variants are as incomplete as the rest of the record.** They are what the account
+  holder chose to enter as a published name and under "also known as". An empty column means
+  nothing was declared, not that the person publishes under a single name, and the list is not
+  an authority record: it is one person's account of the names they use.
+- **The CSV signature is comment lines, which is a convention rather than a standard.** Every
+  line starts with `#`, and a reader with no comment handling parses them as rows. The checkbox
+  above the table turns it off for those.
 - **A Ringgold id is coarser than a ROR id.** `27106` returns both Karolinska Institutet and
   Karolinska University Hospital. It is the largest coverage gain on offer and the likeliest to
   reach past the institution you meant, so read the organisation column before trusting a

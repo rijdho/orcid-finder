@@ -2,9 +2,9 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { clampMaxRows, discoverPeople, normaliseRor, parseList, validateOptions } from './discover.js?v=10';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=10';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=10';
+import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=11';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=11';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=11';
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -12,7 +12,8 @@ const el = {
   error: $('error'), progress: $('progress'), barFill: $('bar-fill'), barLabel: $('bar-label'),
   results: $('results'), summary: $('summary'), breakdown: $('breakdown'), query: $('query'),
   modeTag: $('mode-tag'), tablewrap: $('tablewrap'), cmdTitle: $('cmd-title'), rorNames: $('ror-names'),
-  dlCsv: $('dl-csv'), dlJson: $('dl-json'), lang: $('lang'), theme: $('theme'),
+  dlCsv: $('dl-csv'), dlJson: $('dl-json'), csvProvenance: $('csvProvenance'),
+  lang: $('lang'), theme: $('theme'),
 };
 
 const VIEWS = ['search', 'how', 'caveats', 'about'];
@@ -307,14 +308,20 @@ function render(r) {
   const head = cols.map((c) => `<th>${escapeHtml(t(c))}</th>`).join('');
   const rows = r.people.map((p) => {
     const cell = (v) => `<td>${escapeHtml(v ?? '')}</td>`;
+    const nameCell = () => {
+      const alt = nameVariants(p);
+      if (!alt.length) return cell(p.name);
+      return `<td>${escapeHtml(p.name ?? '')}<span class="alt-names" title="${escapeHtml(t('alt.names.title'))}">` +
+        `${escapeHtml(t('alt.names'))}: ${escapeHtml(alt.join(' · '))}</span></td>`;
+    };
     const idCell = `<td class="nowrap"><a class="mono" href="https://orcid.org/${escapeHtml(p.orcid)}" target="_blank" rel="noreferrer">${escapeHtml(p.orcid)}</a></td>`;
     const matched = () => badge(p.matchedBy, t(`matched.${p.matchedBy}`), p.matchedBy === 'ror_only' ? t('matched.ror_only.title') : null);
     return r.mode === 'full'
-      ? `<tr>${idCell}${cell(p.name)}${cell(p.roleTitle)}${cell(p.department)}${cell(p.organization)}` +
+      ? `<tr>${idCell}${nameCell()}${cell(p.roleTitle)}${cell(p.department)}${cell(p.organization)}` +
         `<td class="nowrap" title="${escapeHtml(p.city ?? '')}">${escapeHtml(p.country ?? '')}</td>` +
         `<td class="nowrap">${escapeHtml(p.startDate ?? '')}</td><td class="nowrap">${escapeHtml(p.endDate ?? '')}</td>` +
         `${assertionCell(p)}</tr>`
-      : `<tr>${idCell}${cell(p.name)}${cell(p.organization)}${matched()}</tr>`;
+      : `<tr>${idCell}${nameCell()}${cell(p.organization)}${matched()}</tr>`;
   }).join('');
   el.tablewrap.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
 }
@@ -364,7 +371,11 @@ el.reset.addEventListener('click', () => {
   writeUrl();
 });
 el.dlCsv.addEventListener('click', () => {
-  if (last) downloadText(exportFilename(last.filters, 'csv'), 'text/csv', peopleToCsv(last.people));
+  // Signed by default, because a file that leaves without a name on it comes back
+  // as a table nobody can cite. Unticking it is for a pipeline that reads the CSV
+  // with no comment handling.
+  if (last) downloadText(exportFilename(last.filters, 'csv'), 'text/csv',
+    peopleToCsv(last.people, el.csvProvenance.checked ? meta() : null));
 });
 el.dlJson.addEventListener('click', () => {
   if (last) downloadText(exportFilename(last.filters, 'json'), 'application/json', peopleToJson(last.people, meta()));

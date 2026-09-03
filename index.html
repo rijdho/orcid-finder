@@ -23,8 +23,8 @@
   <meta name="description" data-i18n-attr="content:meta.description"
         content="Search ORCID for the accounts that declare an institution, by ROR id or organisation name, narrow by role title, start date, current appointments and who asserted the record, and download the result as CSV or JSON." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236d4aff'/%3E%3Ctext x='16' y='22' font-size='15' text-anchor='middle' fill='%23ffffff' font-family='monospace' font-weight='bold'%3EiD%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./style.css?v=10" />
-  <script src="./src/theme-boot.js?v=10"></script>
+  <link rel="stylesheet" href="./style.css?v=11" />
+  <script src="./src/theme-boot.js?v=11"></script>
 </head>
 <body>
   <div class="app">
@@ -185,6 +185,9 @@
               <div class="chips" id="breakdown"></div>
               <div class="chips" id="ror-names"></div>
               <div class="query" id="query"></div>
+              <label class="chk export-sign"><input type="checkbox" id="csvProvenance" checked />
+                <span data-i18n="export.provenance">Sign the CSV: cite and query header</span></label>
+              <p class="hint export-note" data-i18n="export.provenance.hint"></p>
               <p class="hint export-note" data-i18n="export.hint"></p>
               <div class="tablewrap" id="tablewrap"></div>
             </section>
@@ -216,6 +219,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/app.js?v=10"></script>
+  <script type="module" src="./src/app.js?v=11"></script>
 </body>
 </html>

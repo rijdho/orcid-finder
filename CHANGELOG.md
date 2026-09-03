@@ -6,6 +6,35 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-03
+
+### Added
+
+- **The CSV signs itself.** It opens with `#` comment lines naming the tool, its version, its
+  concept DOI, the licence, the data sources, the timestamp, the query sent to ORCID, the mode
+  and the counts. The JSON export has carried this since it existed; the CSV is the file that
+  actually gets opened, mailed on and pasted into a supplementary table, and it was the one
+  leaving with no name on it. `#` is a convention rather than part of RFC 4180, so a reader with
+  no comment handling parses those lines as rows: a checkbox above the table turns the signature
+  off, and the hint names the incantation for pandas and R.
+- **Name variants.** `credit_name` and `other_names` join the export, and the table shows them
+  under the display name as "also known as". Both fields come back from `expanded-search`
+  itself, so they cost no extra request and are as available in fast mode as in full. They
+  matter because the display name is assembled from `given-names` and `family-names`, which are
+  frequently a legal or transliterated form that no publication uses: ORCID 0000-0001-8690-8594
+  reads as "James Abbott Eqdam" by that rule and publishes as "Aboozar Eghdam". In a live run of
+  60 Karolinska accounts, 9 carried a variant.
+- **The tool's identity is one constant, pinned to `CITATION.cff` by a test.** Version, concept
+  DOI, URL, repository, licence and author now live in `TOOL` in `src/exporters.js` and are
+  written into both exports from there. A second copy of a version number is a second chance to
+  hand out a stale one, and the copy that ends up in a stranger's supplementary table is the one
+  nobody can correct afterwards.
+
+### Changed
+
+- The export gains two columns, so a script reading the CSV by column position rather than by
+  name needs updating: `credit_name` and `other_names` sit after `family_name`.
+
 ## [1.1.1] - 2026-09-03
 
 Version DOI: [10.5281/zenodo.22274631](https://doi.org/10.5281/zenodo.22274631).

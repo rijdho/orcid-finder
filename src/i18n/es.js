@@ -64,6 +64,10 @@ export const es = {
   'export.csv': 'Descargar CSV',
   'export.json': 'Descargar JSON',
   'export.hint': 'El archivo lleva todas las filas de la tabla, no la página en pantalla.',
+  'export.provenance': 'Firmar el CSV: cabecera de cita y consulta',
+  'export.provenance.hint': 'Añade sobre la tabla líneas de comentario con el nombre de la herramienta, su DOI y la consulta que produjo las filas. Cada línea empieza por #; un lector que no salte los comentarios (pandas: comment=\'#\') las mostrará como filas. La exportación JSON siempre lleva estos datos.',
+  'alt.names': 'también conocido como',
+  'alt.names.title': 'Otros nombres que constan en este registro ORCID: el nombre de publicación y las entradas de «también conocido como». Se exportan como credit_name y other_names.',
 
   'col.orcid': 'ORCID iD',
   'col.name': 'Nombre',
@@ -144,7 +148,8 @@ export const es = {
     '<p><b>Quién declaró el registro</b> es el campo que ORCID llama fuente. Un empleo que escribió la propia persona lleva su iD como fuente; uno escrito por el sistema de una organización miembro, típicamente la propia universidad, lleva ese cliente, y la tabla lo nombra. Se muestran ambos, porque la diferencia está entre una afirmación y una afirmación que respalda una segunda parte.</p>' +
     '<p>Un candidato encontrado por ROR se conserva aunque el nombre de la institución en el registro esté escrito de otra manera, porque <code>expanded-search</code> devuelve esos nombres sin identificadores ROR por entrada. Descartarlos sería tirar justo los registros que el criterio ROR sirve para encontrar. Esas filas van marcadas como <b>solo ROR</b>.</p>' +
     '<p><b>El identificador ROR por sí solo no basta</b> para reconocer un empleo. ORCID admite cualquier esquema de desambiguación, y los identificadores que escribe el sistema de la propia institución no siempre son ROR: pueden ser RINGGOLD o FUNDREF, con lo que se caerían justo los registros declarados por la organización. Por eso cada identificador ROR se resuelve primero a los nombres que el registro guarda para él, y también se compara con esos. El resultado dice qué nombres usó. Los acrónimos registrados quedan fuera: una aguja de dos letras coincide con buena parte de ORCID.</p>' +
-    '<p>Cada recuento de lo que descartó un filtro se atribuye al filtro que realmente lo descartó, de modo que un filtro que no hace nada se ve como un cero en lugar de quedar oculto tras otro anterior.</p>',
+    '<p>Cada recuento de lo que descartó un filtro se atribuye al filtro que realmente lo descartó, de modo que un filtro que no hace nada se ve como un cero en lugar de quedar oculto tras otro anterior.</p>' +
+    '<p><b>Qué sale con el archivo.</b> Las dos exportaciones se identifican. El CSV empieza con líneas de comentario que nombran la herramienta, su versión, su DOI y la consulta que produjo las filas, de modo que una tabla reenviada sigue siendo citable y repetible; el JSON lo lleva desde siempre. La firma puede desactivarse si el archivo va a un lector que no salta los comentarios. Ambos archivos llevan además los otros nombres que constan en la cuenta, como <code>credit_name</code> y <code>other_names</code>: el nombre mostrado se arma con los campos de nombre y apellido, y esos son a menudo una forma legal o transliterada con la que nadie publica.</p>',
 
   'caveats.title': 'Limitaciones',
   'caveats.body':
@@ -158,6 +163,8 @@ export const es = {
     '<li><b>Solo se informa del primer empleo que cumple.</b> Quien tenga varios nombramientos en la misma institución aparece una vez, bajo el que pasó tus filtros.</li>' +
     '<li><b>Una fecha de fin parcial se lee en su instante más tardío.</b> «Terminado en 2026» cuenta como vigente durante todo 2026, para no eliminar en silencio a personal activo.</li>' +
     '<li><b>La API pública limita las peticiones.</b> Una ejecución grande en modo completo puede verse frenada; la herramienta espera y reintenta, e informa de cualquier registro que aun así no pudo leer.</li>' +
+    '<li><b>Las variantes de nombre son tan incompletas como el resto del registro.</b> Son lo que la propia persona decidió declarar como nombre de publicación y bajo «también conocido como». Una columna vacía significa que no se declaró nada, no que la persona publique con un solo nombre.</li>' +
+    '<li><b>La firma del CSV son líneas de comentario, que es una convención y no un estándar.</b> Todas empiezan por <code>#</code>, y un lector que no salte los comentarios las interpreta como filas. Desmarcar la casilla cuando el archivo vaya a uno de esos.</li>' +
     '</ul>',
 
   'about.title': 'Acerca de',
