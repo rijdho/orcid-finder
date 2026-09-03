@@ -6,8 +6,31 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-03
+
+### Added
+
+- **The page shows its DOI.** A visitor writing a methods section can cite the tool without
+  going to the repository to find the number. It sits in the rail, under the author and
+  licence line, and is labelled in all three languages.
+- **Both citation surfaces carry the Zenodo DOIs**: the concept-DOI badge under the README
+  title, and `CITATION.cff` with the concept DOI at the top level so GitHub's "Cite this
+  repository" widget resolves it, plus an `identifiers:` list holding the concept and the
+  current version DOI.
+
 ### Fixed
 
+- **A `?max=` in the URL was not clamped.** It skips the input's own `min`/`max`, so a link
+  carrying `?max=999999` filled the field with that number and left it marked invalid, while
+  the run itself was capped correctly by `normaliseOptions`. The form therefore stated
+  something the run did not do. The arithmetic now lives in one exported `clampMaxRows`, which
+  both the form and the URL go through, rather than in two copies of a `parseInt` that can
+  drift apart.
+- **A README screenshot published the wrong licence.** `docs/app.png` predated the switch to
+  AGPL-3.0-or-later and still showed "MIT" in the page footer, so the README of an AGPL
+  repository stated MIT to anyone reading the image rather than the text. No text search finds
+  that; it took opening the file. It also still carried the Ringgold wording the overclaim fix
+  replaced. Regenerated from `docs/screenshots.mjs` against the current tree.
 - **An overclaim, in the README, the changelog, the interface in three languages and the
   release notes.** They said an institution's own integration "frequently" or "usually"
   stamps a RINGGOLD identifier rather than a ROR one. That was generalised from the single
