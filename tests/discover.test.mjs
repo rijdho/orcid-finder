@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {
   buildQuery, isValidRor, normaliseRor, parseList, needsEmployments, activeCriteria,
   matchSearchRow, matchEmployments, hasEnded, formatOrcidDate, discoverPeople, normaliseOptions,
-  classifyAssertion, validateOptions,
+  classifyAssertion, validateOptions, clampMaxRows, MAX_ROWS,
 } from '../src/discover.js';
 import { expandedSearch } from '../src/orcid.js';
 
@@ -111,6 +111,19 @@ test('normaliseOptions clamps maxRows into the ORCID paging range', () => {
   assert.equal(normaliseOptions({ maxRows: 0 }).maxRows, 200, 'a falsy value falls back to the default');
   assert.equal(normaliseOptions({ maxRows: 5000 }).maxRows, 2000);
   assert.equal(normaliseOptions({ maxRows: '50' }).maxRows, 50);
+});
+
+test('clampMaxRows takes anything a form or a URL can hand it', () => {
+  // A URL parameter skips the input's own min/max, so this is the only guard
+  // between `?max=999999` and a run that asks ORCID for it.
+  assert.equal(clampMaxRows('5000'), MAX_ROWS);
+  assert.equal(clampMaxRows(MAX_ROWS + 1), MAX_ROWS);
+  assert.equal(clampMaxRows(String(MAX_ROWS)), MAX_ROWS, 'the ceiling itself is allowed');
+  assert.equal(clampMaxRows('-40'), 1, 'below the floor becomes the floor, never a negative page size');
+  assert.equal(clampMaxRows(null), 200, 'an absent parameter is the default, not NaN');
+  assert.equal(clampMaxRows(undefined), 200);
+  assert.equal(clampMaxRows('abc'), 200, 'an unparseable value is the default, not NaN');
+  assert.equal(clampMaxRows('1200'), 1200, 'a value past the old 1000 limit survives');
 });
 
 test('needsEmployments is true for exactly the three employment filters', () => {

@@ -2,9 +2,9 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { discoverPeople, normaliseRor, parseList, validateOptions } from './discover.js?v=8';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=8';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=8';
+import { clampMaxRows, discoverPeople, normaliseRor, parseList, validateOptions } from './discover.js?v=9';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=9';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=9';
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -117,7 +117,7 @@ function readForm() {
     currentOnly: $('currentOnly').checked,
     requireStartDate: $('requireStartDate').checked,
     assertedOnly: $('assertedOnly').checked,
-    maxRows: parseInt($('maxRows').value, 10) || 200,
+    maxRows: clampMaxRows($('maxRows').value),
   };
 }
 
@@ -197,7 +197,7 @@ function readUrl() {
     currentOnly: p.get('current') === '1',
     requireStartDate: p.get('started') === '1',
     assertedOnly: p.get('asserted') === '1',
-    maxRows: parseInt(p.get('max') ?? '200', 10) || 200,
+    maxRows: clampMaxRows(p.get('max')),
   };
 }
 

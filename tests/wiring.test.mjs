@@ -56,3 +56,16 @@ test('no locale key is defined and never asked for', () => {
   const dead = Object.keys(LOCALES.en).filter((key) => !source.includes(key) && !assembled(key));
   assert.deepEqual(dead, [], 'these keys are translated three times and never shown');
 });
+
+test('every maxRows app.js reads from outside is clamped, the URL one included', () => {
+  // `?max=` bypasses the input's min/max entirely, so an unclamped parseInt here
+  // sends a hand-edited number straight into the run. Only values coming FROM the
+  // DOM or the URL are in scope: a literal written INTO the form is already sound.
+  // Asserted on the source text, because app.js cannot be imported without a DOM.
+  const reads = [...app.matchAll(/maxRows:\s*([^,\n]+)/g)]
+    .map((m) => m[1].trim())
+    .filter((expr) => /\$\(|p\.get\(/.test(expr));
+  assert.equal(reads.length, 2, 'expected exactly two outside sources: the form and the URL');
+  for (const expr of reads)
+    assert.match(expr, /^clampMaxRows\(/, `app.js builds maxRows as \`${expr}\`, which skips the clamp`);
+});

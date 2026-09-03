@@ -15,8 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=8';
-import { fetchRorFacts } from './ror.js?v=8';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=9';
+import { fetchRorFacts } from './ror.js?v=9';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
@@ -69,6 +69,18 @@ const year = (v) => {
   return Number.isInteger(n) && n > 0 ? n : null;
 };
 
+/**
+ * How many candidates a run may pull. Exported because the form and the URL
+ * both produce this number and both must land inside the same range: a second
+ * copy of the arithmetic is a second thing that can drift from this one.
+ *
+ * MAX_ROWS is ours, not ORCID's. expanded-search pages well past it; the limit
+ * exists so a mistyped or hand-edited value cannot commit the visitor to tens
+ * of thousands of requests in full mode.
+ */
+export const MAX_ROWS = 2000;
+export const clampMaxRows = (v) => Math.min(Math.max(parseInt(v ?? 200, 10) || 200, 1), MAX_ROWS);
+
 export function normaliseOptions(o = {}) {
   const status = AFFILIATION_STATUS.includes(o.affiliationStatus) ? o.affiliationStatus : 'any';
   return {
@@ -85,7 +97,7 @@ export function normaliseOptions(o = {}) {
     countries: clean(o.countries).map((c) => c.toUpperCase()),
     startFrom: year(o.startFrom),
     startTo: year(o.startTo),
-    maxRows: Math.min(Math.max(parseInt(o.maxRows ?? 200, 10) || 200, 1), 2000),
+    maxRows: clampMaxRows(o.maxRows),
   };
 }
 
