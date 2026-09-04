@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.3.1] - 2026-09-04
 
+Version DOI: [10.5281/zenodo.22296598](https://doi.org/10.5281/zenodo.22296598).
+
 ### Fixed
 
 - **v1.3.0 shipped four changed modules under the cache-busting version they already had.**
