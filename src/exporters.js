@@ -10,7 +10,7 @@
  */
 export const TOOL = {
   name: 'orcid-finder',
-  version: '1.3.0',
+  version: '1.3.1',
   year: 2026,
   author: 'Hartley Belmar, R.',
   url: 'https://rijdho.github.io/orcid-finder/',

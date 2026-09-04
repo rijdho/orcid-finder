@@ -236,8 +236,8 @@ The CSV opens with a block of `#` comment lines naming the tool, its version, it
 the licence, the data sources, the timestamp, the query sent to ORCID, the mode and the counts:
 
 ```
-# orcid-finder v1.3.0 · https://rijdho.github.io/orcid-finder/
-# Cite: Hartley Belmar, R. (2026). orcid-finder (v1.3.0) [Software]. https://doi.org/10.5281/zenodo.22227424
+# orcid-finder v1.3.1 · https://rijdho.github.io/orcid-finder/
+# Cite: Hartley Belmar, R. (2026). orcid-finder (v1.3.1) [Software]. https://doi.org/10.5281/zenodo.22227424
 # License: AGPL-3.0-or-later · Source: https://github.com/rijdho/orcid-finder
 # Data: ORCID public API v3.0, ROR API v2
 # Retrieved: 2026-09-03T15:56:45.845Z
@@ -289,6 +289,19 @@ executes on open, a column that quietly went missing); and i18n key and placehol
 across the three locales, including a check that every `data-i18n` key the page asks for
 exists.
 
+A fourth layer guards the cache-busting: `tests/assets.lock.json` records the `?v=` together
+with a hash of every served file, so a module changed without a bump turns the suite red. Without
+it, the older test only proved the versions agreed with each other, which they did through v1.3.0
+while four files were rewritten underneath them. After editing anything served, bump `?v=` in
+`index.html` and in every relative import, then:
+
+```bash
+node tests/assets-lock.mjs --write
+```
+
+That writer refuses to record a changed hash under an unchanged version, so relocking cannot be
+used to silence the guard instead of fixing it.
+
 The suite was validated by injecting deliberate defects and confirming each one turned it red
 before reverting: five originally, one per layer; five when the provenance header and the name
 variants were added (a `nameVariants` that stops deduplicating, a full mode that drops
@@ -296,7 +309,9 @@ variants were added (a `nameVariants` that stops deduplicating, a full mode that
 and a version gone stale against `CITATION.cff`); and four when the variants were split into
 their own columns (a variable-width block placed in the middle, a width taken from the first row
 instead of the widest, an empty column on every ordinary row, and a joined column that stops
-agreeing with the split ones).
+agreeing with the split ones). The asset lock was validated against the real defect it was
+written for: the v1.3.0 change was replayed, the suite went red, relocking without a bump was
+refused, and only a bump plus a relock turned it green again.
 
 ## Run locally
 

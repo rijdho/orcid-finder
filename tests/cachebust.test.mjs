@@ -10,6 +10,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { assetHash, assetVersion, readLock, relockRefusal, servedFiles } from './assets-lock.mjs';
+
 const root = new URL('../', import.meta.url);
 const read = (rel) => readFileSync(fileURLToPath(new URL(rel, root)), 'utf8');
 
@@ -47,4 +49,51 @@ test('every version in the app is the same number', () => {
     versions.size, 1,
     `versions disagree (${[...versions].join(', ')}): bump them together or a mixed set of files is served`,
   );
+});
+
+// ── The asset lock ──────────────────────────────────────────────────────────
+
+test('the lock matches the tree, so no served file changed without a bump', () => {
+  // The test above proves the versions AGREE with each other. It cannot see the
+  // thing that actually went wrong on 2026-09-04: they agreed at 11 while
+  // `exporters.js` and three locale files had been rewritten under that same 11,
+  // so every browser holding the old copies kept them. The lock is what notices.
+  const lock = readLock();
+  assert.equal(
+    assetVersion(), lock.version,
+    'index.html and the lock disagree on ?v=; run `node tests/assets-lock.mjs --write` after bumping',
+  );
+  assert.equal(
+    assetHash(), lock.hash,
+    'a served file changed. Bump ?v= in index.html and in every relative import, then run ' +
+    '`node tests/assets-lock.mjs --write`. Without the bump, a browser that already has these ' +
+    'files keeps serving the old ones for the length of the Pages cache window.',
+  );
+});
+
+test('the lock covers every served file, and no more', () => {
+  // A new module under src/ that the lock does not hash is a file the guard is
+  // blind to, and it would be blind silently.
+  const served = servedFiles();
+  assert.equal(served.length, readLock().files, 'a served file was added or removed; relock');
+  for (const f of ['index.html', 'style.css', 'src/app.js', 'src/exporters.js', 'src/i18n/en.js'])
+    assert.ok(served.includes(f), `${f} is served and unlocked`);
+  // Tests and fonts are deliberately outside: see the header of assets-lock.mjs.
+  assert.ok(!served.some((f) => f.startsWith('tests/') || f.startsWith('fonts/')));
+});
+
+test('relocking cannot silence the guard while the version stands still', () => {
+  // Without this, "run the writer" would be a way to make the failure go away
+  // without fixing it, which is worse than no guard: it would look handled.
+  const at = (version, hash) => ({ version, hash, files: 12 });
+  assert.match(
+    relockRefusal(at('12', 'old'), at('12', 'new')) ?? '',
+    /\?v= is still 12/,
+    'a changed tree under an unchanged version must be refused',
+  );
+  // The two honest cases still pass: a bump, and a relock that changes nothing.
+  assert.equal(relockRefusal(at('12', 'old'), at('13', 'new')), null);
+  assert.equal(relockRefusal(at('12', 'same'), at('12', 'same')), null);
+  // And the very first lock, with nothing to compare against.
+  assert.equal(relockRefusal(null, at('12', 'new')), null);
 });

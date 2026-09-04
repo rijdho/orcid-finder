@@ -93,6 +93,16 @@ three locale strings, and a control in `index.html`. In that order.
   `orcid.js` against a fresh `ror.js` that imported a symbol it did not export: the module graph
   aborted with no visible error and the tool came up blank while looking deployed.
   `tests/cachebust.test.mjs` pins this; bump `index.html` and every import together.
+- **Agreeing versions are not the property that matters; a bump is.** v1.3.0 shipped four
+  rewritten modules under the `?v=11` they already carried, and the cache-bust test passed the
+  whole way, because it only checked that the numbers agreed with each other. They did.
+  `tests/assets.lock.json` now records the version alongside a hash of every served file, so a
+  changed file under an unchanged N turns the suite red. After editing anything served: bump N
+  everywhere, then `node tests/assets-lock.mjs --write`. The writer REFUSES a changed hash under
+  an unchanged version, which is the case the comparison cannot tell apart on its own. Lock last,
+  once, just before committing; editing after locking means bumping again, and the numbers are
+  free. `fonts/` stays out, because a bare path in `style.css` carries no version and locking it
+  would promise a protection that is not there.
 
 ## House rules inherited from the family
 

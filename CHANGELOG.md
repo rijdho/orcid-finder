@@ -6,6 +6,35 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-04
+
+### Fixed
+
+- **v1.3.0 shipped four changed modules under the cache-busting version they already had.**
+  `src/exporters.js` and the three locale files were rewritten but kept `?v=11`, which they had
+  carried since v1.2.0. There is no bundler here, so that query string is the only thing that
+  makes a browser fetch a file it already holds: GitHub Pages serves these with
+  `cache-control: max-age=600`, so a returning visitor kept the v1.2.0 modules for the length of
+  that window and got a CSV with no split columns, signed `v1.2.0`, from a v1.3.0 page. Nothing
+  broke loudly, which is what made it worth fixing rather than waiting out. Every URL is now at
+  `?v=13`.
+
+### Added
+
+- **An asset lock, so this cannot be forgotten again.** `tests/assets.lock.json` records the
+  version together with a hash of every file the `?v=` covers, and `tests/cachebust.test.mjs`
+  fails when the tree and the lock disagree. The existing test only proved the versions agreed
+  *with each other*, which they did at 11 while four files changed underneath them; agreement was
+  never the property that mattered.
+
+  `node tests/assets-lock.mjs --write` records a new lock and **refuses to record a changed hash
+  under an unchanged version**. Without that refusal, relocking would be a way to make the failure
+  go away without fixing it, which is worse than no guard because it would look handled. The
+  refusal is a pure function, so the test exercises it without a test writing to the repository.
+
+  `fonts/` is deliberately outside the lock: those are referenced from `style.css` by a bare path
+  with no version, so locking them would promise a protection that does not exist.
+
 ## [1.3.0] - 2026-09-04
 
 Version DOI: [10.5281/zenodo.22295998](https://doi.org/10.5281/zenodo.22295998).
