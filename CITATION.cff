@@ -23,8 +23,8 @@ identifiers:
     value: 10.5281/zenodo.22227424
     description: "Concept DOI, always resolves to the latest version"
   - type: doi
-    value: 10.5281/zenodo.22285905
-    description: "Version DOI for v1.2.0"
+    value: 10.5281/zenodo.22295998
+    description: "Version DOI for v1.3.0"
 repository-code: "https://github.com/rijdho/orcid-finder"
 url: "https://rijdho.github.io/orcid-finder/"
 license: AGPL-3.0-or-later

@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.3.0] - 2026-09-04
 
+Version DOI: [10.5281/zenodo.22295998](https://doi.org/10.5281/zenodo.22295998).
+
 ### Added
 
 - **The "also known as" list is split into one column per name.** `other_name_1`, `other_name_2`
