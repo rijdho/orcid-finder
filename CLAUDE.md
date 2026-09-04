@@ -81,6 +81,13 @@ three locale strings, and a control in `index.html`. In that order.
   display-name-removed list is computed on demand rather than stored as a third field that can
   fall out of step with the two it derives from. Both fields come back from `expanded-search`
   itself, so they are as available in fast mode as in full and cost no request.
+- **The CSV's `other_name_N` block is the one place CSV and JSON deliberately differ.** It splits
+  a column both formats carry; it never adds a fact. `otherNameList` is the single list behind
+  the joined `other_names` and the split columns alike, and a test pins that the two cannot
+  disagree. Three properties of the block are load-bearing: it sits AFTER every fixed column, so
+  a variable width never moves `role_title` between two runs that differ only in data; its width
+  follows the widest account rather than a cap, because a cap truncates the record it was set too
+  low for; and it is absent entirely when nobody declares a variant, which is 94.3% of accounts.
 - **Every relative import carries `?v=N`, and every N is the same.** There is no bundler, so the
   query string is the only cache-buster. Versioning only the entry module once served a cached
   `orcid.js` against a fresh `ror.js` that imported a symbol it did not export: the module graph

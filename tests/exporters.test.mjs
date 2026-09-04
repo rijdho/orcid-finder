@@ -7,7 +7,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import {
-  CITATION, COLUMNS, TOOL, csvField, toCsv, toRecord, peopleToCsv, peopleToJson, exportFilename,
+  CITATION, COLUMNS, TOOL, csvField, otherNameList, toCsv, toRecord, peopleToCsv, peopleToJson,
+  exportFilename, variantColumns,
 } from '../src/exporters.js';
 
 const person = (over = {}) => ({
@@ -232,4 +233,78 @@ test('the JSON export names itself the same way the CSV does', () => {
   assert.equal(doc.cite_as, CITATION);
   assert.equal(doc.doi, TOOL.doi);
   assert.equal(doc.license, TOOL.license);
+});
+
+// ── The split variant columns ───────────────────────────────────────────────
+
+const csvRows = (csv) => csv.split('\r\n').map((l) => l.split(','));
+
+test('the CSV grows one column per variant, sized to the widest account in the result', () => {
+  const csv = peopleToCsv([
+    person({ otherNames: ['Isabel Carolin Schroeter', 'Isabel Carolin Schröter'] }),
+    person({ otherNames: [] }),
+    person({ otherNames: ['A.A. Kuznetsov', 'Andrei Kuznetsov', 'Andrey A. Kuznetsov'] }),
+  ]);
+  const [head, ...rows] = csvRows(csv);
+  assert.deepEqual(head.slice(COLUMNS.length), ['other_name_1', 'other_name_2', 'other_name_3']);
+  // Every row is as wide as the header, including the account with none: a short
+  // row is the classic silent corruption, and the file still opens.
+  for (const r of rows) assert.equal(r.length, head.length);
+  assert.deepEqual(rows[1].slice(COLUMNS.length), ['', '', '']);
+  assert.deepEqual(rows[2].slice(COLUMNS.length), ['A.A. Kuznetsov', 'Andrei Kuznetsov', 'Andrey A. Kuznetsov']);
+});
+
+test('a result where nobody declares a variant gets no extra column at all', () => {
+  // 94.3% of accounts declare none, so this is the ordinary case, and paying for
+  // the feature with an empty column on every one of those rows is not the deal.
+  assert.deepEqual(variantColumns([person({ otherNames: [] })]), []);
+  assert.equal(csvRows(peopleToCsv([person({ otherNames: [] })]))[0].join(','), COLUMNS.join(','));
+});
+
+test('the split columns never move a fixed one, whatever the width of the result', () => {
+  // This is why the block sits at the end. A variable-width block in the middle
+  // would move `role_title` between two runs that differ only in their data, and
+  // a reader working by position would break on that difference.
+  const narrow = csvRows(peopleToCsv([person({ otherNames: [] })]))[0];
+  const wide = csvRows(peopleToCsv([person({ otherNames: ['a', 'b', 'c'] })]))[0];
+  assert.deepEqual(wide.slice(0, COLUMNS.length), narrow.slice(0, COLUMNS.length));
+  assert.equal(wide.indexOf('role_title'), narrow.indexOf('role_title'));
+});
+
+test('the joined column and the split ones are the same list, never two answers', () => {
+  const names = ['Claudia P. Castro', 'Claudia Pires'];
+  const [head, row] = csvRows(peopleToCsv([person({ otherNames: names })]));
+  const joined = row[head.indexOf('other_names')];
+  // Quoted, because the pipe-joined value is one field: read it back rather than
+  // trusting the raw cell.
+  assert.equal(joined.replace(/^"|"$/g, ''), names.join(' | '));
+  assert.deepEqual(row.slice(COLUMNS.length), names);
+});
+
+test('a blank other-name entry is dropped from the joined column and the split ones alike', () => {
+  // An empty entry would otherwise show as a stray " | " in the joined column and
+  // as an empty column between two full ones, which reads as a missing value.
+  const p = person({ otherNames: ['', '  ', 'A. Lovelace'] });
+  assert.deepEqual(otherNameList(p), ['A. Lovelace']);
+  assert.equal(toRecord(p).other_names, 'A. Lovelace');
+  assert.deepEqual(variantColumns([p]), ['other_name_1']);
+});
+
+test('the split block sits after the preamble like the rest of the table', () => {
+  const csv = peopleToCsv([person({ otherNames: ['A. Lovelace'] })], { mode: 'fast' });
+  const lines = csv.split('\r\n');
+  const head = lines.findIndex((l) => !l.startsWith('#'));
+  assert.ok(lines[head].endsWith(',other_name_1'));
+  assert.equal(lines.length, head + 2);
+});
+
+test('the sample preamble printed in the README is not from an older version', () => {
+  // A version number written into prose rots at the next release, and this one
+  // sits in a block a reader copies to recognise the file. Pin it rather than
+  // remembering to edit it.
+  const readme = readFileSync(fileURLToPath(new URL('../README.md', import.meta.url)), 'utf8');
+  const shown = [...readme.matchAll(/^# orcid-finder v(\d+\.\d+\.\d+)/gm)].map((m) => m[1]);
+  assert.ok(shown.length, 'the README no longer shows a sample preamble; drop this test with it');
+  for (const v of shown) assert.equal(v, TOOL.version);
+  assert.ok(readme.includes(CITATION), 'the README citation line and CITATION disagree');
 });

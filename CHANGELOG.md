@@ -6,6 +6,34 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-04
+
+### Added
+
+- **The "also known as" list is split into one column per name.** `other_name_1`, `other_name_2`
+  and so on join the CSV, because a spreadsheet cannot sort or filter inside a cell and a
+  pipe-joined list was the wrong shape for the work these names are for. Three decisions are
+  deliberate. The block **follows every fixed column** rather than sitting beside `other_names`:
+  a variable-width block in the middle would move `role_title` and everything after it between
+  two runs that differ only in their data, and a reader working by position would break on that.
+  It is **sized to the widest account in the result rather than capped**, because a cap silently
+  truncates the record it was set too low for, and a truncated name is worse than a wide file. It
+  is **absent entirely when nobody in the result declares a variant**, which measurement says is
+  the ordinary case: across 900 accounts at three institutions, 94.3% declare none, 4.6% one,
+  0.9% two and 0.2% three.
+- **A test pins the sample preamble printed in the README to the shipped version.** It sits in a
+  block a reader copies to recognise the file, and a version number written into prose rots at
+  the next release.
+
+### Changed
+
+- `other_names` **stays exactly as it was**, joined and unsplit, so nothing that reads the 1.2.0
+  CSV breaks. It and the split columns are built from one list, and a test pins that the two
+  cannot disagree. The JSON export keeps the joined form alone: nothing there needs splitting,
+  and this is the one place the two formats deliberately differ.
+- A blank entry in ORCID's `other-name` is now dropped rather than exported as a stray `" | "`
+  in the joined column.
+
 ## [1.2.0] - 2026-09-03
 
 Version DOI: [10.5281/zenodo.22285905](https://doi.org/10.5281/zenodo.22285905).

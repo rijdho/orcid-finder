@@ -180,6 +180,7 @@ Both downloads carry every row of the table, not the page on screen.
 | `assertion_source` | the name ORCID gives for the writer of the employment |
 | `assertion_origin` | the party the source names as the origin of the assertion, when it names one |
 | `institutions` | every institution name ORCID indexed, pipe-separated |
+| `other_name_1` … | CSV only: the "also known as" list split one name per column, appended after every column above |
 
 The JSON file additionally carries the query sent to ORCID, the mode, the filter set, the names
 and GRID ids resolved from ROR, the totals and the per-filter drop counts. A file of results
@@ -199,6 +200,28 @@ uses. ORCID `0000-0001-8690-8594` reads as "James Abbott Eqdam" by that rule and
 entirely. In a live run of 60 Karolinska accounts, 9 carried a variant, among them a changed
 surname and two initialised forms.
 
+The CSV additionally splits that list into one column per name, `other_name_1` onward, because
+a spreadsheet cannot sort or filter inside a cell. The block is as wide as the account in the
+result that declares the most variants, and it is absent entirely when nobody declares any:
+
+```
+… ,credit_name,other_names                                            ,… ,other_name_1              ,other_name_2
+… ,           ,Isabel Carolin Schroeter | Isabel Carolin Schröter     ,… ,Isabel Carolin Schroeter  ,Isabel Carolin Schröter
+… ,           ,                                                       ,… ,                          ,
+```
+
+Three things about that block are deliberate. It **follows every fixed column** rather than
+sitting beside `other_names`: a variable-width block in the middle would move `role_title` and
+everything after it between two runs that differ only in their data, and a reader working by
+position would break on that. It is **sized to the data rather than capped**, because a cap
+silently truncates the record it was set too low for and a truncated name is worse than a wide
+file. And `other_names` **stays**, joined and unsplit, so nothing that reads today's CSV breaks:
+the two are built from one list and a test pins that they cannot disagree. The JSON export keeps
+the joined form alone, since nothing there needs splitting.
+
+Measured across 900 accounts at three institutions, 94.3% declare no variant, 4.6% one, 0.9% two
+and 0.2% three, so the block is usually absent or one column wide.
+
 Like everything else in a record, they are self-declared: an empty column means nothing was
 entered, not that the person publishes under one name.
 
@@ -213,8 +236,8 @@ The CSV opens with a block of `#` comment lines naming the tool, its version, it
 the licence, the data sources, the timestamp, the query sent to ORCID, the mode and the counts:
 
 ```
-# orcid-finder v1.2.0 · https://rijdho.github.io/orcid-finder/
-# Cite: Hartley Belmar, R. (2026). orcid-finder (v1.2.0) [Software]. https://doi.org/10.5281/zenodo.22227424
+# orcid-finder v1.3.0 · https://rijdho.github.io/orcid-finder/
+# Cite: Hartley Belmar, R. (2026). orcid-finder (v1.3.0) [Software]. https://doi.org/10.5281/zenodo.22227424
 # License: AGPL-3.0-or-later · Source: https://github.com/rijdho/orcid-finder
 # Data: ORCID public API v3.0, ROR API v2
 # Retrieved: 2026-09-03T15:56:45.845Z
@@ -222,7 +245,7 @@ the licence, the data sources, the timestamp, the query sent to ORCID, the mode 
 # Mode: fast · found 5340 · scanned 60 · kept 60
 # GRID ids: grid.4714.6
 # These comment lines are not data. Skip lines starting with # when reading.
-orcid,orcid_url,name,…
+orcid,orcid_url,name,…,other_name_1
 ```
 
 The JSON export has always carried this. The CSV is the file that actually gets opened, mailed
@@ -267,10 +290,13 @@ across the three locales, including a check that every `data-i18n` key the page 
 exists.
 
 The suite was validated by injecting deliberate defects and confirming each one turned it red
-before reverting: originally five, one per layer, and five more when the provenance header and
-the name variants were added (a `nameVariants` that stops deduplicating, a full mode that drops
+before reverting: five originally, one per layer; five when the provenance header and the name
+variants were added (a `nameVariants` that stops deduplicating, a full mode that drops
 `other-name`, a signature checkbox that does nothing, a comment line a newline can break out of,
-and a version that has gone stale against `CITATION.cff`).
+and a version gone stale against `CITATION.cff`); and four when the variants were split into
+their own columns (a variable-width block placed in the middle, a width taken from the first row
+instead of the widest, an empty column on every ordinary row, and a joined column that stops
+agreeing with the split ones).
 
 ## Run locally
 
