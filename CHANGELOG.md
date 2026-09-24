@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.4.0] - 2026-09-24
 
+Version DOI: [10.5281/zenodo.22937462](https://doi.org/10.5281/zenodo.22937462).
+
 ### Changed
 
 - **Licensed under Apache-2.0.** The code moves from AGPL-3.0-or-later to Apache-2.0, the licence
