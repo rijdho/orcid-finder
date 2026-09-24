@@ -8,6 +8,14 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The tool is called Affiliation Finder.** ORCID asks third-party tools not to lead with its name,
+  and the old one did. The repository keeps its name, `orcid-finder`, and every URL, DOI, export file
+  name and the JSON `tool` field stay as they were; the name changes where a reader meets it: the page
+  title, the rail, the README, `CITATION.cff` (Zenodo takes the title at the next release), and the
+  citation and preamble each export carries. Assets move to `?v=20`.
+
+### Changed
+
 - **The look comes from rijdho/house-style.** `house/` holds a synced copy (house.css and the Inter
   fonts), loaded before `style.css`, with a lock and a test that fail on a hand edit or a stale copy
   (`node scripts/sync-house.mjs` refreshes it), and the asset lock now covers `house/house.css`, so a

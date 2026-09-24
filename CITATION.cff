@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this tool, please cite it as below."
-title: "orcid-finder"
+title: "Affiliation Finder: who at an institution declares it in ORCID"
 abstract: >-
   A static, client-side web tool that finds the ORCID accounts declaring an
   institution, searching by ROR, GRID and Ringgold identifiers and by

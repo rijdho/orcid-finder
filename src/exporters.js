@@ -9,7 +9,8 @@
  * against `CITATION.cff`, which is the record Zenodo and GitHub read.
  */
 export const TOOL = {
-  name: 'orcid-finder',
+  name: 'orcid-finder',                 // machine-facing: file names and the JSON `tool` field
+  title: 'Affiliation Finder',          // reader-facing: the citation and the preamble
   version: '1.4.0',
   year: 2026,
   author: 'Hartley Belmar, R.',
@@ -25,7 +26,7 @@ export const TOOL = {
 
 /** The citation, in the one form that fits on a single line of a CSV comment. */
 export const CITATION =
-  `${TOOL.author} (${TOOL.year}). ${TOOL.name} (v${TOOL.version}) [Software]. ${TOOL.doi}`;
+  `${TOOL.author} (${TOOL.year}). ${TOOL.title} (v${TOOL.version}) [Software]. ${TOOL.doi}`;
 
 /**
  * The export columns, in order. One place, so CSV and JSON cannot drift apart.
@@ -185,7 +186,7 @@ export function csvPreamble(meta = {}) {
     Number.isFinite(meta.kept) ? `kept ${meta.kept}` : null,
   ].filter(Boolean).join(' \u00b7 ');
   const lines = [
-    `${TOOL.name} v${TOOL.version} \u00b7 ${TOOL.url}`,
+    `${TOOL.title} v${TOOL.version} \u00b7 ${TOOL.url}`,
     `Cite: ${CITATION}`,
     `License: ${TOOL.license} \u00b7 Source: ${TOOL.repository}`,
     `Data: ${TOOL.source}`,

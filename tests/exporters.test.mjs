@@ -177,7 +177,7 @@ test('the identity written into every export is the one CITATION.cff publishes',
 });
 
 test('the citation names the tool, its version and the concept DOI', () => {
-  assert.match(CITATION, /orcid-finder \(v\d+\.\d+\.\d+\)/);
+  assert.match(CITATION, /Affiliation Finder \(v\d+\.\d+\.\d+\)/);
   assert.ok(CITATION.includes(TOOL.doi), 'a citation without the DOI is not one');
   // The CONCEPT DOI, not a version one: it has to keep resolving after the next
   // release, which is exactly when someone reads the file.
@@ -303,7 +303,7 @@ test('the sample preamble printed in the README is not from an older version', (
   // sits in a block a reader copies to recognise the file. Pin it rather than
   // remembering to edit it.
   const readme = readFileSync(fileURLToPath(new URL('../README.md', import.meta.url)), 'utf8');
-  const shown = [...readme.matchAll(/^# orcid-finder v(\d+\.\d+\.\d+)/gm)].map((m) => m[1]);
+  const shown = [...readme.matchAll(/^# Affiliation Finder v(\d+\.\d+\.\d+)/gm)].map((m) => m[1]);
   assert.ok(shown.length, 'the README no longer shows a sample preamble; drop this test with it');
   for (const v of shown) assert.equal(v, TOOL.version);
   assert.ok(readme.includes(CITATION), 'the README citation line and CITATION disagree');
