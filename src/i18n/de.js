@@ -89,7 +89,7 @@ export const de = {
   'rail.cite': 'Dieses Werkzeug zitieren',
   'rail.data': 'Daten von ORCID und ROR',
   'rail.by': 'Von <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">Ricardo Hartley Belmar</a>',
-  'rail.license': 'Code unter AGPL-3.0',
+  'rail.license': 'Code unter Apache-2.0',
   'rail.source': 'Quellcode auf GitHub',
   'rail.family': 'Teil von <a href="https://rijdho.github.io/metaudits-home/" target="_blank" rel="noreferrer">Metaudits</a>',
   'form.assertedOnly': 'Nur von einer Organisation eingetragene Datensätze',
@@ -175,5 +175,5 @@ export const de = {
     '<p>orcid-finder ist eine einzelne statische Seite: kein Build-Schritt, kein Backend, kein Tracking, keine Cookies. Sie spricht direkt aus Ihrem Browser mit <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">der öffentlichen ORCID-API</a> und mit <a href="https://ror.readme.io/" target="_blank" rel="noreferrer">der ROR-API</a>, sodass kein Server von uns je sieht, wonach Sie suchen. Diese beiden sind die einzigen Hosts, die die Seite kontaktiert. Gespeichert wird allein Ihre Sprach- und Designwahl, im Speicher Ihres eigenen Browsers.</p>' +
     '<p>Der Filtersatz stammt aus der Personalsuche eines Forschungsinformationssystems und wurde aus dessen Datenbank herausgelöst, damit dieselbe Suche auch ohne ein solches System möglich ist.</p>',
   'about.footer':
-    'Erstellt von <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · AGPL-3.0-or-later · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">Quellcode auf GitHub</a> · Daten von ORCID und ROR, genutzt gemäß deren Bedingungen für die öffentlichen APIs',
+    'Erstellt von <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · Apache-2.0 · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">Quellcode auf GitHub</a> · Daten von ORCID und ROR, genutzt gemäß deren Bedingungen für die öffentlichen APIs',
 };

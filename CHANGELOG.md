@@ -6,11 +6,19 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-24
+
 ### Changed
 
+- **Licensed under Apache-2.0.** The code moves from AGPL-3.0-or-later to Apache-2.0, the licence
+  the family now uses for its tools on metadata and open science: what these tools need is to be
+  adopted by institutions, and Apache is the permissive licence their legal offices accept most
+  readily (an explicit patent grant, contributions under the same terms, no right to the names).
+  The change applies forward only: releases up to 1.3.1 were published under AGPL-3.0-or-later,
+  and a copy taken under those terms keeps them. Exported files now sign with `Apache-2.0`.
 - **The rail signs off like every other tool in the family.** One item per line: author, licence,
-  source, *Part of Metadata Audits* (linking the new front page, rijdho.github.io/metaudits-home),
-  the data sources and the concept DOI, in the interface language. Assets move to `?v=15`.
+  source, *Part of Metaudits* (linking the family's front page, rijdho.github.io/metaudits-home),
+  the data sources and the concept DOI, in the interface language. Assets move to `?v=16`.
 
 ## [1.3.1] - 2026-09-04
 

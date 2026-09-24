@@ -90,7 +90,7 @@ export const es = {
   'rail.cite': 'Citar esta herramienta',
   'rail.data': 'Datos de ORCID y ROR',
   'rail.by': 'Por <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">Ricardo Hartley Belmar</a>',
-  'rail.license': 'Código bajo AGPL-3.0',
+  'rail.license': 'Código bajo Apache-2.0',
   'rail.source': 'Código en GitHub',
   'rail.family': 'Parte de <a href="https://rijdho.github.io/metaudits-home/" target="_blank" rel="noreferrer">Metaudits</a>',
   'form.assertedOnly': 'Solo registros declarados por una organización',
@@ -176,5 +176,5 @@ export const es = {
     '<p>orcid-finder es una única página estática: sin paso de compilación, sin backend, sin rastreo y sin cookies. Habla directamente desde tu navegador con <a href="https://info.orcid.org/documentation/features/public-api/" target="_blank" rel="noreferrer">la API pública de ORCID</a> y con <a href="https://ror.readme.io/" target="_blank" rel="noreferrer">la API de ROR</a>, así que ningún servidor nuestro ve nunca lo que buscas. Esos dos son los únicos hosts con los que contacta la página. Lo único que guarda es tu elección de idioma y de tema, en el almacenamiento de tu propio navegador.</p>' +
     '<p>El conjunto de filtros procede del descubrimiento de personal de un sistema de información de investigación, extraído de su base de datos para que cualquiera pueda hacer la misma búsqueda sin necesidad de uno.</p>',
   'about.footer':
-    'Creado por <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · AGPL-3.0-or-later · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">código en GitHub</a> · datos de ORCID y ROR, usados conforme a sus condiciones para las API públicas',
+    'Creado por <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">@rijdho</a> · Apache-2.0 · <a href="https://github.com/rijdho/orcid-finder" target="_blank" rel="noreferrer">código en GitHub</a> · datos de ORCID y ROR, usados conforme a sus condiciones para las API públicas',
 };

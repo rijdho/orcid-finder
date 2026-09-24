@@ -10,7 +10,7 @@
  */
 export const TOOL = {
   name: 'orcid-finder',
-  version: '1.3.1',
+  version: '1.4.0',
   year: 2026,
   author: 'Hartley Belmar, R.',
   url: 'https://rijdho.github.io/orcid-finder/',
@@ -19,7 +19,7 @@ export const TOOL = {
   // reader following a citation wants. A version DOI would pin the file's reader
   // to the release that produced it and rot from there.
   doi: 'https://doi.org/10.5281/zenodo.22227424',
-  license: 'AGPL-3.0-or-later',
+  license: 'Apache-2.0',
   source: 'ORCID public API v3.0, ROR API v2',
 };
 
