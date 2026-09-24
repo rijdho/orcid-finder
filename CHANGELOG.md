@@ -8,6 +8,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **The icon and the name link to the tool's start page**, with house-style 1.0.3. Assets move to `?v=22`.
 - **rijdho.github.io under the name is a link to it**, with house-style 1.0.2, which styles that link. Assets move to `?v=21`.
 
 ### Changed
