@@ -1,4 +1,4 @@
-# Affiliation Finder
+# ORCID Affiliation Finder
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22227424.svg)](https://doi.org/10.5281/zenodo.22227424)
 
@@ -61,7 +61,7 @@ Which endpoint runs is decided by the filters, not by a mode switch in the inter
 
 ```mermaid
 flowchart TD
-  accTitle: How Affiliation Finder resolves, queries and filters
+  accTitle: How ORCID Affiliation Finder resolves, queries and filters
   accDescr: Each ROR id is first resolved against the ROR registry, which yields its GRID id for the query and its registered names for matching. One expanded-search call follows, OR-ing the identifiers and names and AND-ing any keywords. If no filter needs employment data the result is returned immediately as fast mode. If any filter reads the employment, the tool reads the employments document of every candidate and returns full mode. Both paths end in the same table, with the count of what each filter dropped.
 
   A[Filters] --> B[Resolve each ROR id:<br/>GRID id and registered names]
@@ -236,8 +236,8 @@ The CSV opens with a block of `#` comment lines naming the tool, its version, it
 the licence, the data sources, the timestamp, the query sent to ORCID, the mode and the counts:
 
 ```
-# Affiliation Finder v1.5.0 · https://rijdho.github.io/orcid-finder/
-# Cite: Hartley Belmar, R. (2026). Affiliation Finder (v1.5.0) [Software]. https://doi.org/10.5281/zenodo.22227424
+# ORCID Affiliation Finder v1.5.0 · https://rijdho.github.io/orcid-finder/
+# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.5.0) [Software]. https://doi.org/10.5281/zenodo.22227424
 # License: Apache-2.0 · Source: https://github.com/rijdho/orcid-finder
 # Data: ORCID public API v3.0, ROR API v2
 # Retrieved: 2026-09-03T15:56:45.845Z

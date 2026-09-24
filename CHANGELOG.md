@@ -6,6 +6,15 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Renamed ORCID Affiliation Finder** (was Affiliation Finder), at the author's request, so the name
+  says which registry it searches. ORCID's brand guidelines ask that "ORCID" not appear in a
+  product's name without its prior permission; the author has taken that decision knowingly
+  (2026-09-24). The page title, the brand block, the three interfaces, the export preamble and
+  citation, the README and `CITATION.cff` carry the new name; the address `orcid-finder`, the DOI
+  and the export file names stay. Assets move to `?v=25`.
+
 ## [1.5.0]: 2026-09-24
 
 ### Changed

@@ -10,7 +10,7 @@
  */
 export const TOOL = {
   name: 'orcid-finder',                 // machine-facing: file names and the JSON `tool` field
-  title: 'Affiliation Finder',          // reader-facing: the citation and the preamble
+  title: 'ORCID Affiliation Finder',          // reader-facing: the citation and the preamble
   version: '1.5.0',
   year: 2026,
   author: 'Hartley Belmar, R.',

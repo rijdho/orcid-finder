@@ -113,3 +113,13 @@ three locale strings, and a control in `index.html`. In that order.
 - English, German and Spanish are the floor, not a goal. `tests/i18n.test.mjs` pins parity.
 - Tests run on `node --test tests/*.test.mjs`, no dependencies. Prove a new test is not vacuous
   by injecting the defect it claims to catch.
+
+## The name (2026-09-24)
+
+The tool is called **ORCID Affiliation Finder** at the author's explicit request. ORCID's brand
+guidelines say not to use "ORCID" in the name of a product without ORCID's prior permission, which
+is why it had been renamed Affiliation Finder earlier; the author chose the name that says which
+registry it searches, knowing that. Do not revert it on your own initiative. If ORCID ever asks,
+the fallback is Affiliation Finder, and the slug, DOI and export file names never carried the
+product name.
+
