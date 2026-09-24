@@ -91,7 +91,7 @@ export const de = {
   'rail.by': 'Von <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">Ricardo Hartley Belmar</a>',
   'rail.license': 'Code unter AGPL-3.0',
   'rail.source': 'Quellcode auf GitHub',
-  'rail.family': 'Teil von <a href="https://rijdho.github.io/metaudits-home/" target="_blank" rel="noreferrer">Metadata Audits</a>',
+  'rail.family': 'Teil von <a href="https://rijdho.github.io/metaudits-home/" target="_blank" rel="noreferrer">Metaudits</a>',
   'form.assertedOnly': 'Nur von einer Organisation eingetragene Datensätze',
   'bd.selfAsserted': '{n} nur selbst eingetragen',
   'col.asserted': 'Eingetragen von',

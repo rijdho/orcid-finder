@@ -10,7 +10,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - **The rail signs off like every other tool in the family.** One item per line: author, licence,
   source, *Part of Metadata Audits* (linking the new front page, rijdho.github.io/metaudits-home),
-  the data sources and the concept DOI, in the interface language. Assets move to `?v=14`.
+  the data sources and the concept DOI, in the interface language. Assets move to `?v=15`.
 
 ## [1.3.1] - 2026-09-04
 
