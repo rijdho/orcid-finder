@@ -8,6 +8,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **rijdho.github.io under the name is a link to it**, with house-style 1.0.2, which styles that link. Assets move to `?v=21`.
+
+### Changed
+
 - **The tool is called Affiliation Finder.** ORCID asks third-party tools not to lead with its name,
   and the old one did. The repository keeps its name, `orcid-finder`, and every URL, DOI, export file
   name and the JSON `tool` field stay as they were; the name changes where a reader meets it: the page
