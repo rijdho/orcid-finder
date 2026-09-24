@@ -45,7 +45,8 @@ export const LOCK_FILE = 'tests/assets.lock.json';
 /** Every file the `?v=` on a URL is responsible for busting, in a stable order. */
 export function servedFiles() {
   const js = (dir) => readdirSync(path(dir)).filter((f) => f.endsWith('.js')).sort().map((f) => `${dir}${f}`);
-  return ['index.html', 'style.css', ...js('src/'), ...js('src/i18n/')];
+  // house/house.css is the synced copy of rijdho/house-style: a sync changes a served file, so it bumps ?v= too.
+  return ['index.html', 'house/house.css', 'style.css', ...js('src/'), ...js('src/i18n/')];
 }
 
 /** The version index.html stamps on its own assets. The imports must match it. */

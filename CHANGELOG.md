@@ -6,6 +6,17 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **The look comes from rijdho/house-style.** `house/` holds a synced copy (house.css and the Inter
+  fonts), loaded before `style.css`, with a lock and a test that fail on a hand edit or a stale copy
+  (`node scripts/sync-house.mjs` refreshes it), and the asset lock now covers `house/house.css`, so a
+  sync bumps `?v=` like any other served file. `style.css` keeps only what this tool adds or sets
+  differently: 216 declarations identical to house.css went, and the duplicate `fonts/` with them.
+  Checked by screenshots and computed styles before and after: the layout is unchanged; what house
+  adds is the family's own detail (antialiased text, an ellipsis for a long command-bar title, bold
+  buttons, the command bar's phone layout). Assets move to `?v=19`.
+
 ## [1.4.0] - 2026-09-24
 
 Version DOI: [10.5281/zenodo.22937462](https://doi.org/10.5281/zenodo.22937462).

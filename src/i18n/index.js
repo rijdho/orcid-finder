@@ -9,9 +9,9 @@
 //    never keys here: they are the API's vocabulary and stay as written in every
 //    locale.
 
-import { en } from './en.js?v=16';
-import { de } from './de.js?v=16';
-import { es } from './es.js?v=16';
+import { en } from './en.js?v=19';
+import { de } from './de.js?v=19';
+import { es } from './es.js?v=19';
 
 export const LOCALES = { en, de, es };
 
