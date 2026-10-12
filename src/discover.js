@@ -15,8 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=27';
-import { fetchRorFacts } from './ror.js?v=27';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=29';
+import { fetchRorFacts } from './ror.js?v=29';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
@@ -125,29 +125,22 @@ export function buildQuery(o, facts = {}) {
   const opts = normaliseOptions(o);
   const terms = [];
 
-  // An identifier criterion cannot carry a current/past distinction: ORCID
-  // indexes that only on the name fields. Including the ids anyway would return
-  // current staff in a search for former ones, which is worse than refusing.
-  // A ROR id is still usable there, through the names ROR registers for it
-  // (`facts.rorNames`): those are names, and the name fields are what ORCID
-  // indexes as current or past. GRID and Ringgold carry no names, so they sit out.
-  const names = [];
-  if (opts.affiliationStatus === 'any') {
+  // ORCID indexes current and past only on the name fields, so an identifier
+  // cannot be put into those. When an identifier is given, the status is applied
+  // instead by reading each employment's end date (see `statusByEndDate`), and the
+  // query is the plain one: identifiers exactly, names on the plain name field.
+  // Only a search by names alone uses ORCID's current/past name index, which is
+  // a phrase match: "Leiden University" also finds Leiden University Medical Center.
+  const field = statusByEndDate(opts) ? NAME_FIELD.any : NAME_FIELD[opts.affiliationStatus];
+  if (opts.affiliationStatus === 'any' || statusByEndDate(opts)) {
     if (opts.byRor) {
       for (const r of opts.rors) terms.push(`ror-org-id:"https://ror.org/${r}"`);
       for (const g of facts.gridIds ?? []) terms.push(`grid-org-id:"${g}"`);
     }
     for (const rg of opts.ringgolds) terms.push(`ringgold-org-id:"${rg}"`);
-  } else if (opts.byRor) {
-    names.push(...(facts.rorNames ?? []));
   }
-  if (opts.byName) names.push(...opts.orgNames);
-  const seen = new Set();
-  for (const n of names) {
-    if (seen.has(n.toLowerCase())) continue;
-    seen.add(n.toLowerCase());
-    terms.push(`${NAME_FIELD[opts.affiliationStatus]}:"${n}"`);
-  }
+  if (opts.byName)
+    for (const n of opts.orgNames) terms.push(`${field}:"${n}"`);
 
   if (!terms.length) return null;
   const affiliation = terms.join(' OR ');
@@ -155,15 +148,19 @@ export function buildQuery(o, facts = {}) {
   return `(${affiliation}) AND (${opts.keywords.map((k) => `keyword:"${k}"`).join(' OR ')})`;
 }
 
+/** Is an identifier given? Then a current or past status is read from end dates. */
+export function statusByEndDate(o) {
+  const opts = normaliseOptions(o);
+  return opts.affiliationStatus !== 'any'
+    && ((opts.byRor && opts.rors.length > 0) || opts.ringgolds.length > 0);
+}
+
 /** Which criteria are usable: a ticked box with an empty field is not one. */
 export function activeCriteria(o) {
   const opts = normaliseOptions(o);
-  const byId = opts.affiliationStatus === 'any';
   return {
-    ror: byId && opts.byRor && opts.rors.length > 0,
-    // A current or past search reaches a ROR id through its registered names.
-    rorByName: !byId && opts.byRor && opts.rors.length > 0,
-    ringgold: byId && opts.ringgolds.length > 0,
+    ror: opts.byRor && opts.rors.length > 0,
+    ringgold: opts.ringgolds.length > 0,
     name: opts.byName && opts.orgNames.length > 0,
   };
 }
@@ -180,12 +177,7 @@ export function validateOptions(o) {
   const badRinggold = opts.ringgolds.find((r) => !RINGGOLD_RE.test(r));
   if (badRinggold) return { key: 'badRinggold', id: badRinggold };
   const active = activeCriteria(opts);
-  // A current/past search is name-only. A ROR id qualifies through the names
-  // ROR registers for it; a Ringgold id alone does not, and the user is told
-  // exactly that rather than "no criteria".
-  if (opts.affiliationStatus !== 'any' && !active.name && !active.rorByName)
-    return { key: 'statusNeedsName' };
-  if (!active.ror && !active.rorByName && !active.ringgold && !active.name) return { key: 'noCriteria' };
+  if (!active.ror && !active.ringgold && !active.name) return { key: 'noCriteria' };
   if (opts.startFrom && opts.startTo && opts.startFrom > opts.startTo)
     return { key: 'badStartRange' };
   return null;
@@ -203,7 +195,8 @@ export function needsEmployments(o) {
     opts.startTo !== null ||
     !!opts.requireStartDate ||
     !!opts.currentOnly ||
-    !!opts.assertedOnly
+    !!opts.assertedOnly ||
+    statusByEndDate(opts)
   );
 }
 
@@ -308,7 +301,7 @@ export function classifyAssertion(emp, orcid) {
  */
 const STAGE = {
   NONE: 0, ORG: 1, COUNTRY: 2, DEPARTMENT: 3, ROLE: 4, ROLE_KEPT: 5,
-  START_PRESENT: 6, START_IN_RANGE: 7, ASSERTED: 8, KEPT: 9,
+  START_PRESENT: 6, START_IN_RANGE: 7, ASSERTED: 8, NOT_ENDED: 9, KEPT: 10,
 };
 
 /** The breakdown counter a candidate lands in, by the last stage it passed:
@@ -323,13 +316,16 @@ const REJECTED_BY = {
   [STAGE.START_PRESENT]: 'startOutOfRange',
   [STAGE.START_IN_RANGE]: 'selfAsserted',
   [STAGE.ASSERTED]: 'pastEmployment',
+  [STAGE.NOT_ENDED]: 'stillRunning',
 };
 
 /** Lower-cased needles, computed once per run rather than once per candidate. */
-function needles(opts, extraNames = []) {
+function needles(opts, extraNames = [], gridIds = []) {
   const lower = (list) => list.map((x) => x.toLowerCase());
   return {
     rors: new Set(opts.rors),
+    grids: new Set(lower(gridIds)),
+    ringgolds: new Set(opts.ringgolds),
     names: lower([...new Set([...opts.orgNames, ...extraNames])]),
     roles: lower(opts.roleTitles),
     excludeRoles: lower(opts.excludeRoleTitles),
@@ -365,14 +361,18 @@ export function matchSearchRow(row, opts, n = needles(normaliseOptions(opts))) {
   const instNames = listed.map((x) => String(x).toLowerCase());
   // The list is every institution on the account, in ORCID's order, so its first
   // entry is often somewhere else entirely. Show the one that matched.
-  const hitAt = instNames.findIndex((name) => n.names.some((needle) => name.includes(needle)));
+  // An exact registered or typed name is preferred over one that merely contains
+  // it: an account listing "Leiden University Medical Center" before "Leiden
+  // University" belongs under the second.
+  const exactAt = instNames.findIndex((name) => n.names.includes(name));
+  const hitAt = exactAt >= 0 ? exactAt
+    : instNames.findIndex((name) => n.names.some((needle) => name.includes(needle)));
   const matchesName = hitAt >= 0;
   const rorTrusted = active.ror;
   if (!matchesName && instNames.length > 0 && !rorTrusted) return null;
-  const namesInQuery = active.name || active.rorByName;
   const matchedBy = !matchesName ? 'ror_only'
     : !rorTrusted ? 'name'
-      : namesInQuery ? 'ror_or_name' : 'ror';
+      : active.name ? 'ror_or_name' : 'ror';
   return {
     orcid: row['orcid-id'],
     name: nameOf(row),
@@ -412,13 +412,24 @@ export function matchEmployments(data, row, opts, today = new Date(), n = needle
     for (const s of group?.summaries ?? []) {
       const emp = s['employment-summary'] ?? s;
       const org = emp.organization ?? {};
-      const empRor = normaliseRor(
-        org['disambiguated-organization']?.['disambiguated-organization-identifier'] ?? '',
-      );
+      const dis = org['disambiguated-organization'] ?? {};
+      const empId = String(dis['disambiguated-organization-identifier'] ?? '');
+      // ORCID always names the scheme; a record that does not is read by the id's form.
+      const scheme = String(dis['disambiguation-source'] ?? (/ror\.org\//i.test(empId) ? 'ROR' : '')).toUpperCase();
       const empName = String(org.name ?? '').toLowerCase();
 
-      const hit =
-        (!!empRor && n.rors.has(empRor)) || n.names.some((needle) => empName.includes(needle));
+      // An identifier on the employment decides when it is one we can compare. A ROR
+      // or GRID id naming another organisation rules the employment out, whatever
+      // its name: "Leiden University Medical Center" with LUMC's own ROR contains
+      // "Leiden University" and is not it. The name decides only when the employment
+      // carries no id, or one of a scheme we were not given (RINGGOLD, FUNDREF), which
+      // is how an institution's own system often writes it (Karolinska: RINGGOLD).
+      const idMatch =
+        (scheme === 'ROR' && n.rors.has(normaliseRor(empId)))
+        || (scheme === 'GRID' && n.grids.has(empId.toLowerCase()))
+        || (scheme === 'RINGGOLD' && n.ringgolds.has(empId));
+      const idElsewhere = !idMatch && (scheme === 'ROR' || scheme === 'GRID');
+      const hit = idMatch || (!idElsewhere && n.names.some((needle) => empName.includes(needle)));
       if (!hit) continue;
       stage = Math.max(stage, STAGE.ORG);
 
@@ -462,7 +473,11 @@ export function matchEmployments(data, row, opts, today = new Date(), n = needle
       stage = Math.max(stage, STAGE.ASSERTED);
 
       const end = emp['end-date'];
-      if (o.currentOnly && hasEnded(end, today)) continue;
+      const wantCurrent = o.currentOnly || (statusByEndDate(o) && o.affiliationStatus === 'current');
+      const wantPast = statusByEndDate(o) && o.affiliationStatus === 'past';
+      if (wantCurrent && hasEnded(end, today)) continue;
+      stage = Math.max(stage, STAGE.NOT_ENDED);
+      if (wantPast && !hasEnded(end, today)) continue;
 
       return {
         stage: STAGE.KEPT,
@@ -501,7 +516,8 @@ function emptyBreakdown(o) {
     noStartDate: o.requireStartDate ? 0 : null,
     startOutOfRange: o.startFrom !== null || o.startTo !== null ? 0 : null,
     selfAsserted: o.assertedOnly ? 0 : null,
-    pastEmployment: o.currentOnly ? 0 : null,
+    pastEmployment: o.currentOnly || (statusByEndDate(o) && o.affiliationStatus === 'current') ? 0 : null,
+    stillRunning: statusByEndDate(o) && o.affiliationStatus === 'past' ? 0 : null,
     unreachable: 0,
   };
 }
@@ -535,22 +551,19 @@ export async function discoverPeople(options, deps = {}) {
   //                matching on the ROR id alone drops exactly the employments
   //                an institution's own system asserts.
   //
-  // In a current or past search the names do a third job: they ARE the query,
-  // because ORCID indexes those two only on the name.
-  //
   // In fast mode the names decide the label (see `matchSearchRow`), so they are
   // resolved and reported in both modes.
   //
   // One request per ROR id, and none at all when no ROR criterion is in play.
   const wantsRor = o.byRor && o.rors.length > 0;
   const facts = wantsRor ? await Promise.all(o.rors.map(resolveRorFacts)) : [];
-  const gridIds = o.affiliationStatus === 'any' ? [...new Set(facts.map((f) => f?.grid).filter(Boolean))] : [];
+  const gridIds = [...new Set(facts.map((f) => f?.grid).filter(Boolean))];
   const rorNames = [...new Set(facts.flatMap((f) => f?.names ?? []))];
 
-  const query = buildQuery(o, { gridIds, rorNames });
+  const query = buildQuery(o, { gridIds });
   if (!query) return empty;
 
-  const n = needles(o, rorNames);
+  const n = needles(o, rorNames, gridIds);
   onProgress({ phase: 'search', done: 0, total: o.maxRows });
   const { rows, totalFound } = await search(query, o.maxRows);
   const base = { breakdown, totalFound, scanned: rows.length, query, rorNames, gridIds, mode: full ? 'full' : 'fast' };

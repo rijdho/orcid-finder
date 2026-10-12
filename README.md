@@ -154,6 +154,11 @@ the organisation-asserted records, and searching Karolinska by ROR with the asse
 filter returned nothing at all. The names ROR registers for the id are matched on as well, and
 the result says which ones it used.
 
+The name only decides when the employment gives no other answer. An employment whose ROR or GRID
+id names a different organisation is ruled out whatever it is called: "Leiden University Medical
+Center" carries its own ROR id and contains "Leiden University" without being it. One that carries
+the GRID id resolved from the ROR id, or a Ringgold id you gave, matches on that id alone.
+
 Registered acronyms are deliberately excluded and anything shorter than four characters is
 dropped: Karolinska's registered acronym is `KI`, and `KI` as a substring matches a large part
 of ORCID. A needle that matches everything turns the filter off while the result still looks
@@ -167,18 +172,18 @@ ORCID fields, and `current OR past` returns exactly what the plain name field re
 three are a clean partition. **Past** is how you find former staff and alumni, which nothing
 else here reaches.
 
-ORCID indexes those two only on the name, never on an identifier. Choosing current or past
-therefore searches by name, and the identifier fields sit out: leaving them in would return
-current staff in a search for former ones. A ROR id still works there, through the names ROR
-registers for it (for Leiden: Leiden University, Rijksuniversiteit Leiden, Universiteit Leiden),
-which go into the query as current or past name terms and are printed with the result. A GRID or
-Ringgold id has no names to search by, so a search with only those is refused, with the reason.
-A name term is a phrase match and wider than the id: on 2026-10-12, a current search for Leiden's
-three registered names found 6,759 accounts against 6,544 for its ROR or GRID id, and 7 of the
-first 50 listed Leiden University Medical Center first. Read the organisation column.
+ORCID indexes those two only on the name, never on an identifier, and a name is a phrase match:
+on 2026-10-12 a current search for Leiden University's three registered names found 6,759
+accounts against 6,544 for its ROR or GRID id, and 16 of the first 1,000 showed Leiden
+University Medical Center, a different institution with its own ROR id. So the tool uses that
+index only for a search by names alone. **With a ROR or Ringgold id, the query stays exact** (the
+same as for *any*), and current or past is read from the end date of each employment instead:
+current keeps employments with no end date or one still to come, past keeps the ones that have
+ended, and the drop counts say how many fell on either side. That reads every candidate's
+employments, so it runs in full mode, one request per candidate.
 
-This is not the same as **Only current appointments**, which reads the end date of each
-employment and works with any identifier.
+Combining **Past** with **Only current appointments** asks for an appointment that has ended and
+is still running, and returns little or nothing.
 
 **Keywords** are the terms researchers put on their own ORCID record. They are AND-ed onto the
 institution block, so they answer "who here works on this" inside one query, at no extra cost.
@@ -256,8 +261,8 @@ The CSV opens with a block of `#` comment lines naming the tool, its version, it
 the licence, the data sources, the timestamp, the query sent to ORCID, the mode and the counts:
 
 ```
-# ORCID Affiliation Finder v1.6.1 · https://rijdho.github.io/orcid-finder/
-# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.6.1) [Software]. https://doi.org/10.5281/zenodo.22227424
+# ORCID Affiliation Finder v1.7.0 · https://rijdho.github.io/orcid-finder/
+# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.7.0) [Software]. https://doi.org/10.5281/zenodo.22227424
 # License: Apache-2.0 · Source: https://github.com/rijdho/orcid-finder
 # Data: ORCID public API v3.0, ROR API v2
 # Retrieved: 2026-09-03T15:56:45.845Z

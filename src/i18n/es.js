@@ -59,6 +59,7 @@ export const es = {
   'bd.noRoleMatch': '{n} el cargo no coincidió',
   'bd.noStartDate': '{n} sin fecha de inicio',
   'bd.pastEmployment': '{n} nombramiento ya terminado',
+  'bd.stillRunning': '{n} nombramiento todavía en curso',
   'bd.unreachable': '{n} registro que no se pudo leer',
 
   'export.csv': 'Descargar CSV',
@@ -127,7 +128,7 @@ export const es = {
   'form.status.current': 'Vigente',
   'form.status.past': 'Pasada',
   'form.status.hint':
-    'ORCID indexa vigente y pasada solo por el nombre de la organización, así que elegir una busca por nombre: los que escribas y los que ROR registra para el identificador ROR que des. Los identificadores GRID y Ringgold quedan fuera. Con «pasada» encuentras ex personal y egresados. No es lo mismo que «Solo nombramientos vigentes»: esto le pregunta a ORCID qué cuentas indexa como vigentes, aquello lee la fecha de fin de cada empleo. Elegir «pasada» y marcar esa casilla pide personas que tengan aquí a la vez un nombramiento terminado y uno en curso, que rara vez es lo que se quiere.',
+    'ORCID indexa vigente y pasada solo por el nombre de la organización, así que con solo un nombre, elegir una usa ese índice, que busca la frase: «Leiden University» también encuentra Leiden University Medical Center. Con un identificador ROR o Ringgold la búsqueda sigue siendo exacta, y vigente o pasada se lee de la fecha de fin de cada empleo, con una consulta por candidato. Con «pasada» encuentras ex personal y egresados. Combinar «pasada» con «Solo nombramientos vigentes» pide un nombramiento terminado y en curso a la vez, y devuelve poco o nada.',
   'form.keywords.label': 'Palabra(s) clave, separadas por comas',
   'form.keywords.ph': 'epidemiología, oncología',
   'form.keywords.hint':
@@ -142,8 +143,6 @@ export const es = {
   'form.startFrom.label': 'Inicio desde',
   'form.startTo.label': 'Inicio hasta',
   'err.badRinggold': '«{id}» no es un identificador Ringgold válido. Son números simples, por ejemplo 27106.',
-  'err.statusNeedsName':
-    'Una búsqueda por vigente o pasada necesita un nombre de organización o un identificador ROR. ORCID indexa esas dos solo por el nombre, así que un ROR se busca por los nombres que ROR registra para él; un identificador GRID o Ringgold no tiene nombres por los que buscar.',
   'err.badStartRange': 'El rango de inicio va al revés: el primer año es posterior al último.',
   'bd.noCountryMatch': '{n} en otro país',
   'bd.noDepartmentMatch': '{n} el departamento no coincidió',

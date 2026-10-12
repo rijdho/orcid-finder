@@ -6,6 +6,35 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.7.0]: 2026-10-12
+
+### Changed
+
+- **With a ROR or Ringgold id, current and past are read from end dates.** 1.6.0 searched a ROR id
+  by the names ROR registers for it, because ORCID indexes current and past only on the name. A
+  name there is a phrase match, so a current search for Leiden University also returned Leiden
+  University Medical Center, a different institution (16 of the first 1,000 rows). The query now
+  stays exact, as for *any*, and each employment's end date decides: current keeps the ones still
+  running, past the ones that have ended, with a new drop count, "appointment still running".
+  This runs in full mode, one request per candidate. A search by names alone still uses ORCID's
+  current/past index. A Ringgold id alone now works with current or past too, so the
+  "needs an organisation name" refusal is gone.
+
+### Fixed
+
+- **The organisation column prefers an exact name.** An account listing Leiden University
+  Medical Center before Leiden University was shown under the first, which merely contains the
+  name searched for; 14 of the 16 rows above were such accounts. An exact registered or typed name
+  now wins over one that contains it.
+- **An employment tied to another organisation is no longer matched by its name.** In full mode an
+  employment counted if it carried the ROR id or if its name contained a registered name, so
+  "Leiden University Medical Center" with LUMC's own ROR id passed for Leiden University. An
+  employment whose ROR or GRID id names another organisation is now ruled out whatever its name;
+  the GRID id resolved from the ROR id, and any Ringgold id given, now count as a match on their
+  own. The name still decides when the employment carries no id or one of another scheme, which
+  keeps Karolinska's RINGGOLD-stamped records.
+- Assets move to `?v=29`.
+
 ## [1.6.1]: 2026-10-12
 
 Version DOI: [10.5281/zenodo.23316844](https://doi.org/10.5281/zenodo.23316844).

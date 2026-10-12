@@ -58,6 +58,7 @@ export const de = {
   'bd.noRoleMatch': '{n} Funktionsbezeichnung passte nicht',
   'bd.noStartDate': '{n} ohne Startdatum',
   'bd.pastEmployment': '{n} Anstellung bereits beendet',
+  'bd.stillRunning': '{n} Anstellung läuft noch',
   'bd.unreachable': '{n} Datensatz nicht lesbar',
 
   'export.csv': 'CSV herunterladen',
@@ -126,7 +127,7 @@ export const de = {
   'form.status.current': 'Laufend',
   'form.status.past': 'Früher',
   'form.status.hint':
-    'Laufend und früher indexiert ORCID nur über den Organisationsnamen. Wird eines davon gewählt, wird nach Namen gesucht: nach den eingegebenen und nach denen, die ROR für eine angegebene ROR-ID führt. GRID- und Ringgold-IDs bleiben außen vor. Über „früher“ finden Sie ehemaliges Personal und Alumni. Das ist nicht dasselbe wie „Nur laufende Anstellungen“: hier wird ORCID gefragt, welche Konten es als laufend führt, dort wird das Enddatum jeder Anstellung gelesen. „Früher“ zusammen mit jenem Häkchen fragt nach Personen, die hier zugleich eine beendete und eine laufende Anstellung haben, was selten gemeint ist.',
+    'Laufend und früher indexiert ORCID nur über den Organisationsnamen. Mit nur einem Namen nutzt die Auswahl diesen Index, der nach der Wortfolge sucht: „Leiden University“ findet auch das Leiden University Medical Center. Mit einer ROR- oder Ringgold-ID bleibt die Suche exakt, und laufend oder früher wird stattdessen aus dem Enddatum jeder Anstellung gelesen, eine Anfrage pro Kandidat. Über „früher“ finden Sie ehemaliges Personal und Alumni. „Früher“ zusammen mit „Nur laufende Anstellungen“ fragt nach einer Anstellung, die beendet ist und noch läuft, und liefert wenig oder nichts.',
   'form.keywords.label': 'Schlagwort(e), kommagetrennt',
   'form.keywords.ph': 'Epidemiologie, Onkologie',
   'form.keywords.hint':
@@ -141,8 +142,6 @@ export const de = {
   'form.startFrom.label': 'Beginn ab',
   'form.startTo.label': 'Beginn bis',
   'err.badRinggold': '„{id}“ ist keine gültige Ringgold-ID. Das sind reine Zahlen, etwa 27106.',
-  'err.statusNeedsName':
-    'Eine Suche nach laufend oder früher braucht einen Organisationsnamen oder eine ROR-ID. ORCID indexiert diese beiden nur über den Namen, daher wird eine ROR-ID über die Namen gesucht, die ROR für sie führt; eine GRID- oder Ringgold-ID hat keine Namen, nach denen sich suchen ließe.',
   'err.badStartRange': 'Der Zeitraum läuft rückwärts: das erste Jahr liegt nach dem letzten.',
   'bd.noCountryMatch': '{n} in einem anderen Land',
   'bd.noDepartmentMatch': '{n} Abteilung passte nicht',

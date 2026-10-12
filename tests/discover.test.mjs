@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 
 import {
   buildQuery, isValidRor, normaliseRor, parseList, needsEmployments, activeCriteria,
-  matchSearchRow, matchEmployments, hasEnded, formatOrcidDate, discoverPeople, normaliseOptions,
+  matchSearchRow, matchEmployments, hasEnded, statusByEndDate, formatOrcidDate, discoverPeople, normaliseOptions,
   classifyAssertion, validateOptions, clampMaxRows, nameVariants, MAX_ROWS,
 } from '../src/discover.js';
 import { expandedSearch } from '../src/orcid.js';
@@ -32,10 +32,10 @@ const employments = (...summaries) => ({
   'affiliation-group': summaries.map((s) => ({ summaries: [{ 'employment-summary': s }] })),
 });
 
-const emp = ({ name = 'Institute of Digital Sciences Austria', ror = null, role = null, dept = null, start = null, end = null, source = null, country = null, city = null } = {}) => ({
+const emp = ({ name = 'Institute of Digital Sciences Austria', ror = null, scheme = 'ROR', role = null, dept = null, start = null, end = null, source = null, country = null, city = null } = {}) => ({
   organization: {
     name,
-    ...(ror ? { 'disambiguated-organization': { 'disambiguated-organization-identifier': ror } } : {}),
+    ...(ror ? { 'disambiguated-organization': { 'disambiguated-organization-identifier': ror, 'disambiguation-source': scheme } } : {}),
     ...(country || city ? { address: { country, city } } : {}),
   },
   'role-title': role,
@@ -104,7 +104,7 @@ test('buildQuery honours the two criterion switches', () => {
 
 test('buildQuery returns null when a ticked box has an empty field', () => {
   assert.equal(buildQuery({ rors: [], orgNames: [], byRor: true, byName: true }), null);
-  assert.deepEqual(activeCriteria({ rors: [], orgNames: ['IT:U'] }), { ror: false, rorByName: false, ringgold: false, name: true });
+  assert.deepEqual(activeCriteria({ rors: [], orgNames: ['IT:U'] }), { ror: false, ringgold: false, name: true });
 });
 
 test('normaliseOptions clamps maxRows into the ORCID paging range', () => {
@@ -183,26 +183,31 @@ test('fast mode cannot tell ROR from name when both were in the query, and says 
   assert.equal(p.matchedBy, 'ror_or_name');
 });
 
-test('a current or past search reaches a ROR id through its registered names', () => {
-  // ORCID indexes current and past only on the name, so the ROR id cannot go into
-  // the query; the names ROR registers for it can. GRID and Ringgold have no names.
-  const q = buildQuery({ rors: ['027bh9e22'], ringgolds: ['12345'], byName: false, affiliationStatus: 'current' },
-    { gridIds: ['grid.5132.5'], rorNames: ['Leiden University', 'Universiteit Leiden'] });
-  assert.equal(q, 'current-institution-affiliation-name:"Leiden University" OR '
-    + 'current-institution-affiliation-name:"Universiteit Leiden"');
-  assert.equal(validateOptions({ rors: ['027bh9e22'], byName: false, affiliationStatus: 'current' }), null);
-  assert.deepEqual(validateOptions({ ringgolds: ['12345'], byName: false, affiliationStatus: 'past' }),
-    { key: 'statusNeedsName' }, 'a Ringgold id alone still has no name to search by');
-  const typed = buildQuery({ rors: ['027bh9e22'], orgNames: ['leiden university'], affiliationStatus: 'past' },
-    { rorNames: ['Leiden University'] });
-  assert.equal(typed, 'past-institution-affiliation-name:"Leiden University"', 'a typed name already given is not repeated');
+test('an employment tied to another organisation by ROR or GRID is not rescued by its name', () => {
+  // ORCID 0000-0002-0920-2632: "Leiden University Medical Center" with LUMC's own
+  // ROR, which contains "Leiden University" and is not it.
+  const o = { rors: ['027bh9e22'], byName: false };
+  const n = { rors: new Set(['027bh9e22']), grids: new Set(['grid.5132.5']), ringgolds: new Set(),
+    names: ['leiden university'], roles: [], excludeRoles: [], departments: [], countries: new Set() };
+  const r = row('0000-0002-0920-2632');
+  const lumc = employments(emp({ name: 'Leiden University Medical Center', ror: 'https://ror.org/05xvt9f17' }));
+  assert.equal(matchEmployments(lumc, r, o, TODAY, n).person, null);
+  const lumcGrid = employments(emp({ name: 'Leiden University Medical Center', ror: 'grid.10419.3d', scheme: 'GRID' }));
+  assert.equal(matchEmployments(lumcGrid, r, o, TODAY, n).person, null);
+  // Our own GRID id counts, whatever the name says.
+  const ownGrid = employments(emp({ name: 'Leiden University Medical Centre', ror: 'grid.5132.5', scheme: 'GRID' }));
+  assert.ok(matchEmployments(ownGrid, r, o, TODAY, n).person);
+  // A scheme we were not given leaves the decision to the name, as for Karolinska.
+  const ringgold = employments(emp({ name: 'Leiden University', ror: '4496', scheme: 'RINGGOLD' }));
+  assert.ok(matchEmployments(ringgold, r, o, TODAY, n).person);
 });
 
-test('a current search by ROR labels its rows by name, since names were the query', () => {
-  const p = matchSearchRow(row('0000-0001-0000-0009', ['Leiden University']),
-    { rors: ['027bh9e22'], byName: false, affiliationStatus: 'current' },
-    { rors: new Set(['027bh9e22']), names: ['leiden university'], roles: [], excludeRoles: [], departments: [], countries: new Set() });
-  assert.equal(p.matchedBy, 'name');
+test('fast mode prefers an exact name over one that merely contains it', () => {
+  // 14 of 16 accounts shown under Leiden University Medical Center also listed
+  // Leiden University, later in their list.
+  const r = row('0000-0001-0000-0107', ['Leiden University Medical Center', 'Leiden University']);
+  const n = { rors: new Set(['027bh9e22']), names: ['leiden university'], roles: [], excludeRoles: [], departments: [], countries: new Set() };
+  assert.equal(matchSearchRow(r, { rors: ['027bh9e22'], byName: false }, n).organization, 'Leiden University');
 });
 
 test('fast mode shows the institution that matched, not the first one listed', () => {
@@ -245,7 +250,7 @@ const NO_ROR = async () => ({ names: [], grid: null });
 test('full mode matches an employment by ROR id and reports its fields', () => {
   const doc = employments(emp({ name: 'Differently Worded', ror: 'https://ror.org/03yrm5c26', role: 'Professor', dept: 'CS', start: date(2024, 9, 1) }));
   const { stage, person } = matchEmployments(doc, row('0000-0001-0000-0007'), OPTS, TODAY);
-  assert.equal(stage, 9, 'a kept candidate has passed every stage');
+  assert.equal(stage, 10, 'a kept candidate has passed every stage');
   assert.equal(person.roleTitle, 'Professor');
   assert.equal(person.department, 'CS');
   assert.equal(person.startDate, '2024-09-01');
@@ -287,7 +292,7 @@ test('full mode rejects at the stage the filter actually applies', () => {
 
 test('full mode matches role titles case-insensitively, as a substring', () => {
   const doc = employments(emp({ role: 'Assistant Professor of Computer Science' }));
-  assert.equal(matchEmployments(doc, row('0000-0001-0000-0009'), { ...OPTS, roleTitles: ['PROFESSOR'] }, TODAY).stage, 9);
+  assert.equal(matchEmployments(doc, row('0000-0001-0000-0009'), { ...OPTS, roleTitles: ['PROFESSOR'] }, TODAY).stage, 10);
 });
 
 test('full mode takes the first employment that passes, not the first that matches us', () => {
@@ -355,7 +360,7 @@ test('full run: the breakdown attributes every rejection to one filter', async (
   assert.equal(r.people[0].orcid, '0000-0001-0000-0030');
   assert.deepEqual(r.breakdown, {
     noOrgMatch: 1, noCountryMatch: null, noDepartmentMatch: null, noRoleMatch: 1, roleExcluded: null,
-    noStartDate: 1, startOutOfRange: null, selfAsserted: null, pastEmployment: 1, unreachable: 0,
+    noStartDate: 1, startOutOfRange: null, selfAsserted: null, pastEmployment: 1, stillRunning: null, unreachable: 0,
   });
 });
 
@@ -569,16 +574,43 @@ test('the affiliation status switches which name field is queried', () => {
   assert.match(buildQuery({ ...base, affiliationStatus: 'nonsense' }), /^affiliation-org-name:/, 'an unknown status falls back to any');
 });
 
-test('a current or past search drops the identifier criteria, and says why', () => {
-  // ORCID indexes current and past only on the name fields. Leaving the ROR
-  // term in would return current staff in a search for former ones.
-  const q = buildQuery({ rors: ['056d84691'], orgNames: ['Karolinska Institutet'], affiliationStatus: 'past' },
-    { gridIds: ['grid.4714.6'] });
-  assert.equal(q, 'past-institution-affiliation-name:"Karolinska Institutet"');
-  assert.equal(
-    validateOptions({ rors: ['056d84691'], byName: false, affiliationStatus: 'past' }), null,
-    'since 1.6.0 a ROR id is searched by its registered names instead of refused',
-  );
+test('with an identifier, current or past is read from end dates, not from the name index', () => {
+  // ORCID indexes current and past only on the name, and a name is a phrase
+  // match: Leiden's names also find Leiden University Medical Center. With an
+  // identifier the query stays exact and each employment's end date decides.
+  const o = { rors: ['056d84691'], orgNames: ['Karolinska Institutet'], affiliationStatus: 'past' };
+  assert.equal(buildQuery(o, { gridIds: ['grid.4714.6'] }),
+    'ror-org-id:"https://ror.org/056d84691" OR grid-org-id:"grid.4714.6" OR affiliation-org-name:"Karolinska Institutet"');
+  assert.equal(statusByEndDate(o), true);
+  assert.equal(needsEmployments(o), true, 'reading end dates means full mode');
+  assert.equal(validateOptions({ ringgolds: ['27106'], affiliationStatus: 'current' }), null,
+    'a Ringgold id works the same way');
+});
+
+test('with names only, current or past still uses the name index', () => {
+  const o = { orgNames: ['Karolinska Institutet'], affiliationStatus: 'current' };
+  assert.equal(buildQuery(o), 'current-institution-affiliation-name:"Karolinska Institutet"');
+  assert.equal(statusByEndDate(o), false);
+  assert.equal(needsEmployments(o), false);
+});
+
+test('a past search by identifier keeps ended employments and counts the running ones', () => {
+  const ended = employments(emp({ end: date(2020) }));
+  const running = employments(emp({}));
+  const past = { ...OPTS, affiliationStatus: 'past' };
+  const current = { ...OPTS, affiliationStatus: 'current' };
+  assert.ok(matchEmployments(ended, row('0000-0001-0000-0101'), past, TODAY).person);
+  assert.equal(matchEmployments(running, row('0000-0001-0000-0102'), past, TODAY).person, null);
+  assert.ok(matchEmployments(running, row('0000-0001-0000-0103'), current, TODAY).person);
+  assert.equal(matchEmployments(ended, row('0000-0001-0000-0104'), current, TODAY).person, null);
+  const rows = [row('0000-0001-0000-0105'), row('0000-0001-0000-0106')];
+  const docs = { '0000-0001-0000-0105': ended, '0000-0001-0000-0106': running };
+  return discoverPeople(past, { search: async () => ({ rows, totalFound: 2 }), employments: async (id) => docs[id],
+    today: TODAY, resolveRorFacts: NO_ROR }).then((r) => {
+    assert.equal(r.people.length, 1);
+    assert.equal(r.breakdown.stillRunning, 1);
+    assert.equal(r.breakdown.pastEmployment, null);
+  });
 });
 
 test('a start range the wrong way round is refused rather than returning nothing', () => {

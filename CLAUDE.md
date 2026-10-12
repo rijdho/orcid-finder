@@ -43,15 +43,23 @@ three locale strings, and a control in `index.html`. In that order.
   drops the GRID coverage.
 - **Keywords are AND-ed, identifiers and names are OR-ed.** OR-ing a keyword would widen the
   search to everyone in ORCID carrying it, which is the opposite of narrowing an institution.
-- **A current or past search drops the identifier criteria.** ORCID indexes those two only on the
-  name fields, so leaving a ROR term in would return current staff in a search for former ones.
-  A ROR id is searched there by the names ROR registers for it (since 1.6.0); GRID and Ringgold
-  have no names, so `validateOptions` refuses a search that has only those, with its own message.
+- **With an identifier, current or past is read from end dates.** ORCID indexes those two only on
+  the name fields, and a name there is a phrase match ("Leiden University" finds Leiden University
+  Medical Center). So `statusByEndDate` keeps the identifier query exact and filters each employment
+  on its end date, in full mode; only a search by names alone uses ORCID's current/past index.
+  1.6.0 tried searching a ROR id by its registered names instead and pulled in the medical center;
+  1.7.0 replaced it. The past check is its own stage (`NOT_ENDED`), so its drops are counted apart.
+- **An employment's own id outranks its name.** A ROR or GRID id naming another organisation rules
+  the employment out; our ROR, our resolved GRID or a given Ringgold id is a match on its own; the
+  name decides only when there is no id or one of another scheme. Matching on name regardless let
+  Leiden University Medical Center (own ROR) pass for Leiden University until 1.7.0.
 - **A fast-mode label says what the row is known to match, and no more.** `ror` when the query
   held only identifiers and the name agrees, `ror_or_name` when it held both (the search returns
   no per-entry id, so which one found the account cannot be told), `ror_only` when the name
   differs, `name` when no ROR id was in the query. The ROR names are resolved in fast mode for
-  this reason. Labelling an identifier match `name` hid it (Leiden, 0009-0000-4301-0530).
+  this reason. Labelling an identifier match `name` hid it (Leiden, 0009-0000-4301-0530). The
+  organisation shown is an exact registered or typed name when the account lists one, else the
+  first name containing one, else the first listed.
 - **The stage numbers ARE the order of the checks in `matchEmployments`.** A rejection is
   attributed to the check that comes next, and an inactive filter still advances the stage, so
   `REJECTED_BY` walks forward to the next active counter. Add a check without adding its stage and
