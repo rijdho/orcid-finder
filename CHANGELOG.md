@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.7.0]: 2026-10-12
 
+Version DOI: [10.5281/zenodo.23316999](https://doi.org/10.5281/zenodo.23316999).
+
 ### Changed
 
 - **With a ROR or Ringgold id, current and past are read from end dates.** 1.6.0 searched a ROR id
