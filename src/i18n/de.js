@@ -23,6 +23,7 @@ export const de = {
   'form.roleTitles.label': 'Funktionsbezeichnung enthält',
   'form.roleTitles.ph': 'Professor, Postdoc (kommagetrennt)',
   'form.currentOnly': 'Nur laufende Anstellungen',
+  'form.employmentOnly': 'Nur Anstellungen',
   'form.requireStartDate': 'Muss ein Startdatum haben',
   'form.employmentsHint':
     'Alles in dieser Spalte liest den ORCID-Anstellungsdatensatz jeder Kandidatin und jedes Kandidaten: eine zusätzliche Anfrage pro Person, also langsamer, aber deutlich genauer. Der Ausschluss von Funktionsbezeichnungen geschieht hier, weil ORCIDs Abfragesprache keine Verneinung kennt.',
@@ -45,6 +46,8 @@ export const de = {
 
   'res.title': 'Ergebnisse',
   'res.summary': '{kept} von {scanned} geprüften Kandidaten behalten.',
+  'res.scope.fast': 'Der Schnellmodus trifft jede Zugehörigkeit, die ORCID führt: Anstellung, Ausbildung, Mitgliedschaft und die übrigen. „Nur Anstellungen“ ankreuzen, um das Personal zu behalten.',
+  'res.scope.full': 'Der vollständige Modus liest nur Anstellungen.',
   'res.totalFound': 'ORCID meldet {total} passende Konten.',
   'res.mode.fast': 'schneller Modus',
   'res.mode.full': 'vollständiger Modus',

@@ -6,6 +6,19 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.8.0]: 2026-10-12
+
+### Added
+
+- **Employment only.** Fast mode matches any affiliation type ORCID indexes, so a search for an
+  institution also returned its alumni and members: ORCID 0000-0002-3521-2391 studied at Leiden,
+  works elsewhere, and was found by a name search for Leiden. The new box reads each candidate's
+  employments and keeps only those with one at the institution (full mode, one request per
+  candidate). URL parameter `emp=1`.
+- **The result says what it covers**: in fast mode, that it matches any affiliation type, with a
+  pointer to Employment only; in full mode, that it read employments only. English, German and
+  Spanish. Assets move to `?v=30`.
+
 ## [1.7.0]: 2026-10-12
 
 Version DOI: [10.5281/zenodo.23316999](https://doi.org/10.5281/zenodo.23316999).

@@ -42,6 +42,7 @@ itself reports about that person's appointment at the institution you asked abou
 | Must have a start date | drops appointments with no `start-date` at all | one request per candidate |
 | Only current appointments | drops appointments whose `end-date` has passed | one request per candidate |
 | Only organisation-asserted | keeps only employments a member organisation wrote, not the researcher | one request per candidate |
+| Employment only | keeps only accounts with an employment at the institution, dropping education and other affiliation types | one request per candidate |
 | Max candidates | how many matching accounts to pull and examine, 1 to 2000 | free |
 
 The institution criteria are OR-ed into one query: an account qualifies by declaring **any** of
@@ -75,7 +76,10 @@ flowchart TD
 
 **Fast mode** is a single `expanded-search` call. It returns names and the institution names
 ORCID has indexed for each account, so it answers "who declares this affiliation" in seconds
-whatever the size of the result.
+whatever the size of the result. "Declares" covers every affiliation type ORCID indexes:
+employment, education, qualification, membership and the rest. ORCID 0000-0002-3521-2391 studied
+at Leiden and works elsewhere, and a name search for Leiden finds it. The result says so, and
+**Employment only** (or any filter that reads the employment) narrows it to staff.
 
 **Full mode** starts as soon as a filter needs role title, start date or end date. Those three
 fields exist only inside a record's `/employments` document, so the tool reads one per
@@ -261,8 +265,8 @@ The CSV opens with a block of `#` comment lines naming the tool, its version, it
 the licence, the data sources, the timestamp, the query sent to ORCID, the mode and the counts:
 
 ```
-# ORCID Affiliation Finder v1.7.0 · https://rijdho.github.io/orcid-finder/
-# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.7.0) [Software]. https://doi.org/10.5281/zenodo.22227424
+# ORCID Affiliation Finder v1.8.0 · https://rijdho.github.io/orcid-finder/
+# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.8.0) [Software]. https://doi.org/10.5281/zenodo.22227424
 # License: Apache-2.0 · Source: https://github.com/rijdho/orcid-finder
 # Data: ORCID public API v3.0, ROR API v2
 # Retrieved: 2026-09-03T15:56:45.845Z
@@ -392,6 +396,8 @@ is not this tool's job.
 
 ## Caveats
 
+- **Fast mode is every affiliation type, not staff.** Education, membership and the rest count
+  as declaring the institution. Tick **Employment only** for a roster of employees.
 - **Most of ORCID is self-asserted.** A record usually says what its owner typed. An
   institution's real roster is larger than what ORCID shows and may differ in role titles,
   spelling and dates.

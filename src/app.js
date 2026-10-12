@@ -2,9 +2,9 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=29';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=29';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=29';
+import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=30';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=30';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=30';
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -116,6 +116,7 @@ function readForm() {
     startFrom: num($('startFrom').value),
     startTo: num($('startTo').value),
     currentOnly: $('currentOnly').checked,
+    employmentOnly: $('employmentOnly').checked,
     requireStartDate: $('requireStartDate').checked,
     assertedOnly: $('assertedOnly').checked,
     maxRows: clampMaxRows($('maxRows').value),
@@ -140,6 +141,7 @@ function writeForm(o) {
   $('startFrom').value = o.startFrom ?? '';
   $('startTo').value = o.startTo ?? '';
   $('currentOnly').checked = !!o.currentOnly;
+  $('employmentOnly').checked = !!o.employmentOnly;
   $('requireStartDate').checked = !!o.requireStartDate;
   $('assertedOnly').checked = !!o.assertedOnly;
   $('maxRows').value = o.maxRows ?? 200;
@@ -169,6 +171,7 @@ function writeUrl(options) {
     if (o.startFrom !== null) p.set('from', String(o.startFrom));
     if (o.startTo !== null) p.set('to', String(o.startTo));
     if (o.currentOnly) p.set('current', '1');
+    if (o.employmentOnly) p.set('emp', '1');
     if (o.requireStartDate) p.set('started', '1');
     if (o.assertedOnly) p.set('asserted', '1');
     if (o.maxRows !== 200) p.set('max', String(o.maxRows));
@@ -196,6 +199,7 @@ function readUrl() {
     startFrom: num(p.get('from')),
     startTo: num(p.get('to')),
     currentOnly: p.get('current') === '1',
+    employmentOnly: p.get('emp') === '1',
     requireStartDate: p.get('started') === '1',
     assertedOnly: p.get('asserted') === '1',
     maxRows: clampMaxRows(p.get('max')),
@@ -261,6 +265,7 @@ function render(r) {
     t('res.summary', { kept: r.people.length, scanned: r.scanned }),
     t('res.totalFound', { total: r.totalFound.toLocaleString(getLang()) }),
     r.aborted ? t('res.aborted') : '',
+    t(r.mode === 'full' ? 'res.scope.full' : 'res.scope.fast'),
   ].filter(Boolean).join(' ');
   el.query.textContent = `${t('res.query')}: ${r.query}`;
 

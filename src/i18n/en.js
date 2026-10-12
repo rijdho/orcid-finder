@@ -25,6 +25,7 @@ export const en = {
   'form.roleTitles.label': 'Role title contains',
   'form.roleTitles.ph': 'professor, postdoc (comma-separated)',
   'form.currentOnly': 'Only current appointments',
+  'form.employmentOnly': 'Employment only',
   'form.requireStartDate': 'Must have a start date',
   'form.employmentsHint':
     'Everything in this column reads each candidate’s ORCID employment record: one extra request per candidate, so the search gets slower but far more precise. Role exclusion happens here because ORCID’s query language has no negation.',
@@ -46,6 +47,8 @@ export const en = {
 
   'res.title': 'Results',
   'res.summary': '{kept} kept of {scanned} candidates examined.',
+  'res.scope.fast': 'Fast mode matches any affiliation ORCID lists: employment, education, membership and the rest. Tick “Employment only” to keep staff.',
+  'res.scope.full': 'Full mode reads employments only.',
   'res.totalFound': 'ORCID reports {total} matching accounts.',
   'res.mode.fast': 'fast mode',
   'res.mode.full': 'full mode',

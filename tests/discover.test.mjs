@@ -131,6 +131,10 @@ test('needsEmployments is true for exactly the three employment filters', () => 
   assert.equal(needsEmployments({ roleTitles: ['professor'] }), true);
   assert.equal(needsEmployments({ requireStartDate: true }), true);
   assert.equal(needsEmployments({ currentOnly: true }), true);
+  // Fast mode matches any affiliation type; reading the employments is the only way
+  // to keep staff (ORCID 0000-0002-3521-2391 studied at Leiden and works elsewhere).
+  assert.equal(needsEmployments({ employmentOnly: true }), true);
+  assert.equal(needsEmployments({ employmentOnly: false }), false);
 });
 
 // ── dates ───────────────────────────────────────────────────────────────────
@@ -181,6 +185,20 @@ test('fast mode cannot tell ROR from name when both were in the query, and says 
   const p = matchSearchRow(row('0000-0001-0000-0008', ['Leiden University']),
     { rors: ['027bh9e22'], orgNames: ['Leiden University'] });
   assert.equal(p.matchedBy, 'ror_or_name');
+});
+
+test('employment only drops an account that is affiliated by education alone', () => {
+  // ORCID 0000-0002-3521-2391: Universiteit Leiden is an education; the only
+  // employment is elsewhere. A name search finds the account; employment only drops it.
+  const r = row('0000-0002-3521-2391', ['UIN Raden Mas Said', 'Universiteit Leiden']);
+  const doc = employments(emp({ name: 'UIN Raden Mas Said' }));
+  return discoverPeople({ orgNames: ['Universiteit Leiden'], employmentOnly: true },
+    { search: async () => ({ rows: [r], totalFound: 1 }), employments: async () => doc, today: TODAY, resolveRorFacts: NO_ROR },
+  ).then((res) => {
+    assert.equal(res.mode, 'full');
+    assert.equal(res.people.length, 0);
+    assert.equal(res.breakdown.noOrgMatch, 1);
+  });
 });
 
 test('an employment tied to another organisation by ROR or GRID is not rescued by its name', () => {

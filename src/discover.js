@@ -15,8 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=29';
-import { fetchRorFacts } from './ror.js?v=29';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=30';
+import { fetchRorFacts } from './ror.js?v=30';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
@@ -59,6 +59,9 @@ export const DEFAULT_OPTIONS = {
   requireStartDate: false,
   currentOnly: false,
   assertedOnly: false,
+  // Fast mode matches any affiliation type ORCID indexes (employment, education,
+  // membership...); this reads the employments, so only staff remain.
+  employmentOnly: false,
   maxRows: 200,
 };
 
@@ -196,6 +199,7 @@ export function needsEmployments(o) {
     !!opts.requireStartDate ||
     !!opts.currentOnly ||
     !!opts.assertedOnly ||
+    !!opts.employmentOnly ||
     statusByEndDate(opts)
   );
 }

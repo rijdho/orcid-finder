@@ -23,6 +23,7 @@ export const es = {
   'form.roleTitles.label': 'El cargo contiene',
   'form.roleTitles.ph': 'profesor, postdoc (separados por comas)',
   'form.currentOnly': 'Solo nombramientos vigentes',
+  'form.employmentOnly': 'Solo empleo',
   'form.requireStartDate': 'Debe tener fecha de inicio',
   'form.employmentsHint':
     'Todo lo de esta columna lee el registro de empleo de cada candidato en ORCID: una petición adicional por candidato, así que la búsqueda es más lenta pero mucho más precisa. La exclusión de cargos ocurre aquí porque el lenguaje de consulta de ORCID no tiene negación.',
@@ -46,6 +47,8 @@ export const es = {
 
   'res.title': 'Resultados',
   'res.summary': 'Se conservan {kept} de {scanned} candidatos examinados.',
+  'res.scope.fast': 'El modo rápido coincide con cualquier afiliación que liste ORCID: empleo, educación, membresía y las demás. Marca «Solo empleo» para quedarte con el personal.',
+  'res.scope.full': 'El modo completo lee solo los empleos.',
   'res.totalFound': 'ORCID informa de {total} cuentas coincidentes.',
   'res.mode.fast': 'modo rápido',
   'res.mode.full': 'modo completo',

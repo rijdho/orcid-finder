@@ -49,6 +49,10 @@ three locale strings, and a control in `index.html`. In that order.
   on its end date, in full mode; only a search by names alone uses ORCID's current/past index.
   1.6.0 tried searching a ROR id by its registered names instead and pulled in the medical center;
   1.7.0 replaced it. The past check is its own stage (`NOT_ENDED`), so its drops are counted apart.
+- **Fast mode is every affiliation type.** ORCID's affiliation fields cover employment,
+  education, membership and the rest, and `expanded-search` does not say which. Only full mode,
+  which reads `/employments`, is a staff list; `employmentOnly` exists to force it, and the result
+  states which of the two it is.
 - **An employment's own id outranks its name.** A ROR or GRID id naming another organisation rules
   the employment out; our ROR, our resolved GRID or a given Ringgold id is a match on its own; the
   name decides only when there is no id or one of another scheme. Matching on name regardless let
