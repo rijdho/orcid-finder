@@ -205,6 +205,15 @@ test('a current search by ROR labels its rows by name, since names were the quer
   assert.equal(p.matchedBy, 'name');
 });
 
+test('fast mode shows the institution that matched, not the first one listed', () => {
+  // ORCID 0000-0001-6193-5369: a current Leiden employment, but the account lists
+  // the Chinese Academy of Medical Sciences first, and that was shown.
+  const r = row('0000-0001-6193-5369',
+    ['Chinese Academy of Medical Sciences & Peking Union Medical College', 'Leiden University', 'Zhengzhou University']);
+  const n = { rors: new Set(['027bh9e22']), names: ['leiden university'], roles: [], excludeRoles: [], departments: [], countries: new Set() };
+  assert.equal(matchSearchRow(r, { rors: ['027bh9e22'], byName: false }, n).organization, 'Leiden University');
+});
+
 test('fast mode drops a non-matching name when ROR is not a criterion', () => {
   const p = matchSearchRow(row('0000-0001-0000-0003', ['Some Other Spelling']),
     { orgNames: ['IT:U'], byRor: false });

@@ -256,8 +256,8 @@ The CSV opens with a block of `#` comment lines naming the tool, its version, it
 the licence, the data sources, the timestamp, the query sent to ORCID, the mode and the counts:
 
 ```
-# ORCID Affiliation Finder v1.6.0 · https://rijdho.github.io/orcid-finder/
-# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.6.0) [Software]. https://doi.org/10.5281/zenodo.22227424
+# ORCID Affiliation Finder v1.6.1 · https://rijdho.github.io/orcid-finder/
+# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.6.1) [Software]. https://doi.org/10.5281/zenodo.22227424
 # License: Apache-2.0 · Source: https://github.com/rijdho/orcid-finder
 # Data: ORCID public API v3.0, ROR API v2
 # Retrieved: 2026-09-03T15:56:45.845Z

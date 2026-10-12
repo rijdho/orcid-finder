@@ -6,7 +6,19 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.6.1]: 2026-10-12
+
+### Fixed
+
+- **The organisation column in fast mode shows the institution that matched.** ORCID lists every
+  institution on an account, and the first one was shown: ORCID 0000-0001-6193-5369, found by a
+  current Leiden employment, appeared under the Chinese Academy of Medical Sciences, first in its
+  list. The column now shows the listed name that matched, and falls back to the first only when
+  none did (a match through the identifier alone). Assets move to `?v=27`.
+
 ## [1.6.0]: 2026-10-12
+
+Version DOI: [10.5281/zenodo.23316765](https://doi.org/10.5281/zenodo.23316765).
 
 ### Fixed
 

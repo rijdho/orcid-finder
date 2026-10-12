@@ -15,8 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=26';
-import { fetchRorFacts } from './ror.js?v=26';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=27';
+import { fetchRorFacts } from './ror.js?v=27';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
@@ -361,8 +361,12 @@ function needles(opts, extraNames = []) {
 export function matchSearchRow(row, opts, n = needles(normaliseOptions(opts))) {
   const o = normaliseOptions(opts);
   const active = activeCriteria(o);
-  const instNames = (row['institution-name'] ?? []).map((x) => String(x).toLowerCase());
-  const matchesName = instNames.some((name) => n.names.some((needle) => name.includes(needle)));
+  const listed = row['institution-name'] ?? [];
+  const instNames = listed.map((x) => String(x).toLowerCase());
+  // The list is every institution on the account, in ORCID's order, so its first
+  // entry is often somewhere else entirely. Show the one that matched.
+  const hitAt = instNames.findIndex((name) => n.names.some((needle) => name.includes(needle)));
+  const matchesName = hitAt >= 0;
   const rorTrusted = active.ror;
   if (!matchesName && instNames.length > 0 && !rorTrusted) return null;
   const namesInQuery = active.name || active.rorByName;
@@ -378,7 +382,7 @@ export function matchSearchRow(row, opts, n = needles(normaliseOptions(opts))) {
     otherNames: row['other-name'] ?? [],
     roleTitle: null,
     department: null,
-    organization: row['institution-name']?.[0] ?? o.orgNames[0] ?? null,
+    organization: (matchesName ? listed[hitAt] : listed[0]) ?? o.orgNames[0] ?? null,
     startDate: null,
     endDate: null,
     institutions: row['institution-name'] ?? [],
