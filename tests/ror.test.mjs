@@ -131,19 +131,23 @@ test('with ROR names, the same employment is kept and named as asserted', () => 
   });
 });
 
-test('fast mode still resolves ROR, for the GRID id, but reports no names', () => {
-  // The names are only ever compared against an employment, and fast mode opens
-  // none. The GRID id is a different matter: it goes into the query.
+test('fast mode resolves ROR for the GRID id and for the label, and reports the names', () => {
+  // The GRID id goes into the query. The names decide the label: a row whose
+  // institution name agrees with a registered name was found by the identifier
+  // AND reads right, which is 'ror', not 'name' and not 'ror_only'.
+  const named = { ...row('0000-0001-0000-0091'), 'institution-name': ['Karolinska Institutet'] };
+  const other = { ...row('0000-0001-0000-0092'), 'institution-name': ['KI Stockholm'] };
   return discoverPeople(
     { rors: ['056d84691'], byName: false },
     {
-      search: async () => ({ rows: [row('0000-0001-0000-0091')], totalFound: 1 }),
+      search: async () => ({ rows: [named, other], totalFound: 2 }),
       resolveRorFacts: async () => ({ names: usableNames(KAROLINSKA), grid: 'grid.4714.6' }),
     },
   ).then((r) => {
-    assert.deepEqual(r.rorNames, [], 'names that cannot be used are not reported as used');
+    assert.ok(r.rorNames.includes('Karolinska Institutet'), 'the names used for the label are reported');
     assert.deepEqual(r.gridIds, ['grid.4714.6']);
     assert.match(r.query, /grid-org-id:"grid\.4714\.6"/);
+    assert.deepEqual(r.people.map((p) => p.matchedBy), ['ror', 'ror_only']);
   });
 });
 

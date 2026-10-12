@@ -104,7 +104,7 @@ test('buildQuery honours the two criterion switches', () => {
 
 test('buildQuery returns null when a ticked box has an empty field', () => {
   assert.equal(buildQuery({ rors: [], orgNames: [], byRor: true, byName: true }), null);
-  assert.deepEqual(activeCriteria({ rors: [], orgNames: ['IT:U'] }), { ror: false, ringgold: false, name: true });
+  assert.deepEqual(activeCriteria({ rors: [], orgNames: ['IT:U'] }), { ror: false, rorByName: false, ringgold: false, name: true });
 });
 
 test('normaliseOptions clamps maxRows into the ORCID paging range', () => {
@@ -165,6 +165,44 @@ test('fast mode trusts a ROR match whose institution name reads differently', ()
   const opts = { rors: ['03yrm5c26'], orgNames: ['IT:U'] };
   const p = matchSearchRow(row('0000-0001-0000-0002', ['Some Other Spelling']), opts);
   assert.equal(p.matchedBy, 'ror_only', 'the ROR criterion is why the row is here at all');
+});
+
+test('fast mode labels a ROR-only search whose name agrees as ror, not name', () => {
+  // ORCID 0009-0000-4301-0530 at Leiden: the ROR is on every employment and the
+  // name reads "Leiden University". Before, this said 'ror_only' (the name "is
+  // worded differently", which it is not) or, with a name typed in, 'name'.
+  const leiden = row('0009-0000-4301-0530', ['Leiden University']);
+  // The registered names arrive as needles, the way discoverPeople passes them.
+  const n = { rors: new Set(['027bh9e22']), names: ['leiden university'], roles: [], excludeRoles: [], departments: [], countries: new Set() };
+  assert.equal(matchSearchRow(leiden, { rors: ['027bh9e22'], byName: false }, n).matchedBy, 'ror');
+});
+
+test('fast mode cannot tell ROR from name when both were in the query, and says so', () => {
+  const p = matchSearchRow(row('0000-0001-0000-0008', ['Leiden University']),
+    { rors: ['027bh9e22'], orgNames: ['Leiden University'] });
+  assert.equal(p.matchedBy, 'ror_or_name');
+});
+
+test('a current or past search reaches a ROR id through its registered names', () => {
+  // ORCID indexes current and past only on the name, so the ROR id cannot go into
+  // the query; the names ROR registers for it can. GRID and Ringgold have no names.
+  const q = buildQuery({ rors: ['027bh9e22'], ringgolds: ['12345'], byName: false, affiliationStatus: 'current' },
+    { gridIds: ['grid.5132.5'], rorNames: ['Leiden University', 'Universiteit Leiden'] });
+  assert.equal(q, 'current-institution-affiliation-name:"Leiden University" OR '
+    + 'current-institution-affiliation-name:"Universiteit Leiden"');
+  assert.equal(validateOptions({ rors: ['027bh9e22'], byName: false, affiliationStatus: 'current' }), null);
+  assert.deepEqual(validateOptions({ ringgolds: ['12345'], byName: false, affiliationStatus: 'past' }),
+    { key: 'statusNeedsName' }, 'a Ringgold id alone still has no name to search by');
+  const typed = buildQuery({ rors: ['027bh9e22'], orgNames: ['leiden university'], affiliationStatus: 'past' },
+    { rorNames: ['Leiden University'] });
+  assert.equal(typed, 'past-institution-affiliation-name:"Leiden University"', 'a typed name already given is not repeated');
+});
+
+test('a current search by ROR labels its rows by name, since names were the query', () => {
+  const p = matchSearchRow(row('0000-0001-0000-0009', ['Leiden University']),
+    { rors: ['027bh9e22'], byName: false, affiliationStatus: 'current' },
+    { rors: new Set(['027bh9e22']), names: ['leiden university'], roles: [], excludeRoles: [], departments: [], countries: new Set() });
+  assert.equal(p.matchedBy, 'name');
 });
 
 test('fast mode drops a non-matching name when ROR is not a criterion', () => {
@@ -528,9 +566,9 @@ test('a current or past search drops the identifier criteria, and says why', () 
   const q = buildQuery({ rors: ['056d84691'], orgNames: ['Karolinska Institutet'], affiliationStatus: 'past' },
     { gridIds: ['grid.4714.6'] });
   assert.equal(q, 'past-institution-affiliation-name:"Karolinska Institutet"');
-  assert.deepEqual(
-    validateOptions({ rors: ['056d84691'], byName: false, affiliationStatus: 'past' }),
-    { key: 'statusNeedsName' },
+  assert.equal(
+    validateOptions({ rors: ['056d84691'], byName: false, affiliationStatus: 'past' }), null,
+    'since 1.6.0 a ROR id is searched by its registered names instead of refused',
   );
 });
 

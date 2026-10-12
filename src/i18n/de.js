@@ -82,6 +82,12 @@ export const de = {
   'matched.employment': 'Anstellung',
   'matched.ror_only.title':
     'ORCID hat die ROR-ID getroffen, der dort geführte Einrichtungsname ist aber anders geschrieben. Das ist normal, der Treffer ist echt.',
+  'matched.ror': 'ROR',
+  'matched.ror.title':
+    'Über die ROR-ID gefunden, und der bei ORCID geführte Einrichtungsname stimmt mit einem Namen überein, den ROR für sie führt.',
+  'matched.ror_or_name': 'ROR oder Name',
+  'matched.ror_or_name.title':
+    'Die Suche enthielt die ROR-ID und einen Namen, und der Name stimmt überein. ORCID gibt nicht an, welches von beiden das Konto gefunden hat.',
 
 
   'nav.label': 'Ansicht',
@@ -120,7 +126,7 @@ export const de = {
   'form.status.current': 'Laufend',
   'form.status.past': 'Früher',
   'form.status.hint':
-    'Laufend und früher indexiert ORCID nur über den Organisationsnamen. Wird eines davon gewählt, wird allein nach Namen gesucht und die ID-Felder bleiben außen vor. Über „früher“ finden Sie ehemaliges Personal und Alumni. Das ist nicht dasselbe wie „Nur laufende Anstellungen“: hier wird ORCID gefragt, welche Konten es als laufend führt, dort wird das Enddatum jeder Anstellung gelesen. „Früher“ zusammen mit jenem Häkchen fragt nach Personen, die hier zugleich eine beendete und eine laufende Anstellung haben, was selten gemeint ist.',
+    'Laufend und früher indexiert ORCID nur über den Organisationsnamen. Wird eines davon gewählt, wird nach Namen gesucht: nach den eingegebenen und nach denen, die ROR für eine angegebene ROR-ID führt. GRID- und Ringgold-IDs bleiben außen vor. Über „früher“ finden Sie ehemaliges Personal und Alumni. Das ist nicht dasselbe wie „Nur laufende Anstellungen“: hier wird ORCID gefragt, welche Konten es als laufend führt, dort wird das Enddatum jeder Anstellung gelesen. „Früher“ zusammen mit jenem Häkchen fragt nach Personen, die hier zugleich eine beendete und eine laufende Anstellung haben, was selten gemeint ist.',
   'form.keywords.label': 'Schlagwort(e), kommagetrennt',
   'form.keywords.ph': 'Epidemiologie, Onkologie',
   'form.keywords.hint':
@@ -136,7 +142,7 @@ export const de = {
   'form.startTo.label': 'Beginn bis',
   'err.badRinggold': '„{id}“ ist keine gültige Ringgold-ID. Das sind reine Zahlen, etwa 27106.',
   'err.statusNeedsName':
-    'Eine Suche nach laufend oder früher braucht einen Organisationsnamen. ORCID indexiert diese beiden nur über den Namen, nie über eine ROR-, GRID- oder Ringgold-ID.',
+    'Eine Suche nach laufend oder früher braucht einen Organisationsnamen oder eine ROR-ID. ORCID indexiert diese beiden nur über den Namen, daher wird eine ROR-ID über die Namen gesucht, die ROR für sie führt; eine GRID- oder Ringgold-ID hat keine Namen, nach denen sich suchen ließe.',
   'err.badStartRange': 'Der Zeitraum läuft rückwärts: das erste Jahr liegt nach dem letzten.',
   'bd.noCountryMatch': '{n} in einem anderen Land',
   'bd.noDepartmentMatch': '{n} Abteilung passte nicht',

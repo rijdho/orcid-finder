@@ -65,8 +65,13 @@ test('every literal key app.js asks for exists', () => {
 test('the match badges have a label in every locale', () => {
   // These are built as `matched.${p.matchedBy}` at render time, so a missing one
   // would surface as the raw key in the table rather than as an error.
-  for (const kind of ['name', 'ror_only', 'employment'])
+  for (const kind of ['name', 'ror', 'ror_or_name', 'ror_only', 'employment'])
     for (const code of CODES) assert.ok(`matched.${kind}` in LOCALES[code]);
+});
+
+test('the identifier match badges carry an explanation in every locale', () => {
+  for (const kind of ['ror', 'ror_or_name', 'ror_only'])
+    for (const code of CODES) assert.ok(`matched.${kind}.title` in LOCALES[code], `${code}: matched.${kind}.title`);
 });
 
 test('every assertion badge has a label and an explanation in every locale', () => {

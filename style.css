@@ -105,7 +105,8 @@ td.nowrap { white-space: nowrap; }
   color: var(--ink-2); }
 .badge { font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
 .badge.employment, .badge.organization { background: var(--d-green-soft); color: var(--d-green); }
-.badge.name { background: var(--d-blue-soft); color: var(--d-blue); }
+.badge.name, .badge.ror_or_name { background: var(--d-blue-soft); color: var(--d-blue); }
+.badge.ror { background: var(--d-green-soft); color: var(--d-green); }
 .badge.ror_only, .badge.self { background: var(--d-amber-soft); color: var(--d-amber); }
 .badge.other, .badge.unknown { background: var(--surface-2); color: var(--ink-2); }
 .empty { padding: 28px 12px; text-align: center; color: var(--ink-2); font-size: 13.5px; }

@@ -15,8 +15,8 @@
 // HTTP through `deps`, which is what makes the whole filter behaviour testable
 // without a network.
 
-import { expandedSearch, fetchEmployments } from './orcid.js?v=25';
-import { fetchRorFacts } from './ror.js?v=25';
+import { expandedSearch, fetchEmployments } from './orcid.js?v=26';
+import { fetchRorFacts } from './ror.js?v=26';
 
 /** A ROR id is nine characters, starts with 0, and uses a crockford-ish alphabet. */
 export const ROR_RE = /^0[a-hj-km-np-z0-9]{8}$/;
@@ -128,15 +128,26 @@ export function buildQuery(o, facts = {}) {
   // An identifier criterion cannot carry a current/past distinction: ORCID
   // indexes that only on the name fields. Including the ids anyway would return
   // current staff in a search for former ones, which is worse than refusing.
+  // A ROR id is still usable there, through the names ROR registers for it
+  // (`facts.rorNames`): those are names, and the name fields are what ORCID
+  // indexes as current or past. GRID and Ringgold carry no names, so they sit out.
+  const names = [];
   if (opts.affiliationStatus === 'any') {
     if (opts.byRor) {
       for (const r of opts.rors) terms.push(`ror-org-id:"https://ror.org/${r}"`);
       for (const g of facts.gridIds ?? []) terms.push(`grid-org-id:"${g}"`);
     }
     for (const rg of opts.ringgolds) terms.push(`ringgold-org-id:"${rg}"`);
+  } else if (opts.byRor) {
+    names.push(...(facts.rorNames ?? []));
   }
-  if (opts.byName)
-    for (const n of opts.orgNames) terms.push(`${NAME_FIELD[opts.affiliationStatus]}:"${n}"`);
+  if (opts.byName) names.push(...opts.orgNames);
+  const seen = new Set();
+  for (const n of names) {
+    if (seen.has(n.toLowerCase())) continue;
+    seen.add(n.toLowerCase());
+    terms.push(`${NAME_FIELD[opts.affiliationStatus]}:"${n}"`);
+  }
 
   if (!terms.length) return null;
   const affiliation = terms.join(' OR ');
@@ -150,6 +161,8 @@ export function activeCriteria(o) {
   const byId = opts.affiliationStatus === 'any';
   return {
     ror: byId && opts.byRor && opts.rors.length > 0,
+    // A current or past search reaches a ROR id through its registered names.
+    rorByName: !byId && opts.byRor && opts.rors.length > 0,
     ringgold: byId && opts.ringgolds.length > 0,
     name: opts.byName && opts.orgNames.length > 0,
   };
@@ -167,11 +180,12 @@ export function validateOptions(o) {
   const badRinggold = opts.ringgolds.find((r) => !RINGGOLD_RE.test(r));
   if (badRinggold) return { key: 'badRinggold', id: badRinggold };
   const active = activeCriteria(opts);
-  // A current/past search is name-only, so a user who set the status and gave
-  // only an identifier is told exactly that rather than "no criteria".
-  if (opts.affiliationStatus !== 'any' && !active.name)
+  // A current/past search is name-only. A ROR id qualifies through the names
+  // ROR registers for it; a Ringgold id alone does not, and the user is told
+  // exactly that rather than "no criteria".
+  if (opts.affiliationStatus !== 'any' && !active.name && !active.rorByName)
     return { key: 'statusNeedsName' };
-  if (!active.ror && !active.ringgold && !active.name) return { key: 'noCriteria' };
+  if (!active.ror && !active.rorByName && !active.ringgold && !active.name) return { key: 'noCriteria' };
   if (opts.startFrom && opts.startTo && opts.startFrom > opts.startTo)
     return { key: 'badStartRange' };
   return null;
@@ -327,18 +341,34 @@ function needles(opts, extraNames = []) {
 /**
  * Fast mode: decide on one search row, using only what expanded-search returned.
  *
- * When ROR is one of the criteria we trust ORCID's own match even if the
+ * When ROR is in the query we trust ORCID's own match even if the
  * institution names it reports do not string-match ours, because expanded-search returns
  * `institution-name[]` with no per-entry ROR id, so a genuine ROR hit can carry a
  * differently-worded name. Dropping those would throw away exactly the records the
  * ROR criterion was chosen to find.
+ *
+ * `matchedBy` says what the row is known to match, and no more:
+ *   'ror'          the query held only identifiers, so the account was found by the
+ *                  ROR (or GRID) id, and its institution name agrees as well.
+ *   'ror_or_name'  the query held identifiers and names, and the name agrees. The
+ *                  search returns no per-entry id, so which of the two found the
+ *                  account cannot be told apart.
+ *   'ror_only'     found through the identifier; the listed name is worded differently.
+ *   'name'         no ROR id was in the query: the name is all there is.
+ * Labelling the first two 'name' hid an identifier match that was there all along
+ * (ORCID 0009-0000-4301-0530 at Leiden carries the ROR on every employment).
  */
 export function matchSearchRow(row, opts, n = needles(normaliseOptions(opts))) {
   const o = normaliseOptions(opts);
+  const active = activeCriteria(o);
   const instNames = (row['institution-name'] ?? []).map((x) => String(x).toLowerCase());
   const matchesName = instNames.some((name) => n.names.some((needle) => name.includes(needle)));
-  const rorTrusted = o.byRor && o.rors.length > 0;
+  const rorTrusted = active.ror;
   if (!matchesName && instNames.length > 0 && !rorTrusted) return null;
+  const namesInQuery = active.name || active.rorByName;
+  const matchedBy = !matchesName ? 'ror_only'
+    : !rorTrusted ? 'name'
+      : namesInQuery ? 'ror_or_name' : 'ror';
   return {
     orcid: row['orcid-id'],
     name: nameOf(row),
@@ -352,7 +382,7 @@ export function matchSearchRow(row, opts, n = needles(normaliseOptions(opts))) {
     startDate: null,
     endDate: null,
     institutions: row['institution-name'] ?? [],
-    matchedBy: matchesName ? 'name' : 'ror_only',
+    matchedBy,
     // Fast mode never opens an employment, so who asserted it is not known.
     // Reporting 'self' here would be a guess dressed as a finding.
     assertedBy: null,
@@ -501,15 +531,19 @@ export async function discoverPeople(options, deps = {}) {
   //                matching on the ROR id alone drops exactly the employments
   //                an institution's own system asserts.
   //
+  // In a current or past search the names do a third job: they ARE the query,
+  // because ORCID indexes those two only on the name.
+  //
+  // In fast mode the names decide the label (see `matchSearchRow`), so they are
+  // resolved and reported in both modes.
+  //
   // One request per ROR id, and none at all when no ROR criterion is in play.
-  const wantsRor = o.byRor && o.rors.length > 0 && o.affiliationStatus === 'any';
+  const wantsRor = o.byRor && o.rors.length > 0;
   const facts = wantsRor ? await Promise.all(o.rors.map(resolveRorFacts)) : [];
-  const gridIds = [...new Set(facts.map((f) => f?.grid).filter(Boolean))];
-  // The names are only ever compared against an employment, so in fast mode
-  // they are neither used nor reported.
-  const rorNames = full ? [...new Set(facts.flatMap((f) => f?.names ?? []))] : [];
+  const gridIds = o.affiliationStatus === 'any' ? [...new Set(facts.map((f) => f?.grid).filter(Boolean))] : [];
+  const rorNames = [...new Set(facts.flatMap((f) => f?.names ?? []))];
 
-  const query = buildQuery(o, { gridIds });
+  const query = buildQuery(o, { gridIds, rorNames });
   if (!query) return empty;
 
   const n = needles(o, rorNames);

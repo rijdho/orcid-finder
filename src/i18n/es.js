@@ -83,6 +83,12 @@ export const es = {
   'matched.employment': 'empleo',
   'matched.ror_only.title':
     'ORCID coincidió con el identificador ROR, pero el nombre de la institución que figura está escrito de otra forma. Es normal y la coincidencia es real.',
+  'matched.ror': 'ROR',
+  'matched.ror.title':
+    'Encontrada por el identificador ROR, y el nombre de institución que figura en ORCID coincide con un nombre que ROR registra para él.',
+  'matched.ror_or_name': 'ROR o nombre',
+  'matched.ror_or_name.title':
+    'La búsqueda tenía el identificador ROR y un nombre, y el nombre coincide. ORCID no dice cuál de los dos encontró la cuenta.',
 
 
   'nav.label': 'Vista',
@@ -121,7 +127,7 @@ export const es = {
   'form.status.current': 'Vigente',
   'form.status.past': 'Pasada',
   'form.status.hint':
-    'ORCID indexa vigente y pasada solo por el nombre de la organización, así que elegir una busca solo por nombre y los campos de identificador quedan fuera. Con «pasada» encuentras ex personal y egresados. No es lo mismo que «Solo nombramientos vigentes»: esto le pregunta a ORCID qué cuentas indexa como vigentes, aquello lee la fecha de fin de cada empleo. Elegir «pasada» y marcar esa casilla pide personas que tengan aquí a la vez un nombramiento terminado y uno en curso, que rara vez es lo que se quiere.',
+    'ORCID indexa vigente y pasada solo por el nombre de la organización, así que elegir una busca por nombre: los que escribas y los que ROR registra para el identificador ROR que des. Los identificadores GRID y Ringgold quedan fuera. Con «pasada» encuentras ex personal y egresados. No es lo mismo que «Solo nombramientos vigentes»: esto le pregunta a ORCID qué cuentas indexa como vigentes, aquello lee la fecha de fin de cada empleo. Elegir «pasada» y marcar esa casilla pide personas que tengan aquí a la vez un nombramiento terminado y uno en curso, que rara vez es lo que se quiere.',
   'form.keywords.label': 'Palabra(s) clave, separadas por comas',
   'form.keywords.ph': 'epidemiología, oncología',
   'form.keywords.hint':
@@ -137,7 +143,7 @@ export const es = {
   'form.startTo.label': 'Inicio hasta',
   'err.badRinggold': '«{id}» no es un identificador Ringgold válido. Son números simples, por ejemplo 27106.',
   'err.statusNeedsName':
-    'Una búsqueda por vigente o pasada necesita un nombre de organización. ORCID indexa esas dos solo por el nombre, nunca por un identificador ROR, GRID o Ringgold.',
+    'Una búsqueda por vigente o pasada necesita un nombre de organización o un identificador ROR. ORCID indexa esas dos solo por el nombre, así que un ROR se busca por los nombres que ROR registra para él; un identificador GRID o Ringgold no tiene nombres por los que buscar.',
   'err.badStartRange': 'El rango de inicio va al revés: el primer año es posterior al último.',
   'bd.noCountryMatch': '{n} en otro país',
   'bd.noDepartmentMatch': '{n} el departamento no coincidió',

@@ -83,6 +83,12 @@ export const en = {
   'matched.employment': 'employment',
   'matched.ror_only.title':
     'ORCID matched the ROR id, but the institution name it lists is worded differently. This is normal and the match is genuine.',
+  'matched.ror': 'ROR',
+  'matched.ror.title':
+    'Found by the ROR id, and the institution name ORCID lists agrees with a name ROR registers for it.',
+  'matched.ror_or_name': 'ROR or name',
+  'matched.ror_or_name.title':
+    'The search held both the ROR id and a name, and the name agrees. ORCID does not say which of the two found the account.',
 
 
   'nav.label': 'View',
@@ -121,7 +127,7 @@ export const en = {
   'form.status.current': 'Current',
   'form.status.past': 'Past',
   'form.status.hint':
-    'Current and past are indexed by ORCID only on the organisation name, so choosing one searches by name alone and the identifier fields sit out. Past is how you find former staff and alumni. This is not the same as “Only current appointments”: this asks ORCID which accounts it indexes as current, while that one reads each employment’s end date. Choosing Past and ticking that box asks for people who have both a finished and a running appointment here, which is rarely what anyone means.',
+    'Current and past are indexed by ORCID only on the organisation name, so choosing one searches by name: the names you type, and the names ROR registers for any ROR id you give. GRID and Ringgold ids sit out. Past is how you find former staff and alumni. This is not the same as “Only current appointments”: this asks ORCID which accounts it indexes as current, while that one reads each employment’s end date. Choosing Past and ticking that box asks for people who have both a finished and a running appointment here, which is rarely what anyone means.',
   'form.keywords.label': 'Keyword(s), comma-separated',
   'form.keywords.ph': 'epidemiology, oncology',
   'form.keywords.hint':
@@ -137,7 +143,7 @@ export const en = {
   'form.startTo.label': 'Started to',
   'err.badRinggold': '“{id}” is not a valid Ringgold id. They are plain numbers, for instance 27106.',
   'err.statusNeedsName':
-    'A current or past search needs an organisation name. ORCID indexes those two only on the name, never on a ROR, GRID or Ringgold id.',
+    'A current or past search needs an organisation name or a ROR id. ORCID indexes those two only on the name, so a ROR id is searched by the names ROR registers for it; a GRID or Ringgold id has no names to search by.',
   'err.badStartRange': 'The start range runs backwards: the first year is later than the last.',
   'bd.noCountryMatch': '{n} in another country',
   'bd.noDepartmentMatch': '{n} department did not match',

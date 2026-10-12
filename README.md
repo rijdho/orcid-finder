@@ -84,15 +84,27 @@ examined up to that point.
 
 A candidate found by ROR is kept even when the institution name on the record reads
 differently, because `expanded-search` returns those names without per-entry ROR ids. Dropping
-them would throw away exactly the records the ROR criterion was chosen to find; such rows are
-marked **ROR only** in the table.
+them would throw away exactly the records the ROR criterion was chosen to find.
+
+In fast mode the table says what each row is known to match, and no more:
+
+| Label | Meaning |
+| --- | --- |
+| **ROR** | The query held only identifiers, and the institution name agrees with a name ROR registers |
+| **ROR or name** | The query held identifiers and names, and the name agrees; which one found the account cannot be told |
+| **ROR only** | Found through the identifier; the institution name is worded differently |
+| **name** | No ROR id was in the query |
+
+Before 1.6.0 the first two were labelled **name** or **ROR only**, which hid an identifier match
+that was there: ORCID 0009-0000-4301-0530 carries Leiden's ROR on every employment and was shown
+as a name match. Full mode reads the employment itself and labels every kept row **employment**.
 
 Every count of what a filter dropped is attributed to the filter that actually dropped it,
 using the stage the candidate reached. Without that, a filter doing nothing looks identical to
 one doing all the work.
 
-![The results card for ROR 056d84691 in full mode: 8 kept of 12 candidates examined, ORCID
-reports 5,340 matching accounts once the GRID id is OR-ed into the query, 4 dropped as
+![The results card for ROR 056d84691 in full mode: 7 kept of 12 candidates examined, ORCID
+reports 5,493 matching accounts once the GRID id is OR-ed into the query, 5 dropped as
 self-asserted only, and every kept row asserted by Karolinska Institutet. Above the table, the
 "Sign the CSV" box is ticked.](docs/results.png)
 
@@ -156,9 +168,17 @@ three are a clean partition. **Past** is how you find former staff and alumni, w
 else here reaches.
 
 ORCID indexes those two only on the name, never on an identifier. Choosing current or past
-therefore searches by organisation name alone and the identifier fields sit out. Leaving them
-in would return current staff in a search for former ones, so the tool refuses rather than
-pretending, and says why.
+therefore searches by name, and the identifier fields sit out: leaving them in would return
+current staff in a search for former ones. A ROR id still works there, through the names ROR
+registers for it (for Leiden: Leiden University, Rijksuniversiteit Leiden, Universiteit Leiden),
+which go into the query as current or past name terms and are printed with the result. A GRID or
+Ringgold id has no names to search by, so a search with only those is refused, with the reason.
+A name term is a phrase match and wider than the id: on 2026-10-12, a current search for Leiden's
+three registered names found 6,759 accounts against 6,544 for its ROR or GRID id, and 7 of the
+first 50 listed Leiden University Medical Center first. Read the organisation column.
+
+This is not the same as **Only current appointments**, which reads the end date of each
+employment and works with any identifier.
 
 **Keywords** are the terms researchers put on their own ORCID record. They are AND-ed onto the
 institution block, so they answer "who here works on this" inside one query, at no extra cost.
@@ -175,7 +195,7 @@ Both downloads carry every row of the table, not the page on screen.
 | `role_title`, `department`, `organization` | the matching employment (full mode only) |
 | `country`, `city` | the employment organisation's address, as ORCID holds it |
 | `start_date`, `end_date` | the matching employment, at the precision ORCID holds |
-| `matched_by` | `employment`, `name` or `ror_only` |
+| `matched_by` | `employment`, `ror`, `ror_or_name`, `ror_only` or `name` (see the two modes) |
 | `asserted_by` | `organization`, `self`, `other` or `unknown`; empty in fast mode |
 | `assertion_source` | the name ORCID gives for the writer of the employment |
 | `assertion_origin` | the party the source names as the origin of the assertion, when it names one |
@@ -226,7 +246,7 @@ Like everything else in a record, they are self-declared: an empty column means 
 entered, not that the person publishes under one name.
 
 ![The results card for the same ROR id in fast mode, 16 kept of 16 candidates examined out of
-5,340 matching accounts, every row marked ROR only. One of the sixteen, Kelly Marcela Velasco
+5,493 matching accounts, every row marked ROR. One of the sixteen, Kelly Marcela Velasco
 Pinto, carries a second line under the name reading "also known as: Kelly
 Velasco".](docs/names.png)
 
@@ -236,8 +256,8 @@ The CSV opens with a block of `#` comment lines naming the tool, its version, it
 the licence, the data sources, the timestamp, the query sent to ORCID, the mode and the counts:
 
 ```
-# ORCID Affiliation Finder v1.5.0 · https://rijdho.github.io/orcid-finder/
-# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.5.0) [Software]. https://doi.org/10.5281/zenodo.22227424
+# ORCID Affiliation Finder v1.6.0 · https://rijdho.github.io/orcid-finder/
+# Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.6.0) [Software]. https://doi.org/10.5281/zenodo.22227424
 # License: Apache-2.0 · Source: https://github.com/rijdho/orcid-finder
 # Data: ORCID public API v3.0, ROR API v2
 # Retrieved: 2026-09-03T15:56:45.845Z

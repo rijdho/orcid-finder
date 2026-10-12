@@ -2,9 +2,9 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=25';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=25';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=25';
+import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=26';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=26';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=26';
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -315,7 +315,7 @@ function render(r) {
         `${escapeHtml(t('alt.names'))}: ${escapeHtml(alt.join(' · '))}</span></td>`;
     };
     const idCell = `<td class="nowrap"><a class="mono" href="https://orcid.org/${escapeHtml(p.orcid)}" target="_blank" rel="noreferrer">${escapeHtml(p.orcid)}</a></td>`;
-    const matched = () => badge(p.matchedBy, t(`matched.${p.matchedBy}`), p.matchedBy === 'ror_only' ? t('matched.ror_only.title') : null);
+    const matched = () => badge(p.matchedBy, t(`matched.${p.matchedBy}`), MATCH_TITLED.has(p.matchedBy) ? t(`matched.${p.matchedBy}.title`) : null);
     return r.mode === 'full'
       ? `<tr>${idCell}${nameCell()}${cell(p.roleTitle)}${cell(p.department)}${cell(p.organization)}` +
         `<td class="nowrap" title="${escapeHtml(p.city ?? '')}">${escapeHtml(p.country ?? '')}</td>` +
@@ -326,6 +326,8 @@ function render(r) {
   el.tablewrap.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// The labels that need saying what they do and do not establish carry a tooltip.
+const MATCH_TITLED = new Set(['ror', 'ror_or_name', 'ror_only']);
 const badge = (kind, label, title) =>
   `<td><span class="badge ${escapeHtml(kind)}"${title ? ` title="${escapeHtml(title)}"` : ''}>${escapeHtml(label)}</span></td>`;
 

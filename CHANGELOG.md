@@ -6,7 +6,30 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.6.0]: 2026-10-12
+
+### Fixed
+
+- **The fast-mode label no longer hides a ROR match.** A row found by the ROR id whose institution
+  name agrees was labelled **ROR only** (with a tooltip saying the name was worded differently) in a
+  ROR-only search, and **name** when a name was typed as well. ORCID 0009-0000-4301-0530 carries
+  Leiden University's ROR on every employment and showed as either. The labels are now **ROR**
+  (identifiers only in the query, name agrees), **ROR or name** (both in the query, name agrees:
+  the search returns no per-entry id, so which one found the account cannot be told), **ROR only**
+  (name differs) and **name** (no ROR id in the query). The `matched_by` export column carries the
+  same values, `ror` and `ror_or_name` being new. To decide the label, the names ROR registers
+  are now resolved and reported in fast mode as well.
+
 ### Changed
+
+- **A current or past search accepts a ROR id.** ORCID indexes current and past only on the
+  organisation name, so the tool used to refuse a ROR id there. It now searches by the names ROR
+  registers for the id (for Leiden: Leiden University, Rijksuniversiteit Leiden, Universiteit
+  Leiden), as current or past name terms, and prints them with the result. A search with only a
+  GRID or Ringgold id is still refused, since neither carries a name. Messages and the status hint
+  in English, German and Spanish say so. A name is a phrase match and wider than the id:
+  "Leiden University" also finds Leiden University Medical Center, which the README says.
+- Assets move to `?v=26`.
 
 - **Renamed ORCID Affiliation Finder** (was Affiliation Finder), at the author's request, so the name
   says which registry it searches. ORCID's brand guidelines ask that "ORCID" not appear in a

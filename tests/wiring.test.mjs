@@ -35,7 +35,7 @@ test('every badge the table can emit has a rule in the stylesheet', () => {
   // The class comes from data: `matchedBy` and `assertedBy`. A value with no
   // rule renders as an unstyled pill, which reads as a rendering glitch rather
   // than as the missing style it is.
-  for (const kind of ['employment', 'name', 'ror_only', 'self', 'organization', 'other', 'unknown'])
+  for (const kind of ['employment', 'name', 'ror', 'ror_or_name', 'ror_only', 'self', 'organization', 'other', 'unknown'])
     assert.match(css, new RegExp(`\\.badge\\.${kind}\\b`), `.badge.${kind} has no rule`);
 });
 
