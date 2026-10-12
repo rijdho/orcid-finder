@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.6.1]: 2026-10-12
 
+Version DOI: [10.5281/zenodo.23316844](https://doi.org/10.5281/zenodo.23316844).
+
 ### Fixed
 
 - **The organisation column in fast mode shows the institution that matched.** ORCID lists every
