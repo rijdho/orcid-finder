@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.8.0]: 2026-10-12
 
+Version DOI: [10.5281/zenodo.23317146](https://doi.org/10.5281/zenodo.23317146).
+
 ### Added
 
 - **Employment only.** Fast mode matches any affiliation type ORCID indexes, so a search for an
