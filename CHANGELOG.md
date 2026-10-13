@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.9.0]: 2026-10-13
 
+Version DOI: [10.5281/zenodo.23342956](https://doi.org/10.5281/zenodo.23342956).
+
 ### Changed
 
 - **Licensed under MIT.** The code moves from Apache-2.0 to MIT, as every code licence in the
