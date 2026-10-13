@@ -2,9 +2,9 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=31';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=31';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=31';
+import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=32';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=32';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=32';
 
 const $ = (id) => document.getElementById(id);
 const el = {

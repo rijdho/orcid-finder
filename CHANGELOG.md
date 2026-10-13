@@ -6,6 +6,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.0]: 2026-10-13
+
 ### Changed
 
 - **Licensed under MIT.** The code moves from Apache-2.0 to MIT, as every code licence in the
