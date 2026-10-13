@@ -20,7 +20,7 @@ export const TOOL = {
   // reader following a citation wants. A version DOI would pin the file's reader
   // to the release that produced it and rot from there.
   doi: 'https://doi.org/10.5281/zenodo.22227424',
-  license: 'Apache-2.0',
+  license: 'MIT',
   source: 'ORCID public API v3.0, ROR API v2',
 };
 

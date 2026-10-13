@@ -267,7 +267,7 @@ the licence, the data sources, the timestamp, the query sent to ORCID, the mode 
 ```
 # ORCID Affiliation Finder v1.8.0 · https://rijdho.github.io/orcid-finder/
 # Cite: Hartley Belmar, R. (2026). ORCID Affiliation Finder (v1.8.0) [Software]. https://doi.org/10.5281/zenodo.22227424
-# License: Apache-2.0 · Source: https://github.com/rijdho/orcid-finder
+# License: MIT · Source: https://github.com/rijdho/orcid-finder
 # Data: ORCID public API v3.0, ROR API v2
 # Retrieved: 2026-09-03T15:56:45.845Z
 # Query: ror-org-id:"https://ror.org/056d84691" OR grid-org-id:"grid.4714.6"
@@ -457,10 +457,9 @@ is not this tool's job.
 
 Copyright (C) 2026 Ricardo Hartley Belmar.
 
-[Apache-2.0](LICENSE): read, cite, fork, adapt and build on it freely, including in your own
-services, keeping the copyright and licence notices and stating what you changed. The licence
-grants no right to the tool's name. Releases up to 1.3.1 were published under
-AGPL-3.0-or-later and remain so.
+[MIT](LICENSE): read, cite, fork, adapt and build on it freely, including in your own
+services, keeping the copyright and licence notice. Releases 1.4.0 to 1.8.0 were published under
+Apache-2.0, and up to 1.3.1 under AGPL-3.0-or-later, and remain so.
 
 ## Citation
 
