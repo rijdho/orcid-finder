@@ -9,10 +9,10 @@
 //    never keys here: they are the API's vocabulary and stay as written in every
 //    locale.
 
-import { en } from './en.js?v=36';
+import { en } from './en.js?v=37';
 
-// English only since 2026-10-20 (1.10.0): every text passes a claims check, and each locale
-// multiplied that work. A translation comes back by adding its catalogue here and to LANGS.
+// English only since 2026-10-20 (1.10.0): every change to a text had to be made, and checked,
+// in each locale. A translation comes back by adding its catalogue here and to LANGS.
 export const LOCALES = { en };
 
 // `label` is deliberately the endonym: a reader looking for their own language
