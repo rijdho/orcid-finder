@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.10.2]: 2026-10-20
 
+Version DOI: [10.5281/zenodo.23502885](https://doi.org/10.5281/zenodo.23502885).
+
 ### Fixed
 
 - **The citation abstract.** `CITATION.cff`, which Zenodo reads for the record, still called the
