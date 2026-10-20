@@ -98,7 +98,6 @@ export const en = {
   'nav.label': 'View',
   'nav.search': 'Search',
   'rail.cite': 'Cite this tool',
-  'rail.data': 'Data from ORCID and ROR',
   'rail.by': 'By <a href="https://rijdho.github.io" target="_blank" rel="noreferrer">Ricardo Hartley Belmar</a>',
   'rail.license': 'Code under MIT',
   'rail.source': 'Source on GitHub',
