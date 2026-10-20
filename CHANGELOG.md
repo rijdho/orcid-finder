@@ -6,6 +6,14 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.1]: 2026-10-20
+
+### Fixed
+
+- **The version written into every export.** 1.10.0 still stamped its CSV and JSON exports as
+  1.9.0: the release raised the version in `CITATION.cff` but not in `src/exporters.js`. The test
+  that compares the two failed, and the release went out regardless. Use 1.10.1, not 1.10.0.
+
 ## [1.10.0]: 2026-10-20
 
 ### Removed

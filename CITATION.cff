@@ -28,7 +28,7 @@ identifiers:
 repository-code: "https://github.com/rijdho/orcid-finder"
 url: "https://rijdho.github.io/orcid-finder/"
 license: MIT
-version: "1.10.0"
+version: "1.10.1"
 date-released: "2026-10-20"
 keywords:
   - ORCID
