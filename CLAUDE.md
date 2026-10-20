@@ -128,7 +128,8 @@ three locale strings, and a control in `index.html`. In that order.
   The data palette (`--m-emp`, `--m-name`, `--m-ror`) is the only place colour carries meaning.
 - `style.css` is linked with `?v=N`. Bump N on every stylesheet change or cached browsers keep
   the old one while the HTML updates.
-- English, German and Spanish are the floor, not a goal. `tests/i18n.test.mjs` pins parity.
+- English only since 1.10.0 (2026-10-20); the catalogue structure stays, so a translation is one
+  more file in `src/i18n/` and the switch reappears. `tests/i18n.test.mjs` pins parity then.
 - Tests run on `node --test tests/*.test.mjs`, no dependencies. Prove a new test is not vacuous
   by injecting the defect it claims to catch.
 

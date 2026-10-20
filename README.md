@@ -16,7 +16,7 @@ Caveats say where that answer stops.
 
 🔗 **Live:** <https://rijdho.github.io/orcid-finder/>
 
-Available in **English, German and Spanish** (auto-detected from the browser, switchable).
+Available in **English**.
 
 ![The tool on arrival: a rail listing Search, How it works, Caveats and About, and a
 three-column filter panel holding ROR id 056d84691, country code SE and "Only records asserted

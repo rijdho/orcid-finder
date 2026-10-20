@@ -12,12 +12,13 @@ import { LOCALES, LANGS, DEFAULT_LANG, t, setLang, resolveLang, missingKeys, ext
 const CODES = Object.keys(LOCALES);
 const read = (rel) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
 
-test('the floor is English, German and Spanish, and the switcher lists all three', () => {
-  assert.deepEqual(CODES.sort(), ['de', 'en', 'es']);
-  assert.deepEqual(LANGS.map((l) => l.code).sort(), CODES.sort());
+test('English is always there, and the switcher lists every catalogue', () => {
+  // English only since 1.10.0 (2026-10-20); a second language brings the switch back.
+  assert.ok(CODES.includes('en'));
+  assert.deepEqual(LANGS.map((l) => l.code).sort(), [...CODES].sort());
   // The label is the endonym: a reader looking for their own language scans for
   // "Deutsch", not for "German".
-  assert.deepEqual(LANGS.map((l) => l.label), ['English', 'Deutsch', 'Español']);
+  for (const l of LANGS) assert.ok(l.label && l.label.trim(), `${l.code} needs a label`);
 });
 
 test('every locale carries every key, and no key English does not have', () => {
@@ -90,14 +91,19 @@ test('every view the rail can select has a title in every locale', () => {
 });
 
 test('t interpolates, falls back to English, then to the key itself', () => {
-  setLang('es');
-  assert.equal(t('bd.noStartDate', { n: 3 }), '3 sin fecha de inicio');
+  setLang('en');
+  assert.ok(t('bd.noStartDate', { n: 3 }).includes('3'));
+  assert.ok(!t('bd.noStartDate', { n: 3 }).includes('{n}'));
   assert.equal(t('no.such.key'), 'no.such.key');
-  // A key present only in English must still render, in English.
-  const backup = LOCALES.es['res.title'];
-  delete LOCALES.es['res.title'];
-  assert.equal(t('res.title'), LOCALES.en['res.title']);
-  LOCALES.es['res.title'] = backup;
+  // A key present only in English must still render, in English, in any other locale.
+  const other = CODES.find((c) => c !== 'en');
+  if (other) {
+    setLang(other);
+    const backup = LOCALES[other]['res.title'];
+    delete LOCALES[other]['res.title'];
+    assert.equal(t('res.title'), LOCALES.en['res.title']);
+    LOCALES[other]['res.title'] = backup;
+  }
   setLang(DEFAULT_LANG);
 });
 
@@ -107,9 +113,15 @@ test('an unknown placeholder is left alone rather than blanked', () => {
 });
 
 test('the language is resolved from the URL, then the browser, then English', () => {
-  assert.equal(resolveLang('de', ['es-ES']), 'de');
-  assert.equal(resolveLang(null, ['de-AT', 'en']), 'de');
-  assert.equal(resolveLang('fr', ['es-CL']), 'es', 'an unsupported request falls through to the browser');
+  // Written against whatever catalogues exist, so it holds with English alone and checks the
+  // precedence again as soon as a second language is added.
+  const other = CODES.find((c) => c !== 'en');
+  if (other) {
+    assert.equal(resolveLang(other, ['pt-BR']), other);
+    assert.equal(resolveLang(null, [`${other}-XX`, 'en']), other);
+    assert.equal(resolveLang('fr', [`${other}-YY`]), other, 'an unsupported request falls through to the browser');
+  }
+  assert.equal(resolveLang('de', ['es-ES']), 'en');
   assert.equal(resolveLang(null, ['fr-FR']), 'en');
   assert.equal(resolveLang(null, []), 'en');
 });

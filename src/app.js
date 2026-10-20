@@ -2,9 +2,9 @@
 // only moves values between the DOM and those modules, which is what keeps the
 // filter behaviour testable in Node without a browser.
 
-import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=33';
-import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=33';
-import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=33';
+import { clampMaxRows, discoverPeople, nameVariants, normaliseRor, parseList, validateOptions } from './discover.js?v=34';
+import { peopleToCsv, peopleToJson, exportFilename, downloadText } from './exporters.js?v=34';
+import { LANGS, t, setLang, getLang, resolveLang } from './i18n/index.js?v=34';
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -64,6 +64,8 @@ function initLang() {
   el.lang.innerHTML = LANGS.map(
     (l) => `<button type="button" data-code="${l.code}" aria-current="false" title="${escapeHtml(l.label)}">${l.code.toUpperCase()}</button>`,
   ).join('');
+  // With a single language there is nothing to switch, so the switch is not shown.
+  if (LANGS.length < 2) el.lang.remove();
   el.lang.addEventListener('click', (e) => {
     const code = e.target.closest('button')?.dataset.code;
     if (!code) return;
