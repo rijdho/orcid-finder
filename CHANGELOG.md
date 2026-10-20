@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.10.1]: 2026-10-20
 
+Version DOI: [10.5281/zenodo.23496739](https://doi.org/10.5281/zenodo.23496739).
+
 ### Fixed
 
 - **The version written into every export.** 1.10.0 still stamped its CSV and JSON exports as
@@ -15,6 +17,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   that compares the two failed, and the release went out regardless. Use 1.10.1, not 1.10.0.
 
 ## [1.10.0]: 2026-10-20
+
+Version DOI: [10.5281/zenodo.23496727](https://doi.org/10.5281/zenodo.23496727). Superseded by 1.10.1: its exports carry the version 1.9.0.
 
 ### Removed
 
