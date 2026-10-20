@@ -6,6 +6,14 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.2]: 2026-10-20
+
+### Fixed
+
+- **The citation abstract.** `CITATION.cff`, which Zenodo reads for the record, still called the
+  tool multilingual. The interface has been English only since 1.10.0. Exports now carry the
+  version 1.10.2; nothing else in the tool changed.
+
 ## [1.10.1]: 2026-10-20
 
 Version DOI: [10.5281/zenodo.23496739](https://doi.org/10.5281/zenodo.23496739).

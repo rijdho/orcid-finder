@@ -9,7 +9,7 @@
 //    never keys here: they are the API's vocabulary and stay as written in every
 //    locale.
 
-import { en } from './en.js?v=37';
+import { en } from './en.js?v=38';
 
 // English only since 2026-10-20 (1.10.0): every change to a text had to be made, and checked,
 // in each locale. A translation comes back by adding its catalogue here and to LANGS.
