@@ -8,7 +8,7 @@ abstract: >-
   role title, department, country, start date, and whether the employment was
   asserted by a member organisation rather than self-declared. It reports which
   filter dropped each candidate and exports the result as CSV or JSON together
-  with the query that produced it. Multilingual (EN/DE/ES). Runs entirely in the
+  with the query that produced it. Runs entirely in the
   browser against the public ORCID and ROR APIs: no account, no API key, no
   backend.
 type: software
