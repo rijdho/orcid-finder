@@ -124,7 +124,7 @@ Version DOI: [10.5281/zenodo.23316765](https://doi.org/10.5281/zenodo.23316765).
   title, the rail, the README, `CITATION.cff` (Zenodo takes the title at the next release), and the
   citation and preamble each export carries. Assets move to `?v=20`.
 
-- **The look comes from rijdho/house-style.** `house/` holds a synced copy (house.css and the Inter
+- **The look comes from the shared house style.** `house/` holds a synced copy (house.css and the Inter
   fonts), loaded before `style.css`, with a lock and a test that fail on a hand edit or a stale copy
   (`node scripts/sync-house.mjs` refreshes it), and the asset lock now covers `house/house.css`, so a
   sync bumps `?v=` like any other served file. `style.css` keeps only what this tool adds or sets

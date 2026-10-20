@@ -5,7 +5,7 @@
    place semantic colour lives. */
 
 /* The shared look (tokens, shell, components, the self-hosted Inter font) comes from
-   house/house.css, a synced copy of rijdho/house-style loaded first; what stays here is
+   house/house.css, a synced copy of the house style loaded first; what stays here is
    what this tool adds or sets differently. node scripts/sync-house.mjs refreshes the copy. */
 
 :root { --d-green: #1f9670; --d-blue: #2f7bd0; --d-amber: #b56c1f; --d-green-soft: rgba(31, 150, 112, 0.09); --d-blue-soft: rgba(47, 123, 208, 0.09); --d-amber-soft: rgba(181, 108, 31, 0.09); }
