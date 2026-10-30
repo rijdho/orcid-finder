@@ -11,6 +11,7 @@ abstract: >-
   with the query that produced it. Runs entirely in the
   browser against the public ORCID and ROR APIs: no account, no API key, no
   backend.
+  It runs at https://rijdho.github.io/orcid-finder/.
 type: software
 authors:
   - family-names: "Hartley Belmar"
