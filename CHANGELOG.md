@@ -8,6 +8,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.10.3]: 2026-11-05
 
+Version DOI: [10.5281/zenodo.23973917](https://doi.org/10.5281/zenodo.23973917).
+
 ### Fixed
 
 - **The line under the results naming the ROR names.** It read "Also matched on the names ROR
