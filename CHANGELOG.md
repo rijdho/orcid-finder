@@ -6,6 +6,16 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.3]: 2026-11-05
+
+### Fixed
+
+- **The line under the results naming the ROR names.** It read "Also matched on the names ROR
+  registers for the id", which suggested the names had gone into the search. They do not: the
+  query names an organisation only if the organisation-name box is ticked, and the query shown under the line says which. The
+  names ROR registers label each row and, in full mode, match an employment that carries no ROR
+  or GRID id. The line and the CSV preamble now say so. Exports carry the version 1.10.3.
+
 ### Changed
 
 - The abstract in `CITATION.cff` names the address where the tool runs, so the Zenodo record

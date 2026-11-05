@@ -11,7 +11,7 @@
 export const TOOL = {
   name: 'orcid-finder',                 // machine-facing: file names and the JSON `tool` field
   title: 'ORCID Affiliation Finder',          // reader-facing: the citation and the preamble
-  version: '1.10.2',
+  version: '1.10.3',
   year: 2026,
   author: 'Hartley Belmar, R.',
   url: 'https://rijdho.github.io/orcid-finder/',
@@ -193,7 +193,7 @@ export function csvPreamble(meta = {}) {
     `Retrieved: ${at}`,
     meta.query ? `Query: ${meta.query}` : null,
     counts || null,
-    meta.rorNames?.length ? `ROR names matched: ${meta.rorNames.join(' | ')}` : null,
+    meta.rorNames?.length ? `Names ROR registers for the id (row labels; in full mode, the match for an employment without a ROR or GRID id): ${meta.rorNames.join(' | ')}` : null,
     meta.gridIds?.length ? `GRID ids: ${meta.gridIds.join(' | ')}` : null,
     'These comment lines are not data. Skip lines starting with # when reading.',
   ];

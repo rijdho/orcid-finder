@@ -56,7 +56,7 @@ export const en = {
   'res.empty': 'No account matched. Loosen a filter, or check the ROR id.',
   'res.query': 'Query sent to ORCID',
 
-  'res.rorNames': 'Also matched on the names ROR registers for the id: {names}',
+  'res.rorNames': 'Names ROR registers for the id, used to label each row and, in full mode, to match an employment that carries no ROR or GRID id: {names}',
   'bd.title': 'What the filters dropped',
   'bd.noOrgMatch': '{n} no affiliation match',
   'bd.noRoleMatch': '{n} role title did not match',
